@@ -14,7 +14,7 @@ from rfdetr_demo.gui.state.job_state import TuneJobState
 from rfdetr_demo.gui.state.tune_parameters import TuneParameters, keypoint_style
 from rfdetr_demo.inference.overlays.detection import render_tune_cache_sequence
 from rfdetr_demo.inference.overlays.keypoint import KeypointOverlaySettings
-from rfdetr_demo.inference.temporal_filter import MotionPlausibilitySettings
+from rfdetr_demo.inference.temporal import MotionPlausibilitySettings
 from rfdetr_demo.inference.types import TaskName
 from rfdetr_demo.tuning.auto_tune import CurrentParameters, run_auto_tune
 

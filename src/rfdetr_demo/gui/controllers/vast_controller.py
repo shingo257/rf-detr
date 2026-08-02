@@ -19,17 +19,16 @@ from rfdetr_demo.gui.vast_preflight import (
 from rfdetr_demo.media.guard import is_vast_transfer_allowed
 from rfdetr_demo.paths import VAST_CONSENT_FILE
 from rfdetr_demo.vast.api_config import resolve_vast_api_key, resolve_vast_api_key_info, save_local_vast_api_key
-from rfdetr_demo.vast.cli import is_vast_cli_available
+from rfdetr_demo.vast.cli import ensure_vast_cli_or_raise, is_vast_cli_available
+from rfdetr_demo.vast.offers import search_gpu_offers
 from rfdetr_demo.vast.preflight import PreflightCheck
-from rfdetr_demo.vast.runner import (
+from rfdetr_demo.vast.safety import VastSafetySettings, cleanup_orphan_instances
+from rfdetr_demo.vast.start_phases import VastJobPhase, VastProgressUpdate
+from rfdetr_demo.vast.types import (
     VAST_DOCS_URL,
     VastGpuOffer,
     VastRunnerError,
-    ensure_vast_cli_or_raise,
-    search_gpu_offers,
 )
-from rfdetr_demo.vast.safety import VastSafetySettings, cleanup_orphan_instances
-from rfdetr_demo.vast.start_phases import VastJobPhase, VastProgressUpdate
 
 _LOG_PHASES = frozenset(
     {

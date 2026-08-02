@@ -21,7 +21,7 @@ from rfdetr_demo.tracking.types import (
 )
 
 if TYPE_CHECKING:
-    from rfdetr_demo.inference.temporal_filter import KeypointTemporalFilter
+    from rfdetr_demo.inference.temporal import KeypointTemporalFilter
 
 
 @dataclass

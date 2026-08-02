@@ -19,8 +19,8 @@ import numpy as np
 from rfdetr.visualize.keypoints import key_points_for_display
 from rfdetr_demo.inference.models import build_keypoint_model
 from rfdetr_demo.inference.overlays.keypoint import KeypointOverlaySettings, render_keypoint_overlay
-from rfdetr_demo.inference.temporal_filter import KeypointTemporalFilter, MotionPlausibilitySettings
-from rfdetr_demo.inference.uncertainty_viz import COCO17_KEYPOINT_NAMES
+from rfdetr_demo.inference.temporal import KeypointTemporalFilter, MotionPlausibilitySettings
+from rfdetr_demo.inference.uncertainty import COCO17_KEYPOINT_NAMES
 from rfdetr_demo.inference.video_io import probe_video_size
 from rfdetr_demo.paths import resolve_default_source
 from rfdetr_demo.tracking.keypoints_ops import attach_track_ids

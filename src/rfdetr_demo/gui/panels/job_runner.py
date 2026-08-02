@@ -28,11 +28,8 @@ from rfdetr_demo.gui.state.ui_bindings import build_run_config
 from rfdetr_demo.inference.types import VideoProcessingCancelledError
 from rfdetr_demo.inference.video_io import probe_video_size
 from rfdetr_demo.media.frame_audit import DEFAULT_FRAME_AUDIT_COUNT
-from rfdetr_demo.vast.runner import (
-    VastRunnerCancelledError,
-    VastRunnerError,
-)
 from rfdetr_demo.vast.start_phases import VastJobPhase, VastProgressUpdate
+from rfdetr_demo.vast.types import VastRunnerCancelledError, VastRunnerError
 
 
 class JobRunnerMixin:

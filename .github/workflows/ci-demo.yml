@@ -5,6 +5,7 @@ on:
     paths:
       - "src/rfdetr_demo/**"
       - "tests/rfdetr_demo/**"
+      - "tests/test_temporal_quality.py"
       - "scripts/**"
       - "pyproject.toml"
       - ".github/workflows/ci-demo.yml"
@@ -12,6 +13,7 @@ on:
     paths:
       - "src/rfdetr_demo/**"
       - "tests/rfdetr_demo/**"
+      - "tests/test_temporal_quality.py"
       - "scripts/**"
       - "pyproject.toml"
       - ".github/workflows/ci-demo.yml"
@@ -34,7 +36,7 @@ jobs:
         run: uv sync --extra demo --extra tests
 
       - name: Run demo pytest suite
-        run: uv run pytest tests/rfdetr_demo -v --tb=short
+        run: uv run pytest tests/rfdetr_demo tests/test_temporal_quality.py -v --tb=short
 
       - name: Media guard coverage
         run: uv run pytest tests/rfdetr_demo/test_media_guard.py --cov=rfdetr_demo.media.guard --cov-report=term-missing --cov-fail-under=90

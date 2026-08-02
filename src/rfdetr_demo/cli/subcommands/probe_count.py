@@ -16,8 +16,8 @@ import cv2
 from rfdetr_demo.inference.models import build_keypoint_model
 from rfdetr_demo.paths import REPO_ROOT, resolve_default_source
 from rfdetr_demo.tracking.bbox import nms_detection_indices
-from rfdetr_demo.tracking.detection_stabilizer import DetectionStabilizer
 from rfdetr_demo.tracking.keypoints_ops import subset_key_points
+from rfdetr_demo.tracking.stabilizer import DetectionStabilizer
 from rfdetr_demo.tracking.types import PersonTrackSettings
 
 

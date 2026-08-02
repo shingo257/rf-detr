@@ -10,13 +10,11 @@ from __future__ import annotations
 import numpy as np
 import supervision as sv
 
-from rfdetr_demo.tracking.detection_stabilizer import (
-    DetectionStabilizer,
-    DetectionStabilizerSettings,
-    merge_key_points,
-    nms_detection_indices,
-    subset_key_points,
-)
+from rfdetr_demo.tracking import detection_stabilizer as legacy_stabilizer
+from rfdetr_demo.tracking.bbox import nms_detection_indices
+from rfdetr_demo.tracking.keypoints_ops import merge_key_points, subset_key_points
+from rfdetr_demo.tracking.stabilizer import DetectionStabilizer
+from rfdetr_demo.tracking.types import PersonTrackSettings as DetectionStabilizerSettings
 
 
 def _box_key_points(
@@ -90,3 +88,8 @@ def test_merge_key_points_concatenates_rows() -> None:
     merged = merge_key_points([left, right])
     assert len(merged) == 2
     assert merged.data["xyxy"].shape == (2, 4)
+
+
+def test_legacy_facade_reexports_canonical_stabilizer() -> None:
+    assert legacy_stabilizer.DetectionStabilizer is DetectionStabilizer
+    assert legacy_stabilizer.DetectionStabilizerSettings is DetectionStabilizerSettings

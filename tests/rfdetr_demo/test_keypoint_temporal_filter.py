@@ -7,8 +7,21 @@
 
 from __future__ import annotations
 
-from rfdetr_demo.inference.temporal_filter import KeypointTemporalFilter, MotionPlausibilitySettings
+from rfdetr_demo.inference import temporal_filter as legacy_temporal_filter
+from rfdetr_demo.inference.temporal import (
+    KeypointTemporalFilter,
+    MotionFilterStats,
+    MotionPlausibilitySettings,
+    OneEuroFilter,
+)
 from tests.rfdetr_demo.helpers import single_person_keypoints
+
+
+def test_legacy_temporal_filter_facade_reexports_canonical_api() -> None:
+    assert legacy_temporal_filter.KeypointTemporalFilter is KeypointTemporalFilter
+    assert legacy_temporal_filter.MotionFilterStats is MotionFilterStats
+    assert legacy_temporal_filter.MotionPlausibilitySettings is MotionPlausibilitySettings
+    assert legacy_temporal_filter.OneEuroFilter is OneEuroFilter
 
 
 def test_single_person_keeps_stable_track() -> None:
@@ -53,7 +66,7 @@ def test_temporal_filter_skips_ghost_tracks() -> None:
     import numpy as np
     import supervision as sv
 
-    from rfdetr_demo.tracking.detection_stabilizer import TRACK_IS_GHOST_KEY
+    from rfdetr_demo.tracking.types import TRACK_IS_GHOST_KEY
 
     settings = MotionPlausibilitySettings(
         enabled=True,

@@ -21,17 +21,16 @@ import numpy.typing as npt
 
 from rfdetr_demo.inference.models import build_keypoint_model
 from rfdetr_demo.inference.overlays.keypoint import KeypointOverlaySettings, render_keypoint_overlay
-from rfdetr_demo.inference.temporal_filter import KeypointTemporalFilter, MotionPlausibilitySettings
+from rfdetr_demo.inference.temporal import KeypointTemporalFilter, MotionPlausibilitySettings
 from rfdetr_demo.inference.video_io import probe_video_size
 from rfdetr_demo.paths import CONFIDENTIAL_AUDIT, REPO_ROOT, resolve_default_source
-from rfdetr_demo.tracking.detection_stabilizer import (
-    TrackDiagnostic,
+from rfdetr_demo.tracking.bbox import (
     detection_bbox,
     detection_confidence,
     nms_detection_indices,
 )
 from rfdetr_demo.tracking.pipeline import PersonTrackPipeline
-from rfdetr_demo.tracking.types import PersonTrackSettings
+from rfdetr_demo.tracking.types import PersonTrackSettings, TrackDiagnostic
 
 logger = logging.getLogger(__name__)
 

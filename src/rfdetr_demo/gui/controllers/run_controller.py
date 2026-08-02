@@ -18,10 +18,11 @@ from rfdetr_demo.gui.state.ui_bindings import (
     resolve_tune_preview_path,
 )
 from rfdetr_demo.inference.runner import run_demo
-from rfdetr_demo.inference.temporal_filter import MotionPlausibilitySettings
+from rfdetr_demo.inference.temporal import MotionPlausibilitySettings
 from rfdetr_demo.inference.types import PreviewCallback, ProgressCallback
-from rfdetr_demo.vast.runner import VastVideoJobConfig, run_video_demo_on_vast
 from rfdetr_demo.vast.start_phases import VastProgressUpdate
+from rfdetr_demo.vast.types import VastVideoJobConfig
+from rfdetr_demo.vast.video_job import run_video_demo_on_vast
 
 
 @dataclass(frozen=True)

@@ -28,7 +28,7 @@ from rfdetr_demo.inference.models import (
 )
 from rfdetr_demo.inference.overlays.keypoint import KeypointOverlaySettings, resolve_uncertainty_max_axis
 from rfdetr_demo.inference.progress import compose_preview_callback, compose_progress_callback
-from rfdetr_demo.inference.temporal_filter import MotionPlausibilitySettings
+from rfdetr_demo.inference.temporal import MotionPlausibilitySettings
 from rfdetr_demo.inference.types import (
     KeypointUncertaintyStyle,
     ModelSize,
@@ -112,7 +112,7 @@ def _build_task_callback(
         temporal_filter = None
         person_track_pipeline = None
         if motion_settings is not None and motion_settings.enabled:
-            from rfdetr_demo.inference.temporal_filter import KeypointTemporalFilter
+            from rfdetr_demo.inference.temporal import KeypointTemporalFilter
 
             temporal_filter = KeypointTemporalFilter(
                 motion_settings,
@@ -121,11 +121,10 @@ def _build_task_callback(
                 fps=video_fps,
                 frame_stride=frame_stride,
             )
-        from rfdetr_demo.tracking.detection_stabilizer import is_detection_stabilizer_enabled
         from rfdetr_demo.tracking.pipeline import PersonTrackPipeline
-        from rfdetr_demo.tracking.types import PersonTrackSettings
+        from rfdetr_demo.tracking.types import PersonTrackSettings, is_person_track_enabled
 
-        if is_detection_stabilizer_enabled():
+        if is_person_track_enabled():
             person_track_pipeline = PersonTrackPipeline.from_env(
                 frame_width=frame_width,
                 frame_height=frame_height,
@@ -188,6 +187,7 @@ def run_demo(
     cancel_event: Event | None = None,
     progress_file: Path | None = None,
     max_source_seconds: float | None = None,
+    start_source_seconds: float | None = None,
     tune_cache: Any | None = None,
     heatmap_opacity: float = 0.38,
     heatmap_decay: float = 3.0,
@@ -206,6 +206,8 @@ def run_demo(
         raise ValueError(f"frame_stride must be >= 1, got {frame_stride}")
     if max_source_seconds is not None and max_source_seconds <= 0:
         raise ValueError(f"max_source_seconds must be > 0, got {max_source_seconds}")
+    if start_source_seconds is not None and start_source_seconds < 0:
+        raise ValueError(f"start_source_seconds must be >= 0, got {start_source_seconds}")
 
     target_path.parent.mkdir(parents=True, exist_ok=True)
     partial_path = partial_video_path(target_path)
@@ -299,6 +301,7 @@ def run_demo(
             frame_stride=frame_stride,
             max_frames=max_frames,
             max_source_seconds=max_source_seconds,
+            start_source_seconds=start_source_seconds,
             stats=stats,
             progress_callback=combined_progress,
             preview_throttle=preview_throttle,
@@ -337,6 +340,8 @@ def run_demo(
     if max_source_seconds is not None:
         summary["max_source_seconds"] = max_source_seconds
         summary["tune_preview"] = True
+    if start_source_seconds is not None and start_source_seconds > 0:
+        summary["start_source_seconds"] = start_source_seconds
     if stats["processed_frames"] > 0:
         summary["avg_detections_per_frame"] = round(
             stats["total_detections"] / stats["processed_frames"],

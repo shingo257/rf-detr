@@ -16,9 +16,9 @@ from tkinter import messagebox, ttk
 from rfdetr_demo.gui.controllers.vast_controller import VastController
 from rfdetr_demo.gui.panels._common import VAST_GPU_FILTERS, logger
 from rfdetr_demo.gui.theme import PAD_ROW, PAD_SECTION
-from rfdetr_demo.vast.runner import VastGpuOffer, VastRunnerCancelledError, VastRunnerError
 from rfdetr_demo.vast.start_phases import VastProgressUpdate
 from rfdetr_demo.vast.start_progress import VastStartProgressPanel
+from rfdetr_demo.vast.types import VastGpuOffer, VastRunnerCancelledError, VastRunnerError
 
 
 class ComputePanelMixin:
