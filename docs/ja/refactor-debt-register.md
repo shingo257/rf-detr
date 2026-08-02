@@ -12,12 +12,20 @@
 
 | facade | 行数 | 実利用 | 移行先 | 状態 |
 |--------|------|--------|--------|------|
-| `tracking/detection_stabilizer.py` | 97 | runner, callbacks, tracking/`__init__`, overlays/keypoint, tracking_audit, probe_count（**6**） | `tracking/pipeline.py` (`PersonTrackPipeline`) | 未着手 |
+| `tracking/detection_stabilizer.py` | 57 | re-export + compat | `tracking/pipeline.py` / `stabilizer.py` | Phase 15 ✅（削除は別途） |
 | `vast/runner.py` | 55 | re-export | `vast/cli.py`, `offers.py`, `instance.py` | 未着手 |
 | `vast/compat.py` | 58 | private alias | `vast/cli.py`, `instance.py`, `remote_io.py` | 未着手 |
 | `inference/pipeline.py` | 11 | re-export | `cli/run_video.py`, `inference/runner.py` | 未着手 |
 | `inference/uncertainty_viz.py` | 57 | re-export | `inference/uncertainty/` | 未着手 |
 | `gui/controller.py` | 10 | re-export | `gui/state/job_state.py` | 未着手 |
+
+### Phase 13–15 構造的重複（解消済）
+
+| 項目 | 旧状態 | 現状態 |
+|------|--------|--------|
+| `PersonAssociator` 多重保有 | stabilizer / temporal / associator | `TrackStore` 内の単一 associator |
+| `DetectionStabilizer._TrackSnapshot` | stabilizer 内 private | `track_store.TrackSnapshot` |
+| `KeypointTemporalFilter._associator` | temporal が独自 ID | 削除。pipeline の `track_id` を消費 |
 
 ---
 
@@ -25,12 +33,13 @@
 
 3行 `from ... import *` shim と 18 行 wrapper。entry point に一本化し削除。
 
-| 種別 | ファイル | 移行先 |
-|------|---------|--------|
-| 3行 shim（~12） | `vast_*.py`, `media_guard.py`, `keypoint_temporal_filter.py`, `auto_tune_parameters.py`, `tune_live_preview.py`, `keypoint_uncertainty_viz.py`, `video_*.py` | 対応する `rfdetr_demo/*` |
-| 18行 wrapper | `run_video_demo.py`, `video_demo_gui.py`, `vast_cleanup_orphans.py` | `[project.scripts]` entry point |
-| 残すロジック | `run_mzoo_benchmark.py`（518） | Phase 10 で `rfdetr_demo/benchmark/` へ |
-| 維持 | `launch_gui.py`(53), `check_import_cycles.py`(105), `*.cmd` | thin launcher のみ |
+| 種別 | ファイル | 移行先 | 状態 |
+|------|---------|--------|------|
+| 診断 wrapper | `probe_person_count.py`, `audit_center_tracking.py` | `rfdetr-demo probe-count` / `audit-tracking` | Phase 14 ✅ |
+| 18行 wrapper | `run_video_demo.py`, `video_demo_gui.py`, `vast_cleanup_orphans.py` | `[project.scripts]` entry point | DeprecationWarning thin |
+| 3行 shim（~12） | `vast_*.py`, `media_guard.py`, … | 対応する `rfdetr_demo/*` | Phase 8 残 |
+| 残すロジック | `run_mzoo_benchmark.py`（518） | `rfdetr_demo/benchmark/` | Phase 10 残 |
+| 維持 | `launch_gui.py`, `check_import_cycles.py`, `*.cmd` | thin launcher | ✅ |
 
 ---
 
@@ -97,8 +106,8 @@
 
 | 項目 | 状態 | 担当 Phase |
 |------|------|-----------|
-| `max_missed` 設定化（env/CLI/GUI） | 設計済み | 9（pipeline 設定として） |
-| 中央 sticky トラック | 監査で ID 切替 31 回確認 | 9 |
+| `max_missed` 設定化（env/CLI） | ✅ `RFDETR_MAX_MISSED` + CLI | Phase 15c |
+| 中央 sticky トラック | ✅ `RFDETR_STICKY_CENTER_TRACK` + CLI | Phase 15c（全編回帰は手動） |
 | auto_tune KPI 試走 | 未達 | 実験トラック |
 
 ---
@@ -125,7 +134,7 @@ uv run rfdetr-demo audit-tracking --max-frames 60
 
 ## 8. import 循環
 
-`scripts/check_import_cycles.py` で検出。Phase 7 時点: **0 件**（要再確認）。
+`scripts/check_import_cycles.py` で検出。Phase 13 以降: **0 件**（2026-08-02 確認）。
 
 ---
 

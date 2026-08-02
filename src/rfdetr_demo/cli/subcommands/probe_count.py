@@ -17,7 +17,7 @@ from rfdetr_demo.inference.models import build_keypoint_model
 from rfdetr_demo.paths import REPO_ROOT, resolve_default_source
 from rfdetr_demo.tracking.bbox import nms_detection_indices
 from rfdetr_demo.tracking.keypoints_ops import subset_key_points
-from rfdetr_demo.tracking.stabilizer import DetectionStabilizer
+from rfdetr_demo.tracking.pipeline import PersonTrackPipeline
 from rfdetr_demo.tracking.types import PersonTrackSettings
 
 
@@ -88,6 +88,17 @@ def add_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) 
     parser.add_argument("--nms-iou", type=float, default=0.50, help="IoU threshold for NMS")
     parser.add_argument("--max-missed", type=int, default=2, help="Track hold frames")
     parser.add_argument(
+        "--sticky-center-track",
+        action="store_true",
+        help="Extend hold for the center-lane track (reduces center ID switches)",
+    )
+    parser.add_argument(
+        "--sticky-max-missed",
+        type=int,
+        default=4,
+        help="Hold frames for sticky center track when --sticky-center-track is set",
+    )
+    parser.add_argument(
         "--no-hysteresis",
         action="store_true",
         help="Disable new-track confidence gate (default: hysteresis on at 0.65)",
@@ -133,8 +144,9 @@ def run(args: argparse.Namespace) -> int:
         return 1
 
     frame_width = max(1, int(capture.get(cv2.CAP_PROP_FRAME_WIDTH)))
+    frame_height = max(1, int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
     model = build_keypoint_model()
-    stabilizer = DetectionStabilizer(
+    track_pipeline = PersonTrackPipeline(
         settings=PersonTrackSettings(
             enabled=True,
             nms_iou_threshold=args.nms_iou,
@@ -143,8 +155,11 @@ def run(args: argparse.Namespace) -> int:
             new_track_min_confidence=args.new_track_min_confidence,
             expected_person_count=args.expected_person_count,
             fill_extra_missed=args.fill_extra_missed,
+            sticky_center_track=bool(args.sticky_center_track),
+            sticky_max_missed=max(1, int(args.sticky_max_missed)),
         ),
         frame_width=frame_width,
+        frame_height=frame_height,
     )
     rows: list[dict[str, object]] = []
 
@@ -167,7 +182,7 @@ def run(args: argparse.Namespace) -> int:
             rows.append(_row_from_keypoints(frame_index, filtered, raw_n=raw_n, nms_n=len(filtered)))
             continue
 
-        result = stabilizer.apply(key_points, frame_index)
+        result = track_pipeline.apply(key_points, frame_index)
         rows.append(
             _row_from_keypoints(
                 frame_index,

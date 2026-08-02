@@ -342,13 +342,26 @@ facade の削除は機械的な後続スライスにはしない。外部利用�
 
 各スライスは挙動を変えず、`tests/rfdetr_demo`、`test_temporal_quality.py`、Ruff、strict mypy（新境界）、`check_import_cycles.py` を gate とする。mesh 描画を動かす変更では短尺動画または固定画像の visual parity も必須とする。
 
+### Phase 13–15 tracking 統合計画（完了）
+
+別紙計画（Phase 13 baseline → 15a/b/c → 14 CLI）の DoD:
+
+- [x] Phase 13 — baseline / debt register / `check_import_cycles.py`（循環 0）
+- [x] Phase 15a — `types.py` + `bbox.py`
+- [x] Phase 15b — `TrackStore`、temporal `_associator` 除去
+- [x] Phase 15c — `PersonTrackPipeline`、`max_missed` / sticky 設定昇格
+- [x] Phase 14 — `probe-count` / `audit-tracking` サブコマンド + scripts wrapper
+- [x] `detection_stabilizer.py` ≤300 行 facade（現行 57 行）
+
+回帰手順: [refactor-baseline-metrics.md](refactor-baseline-metrics.md)。全編 sticky 監査（ID 切替 ≤15）は機密動画のローカル実行が残件。
+
 ### 次スライス（推奨）
 
 1. Phase 12 残存中型 — `vast/safety.py`（417）を `consent` / `transfer_log` / `guardrails` へ分割
-2. Phase 9 — demo facade 削除（`detection_stabilizer` 等の実利用を正規パスへ）
+2. Phase 9 — 残 facade 削除（`vast/runner` 等）
 3. Phase 8 — `scripts/` shim sunset
 
 ---
 
 **最終更新**: 2026-08-02
-**ステータス**: Phase 11（監査 common）完了。次は Phase 12 残存負債（`vast/safety.py`）または Phase 9 facade 削除。
+**ステータス**: Phase 13–15（tracking 統合）+ Phase 11（監査 common）完了。次は Phase 12（`vast/safety.py`）または Phase 9 facade 削除。
