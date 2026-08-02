@@ -75,21 +75,23 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
 
 
 def preflight_style_for_status(status: str) -> str:
-    """Return ttk label style name for a preflight status."""
-    if status == "pass":
-        return "PreflightPass.TLabel"
-    if status == "warn":
-        return "PreflightWarn.TLabel"
-    return "PreflightFail.TLabel"
+    """Return ttk label style name for a preflight status.
+
+    Deprecated import path — prefer :mod:`rfdetr_demo.gui.vast_preflight`.
+    """
+    from rfdetr_demo.gui.vast_preflight import preflight_style_for_status as _impl
+
+    return _impl(status)
 
 
 def preflight_icon_for_status(status: str) -> str:
-    """Return a short icon prefix for preflight rows."""
-    if status == "pass":
-        return "✓"
-    if status == "warn":
-        return "!"
-    return "✕"
+    """Return a short icon prefix for preflight rows.
+
+    Deprecated import path — prefer :mod:`rfdetr_demo.gui.vast_preflight`.
+    """
+    from rfdetr_demo.gui.vast_preflight import preflight_icon_for_status as _impl
+
+    return _impl(status)
 
 
 def status_style_for_phase(phase: str) -> str:

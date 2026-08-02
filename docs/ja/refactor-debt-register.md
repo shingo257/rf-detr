@@ -2,7 +2,7 @@
 
 [refactor-master-plan.md](refactor-master-plan.md)（Phase 7–13 体系）の実行トラッキング用。**2026-06-28 実測で全面更新**（旧 Phase 13–20 体系の記録は破棄）。
 
-**最終更新**: 2026-06-28
+**最終更新**: 2026-08-02
 
 ---
 
@@ -38,7 +38,7 @@
 
 | パス | 行数 | 分割方針 | Phase |
 |------|------|---------|-------|
-| `media/tracking_audit.py` | 475 | `audit/common` 抽出 | 11 |
+| `media/tracking_audit.py` | 26 | `media/audit/` 抽出済（facade） | 11 ✅ |
 | `vast/safety.py` | 417 | `consent`/`transfer_log`/`guardrails` | 12 |
 | `inference/runner.py` | 355 | callback 組立を `callbacks` へ | 12 |
 | `tracking/track_store.py` | 354 | hold/ghost 状態機械を分離 | 12 |
@@ -47,7 +47,7 @@
 | `gui/panels/job_runner.py` | 327 | 進捗/ログを `RunController` へ | 12 |
 | `gui/controllers/vast_controller.py` | 326 | offer 探索 / progress 分離 | 12 |
 | `tuning/analyze_clip.py` | 319 | コアのみ残す | 12 |
-| `media/frame_audit.py` | 306 | `common` 抽出で縮む | 11 |
+| `media/frame_audit.py` | 26 | `media/audit/frame.py` 抽出済（facade） | 11 ✅ |
 | `inference/temporal_filter.py` | 301 | 設定 dataclass を `types` へ | 12 |
 
 ### 2026-07-29 animation 追加実測
@@ -72,14 +72,15 @@
 
 ---
 
-## 4. 監査2系統（Phase 11 対象）
+## 4. 監査2系統（Phase 11 — 完了）
 
-| 系統 | モジュール | 重複 |
+| 系統 | モジュール | 状態 |
 |------|-----------|------|
-| フレーム監査 | `media/frame_audit.py` | JSONL 追記, `_relpath`, 画像 I/O |
-| トラッキング監査 | `media/tracking_audit.py` | 同上 + 評価ロジック |
+| 共通 | `media/audit/common.py` | JSONL / `_relpath` / 画像 I/O / 共通スキーマ |
+| フレーム | `media/audit/frame.py` + `frame_audit.py` facade | ✅ |
+| トラッキング | `media/audit/tracking_*.py` + `tracking_audit.py` facade | ✅ |
 
-統合先: `media/audit/common.py`（JSONL・画像 I/O・共通スキーマ）。
+共通 JSONL ベース: `timestamp`, `classification`, `audit_kind`, `run_id`, `source_relpath`, `frame_index`（+ kind 固有フィールド）。
 
 ---
 

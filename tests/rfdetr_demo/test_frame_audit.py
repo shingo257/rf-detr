@@ -7,12 +7,14 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-from rfdetr_demo.media.frame_audit import (
+from rfdetr_demo.media.audit import frame as frame_mod
+from rfdetr_demo.media.audit.frame import (
     ConfidentialFrameAuditLogger,
     FrameAuditRecord,
     evaluate_frame_audit,
@@ -22,11 +24,13 @@ from rfdetr_demo.paths import REPO_ROOT
 
 @pytest.fixture
 def audit_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setattr("rfdetr_demo.media.frame_audit.CONFIDENTIAL_AUDIT", tmp_path / "audit")
-    monkeypatch.setattr("rfdetr_demo.media.frame_audit._FRAME_AUDIT_ROOT", tmp_path / "audit" / "frame-runs")
-    monkeypatch.setattr("rfdetr_demo.media.frame_audit._FRAME_AUDIT_JSONL", tmp_path / "audit" / "frame-audit.jsonl")
-    monkeypatch.setattr("rfdetr_demo.media.frame_audit.REPO_ROOT", tmp_path)
-    return tmp_path / "audit"
+    audit_root = tmp_path / "audit"
+    monkeypatch.setattr(frame_mod, "CONFIDENTIAL_AUDIT", audit_root)
+    monkeypatch.setattr(frame_mod, "_FRAME_AUDIT_ROOT", audit_root / "frame-runs")
+    monkeypatch.setattr(frame_mod, "_FRAME_AUDIT_JSONL", audit_root / "frame-audit.jsonl")
+    monkeypatch.setattr("rfdetr_demo.media.audit.common.REPO_ROOT", tmp_path)
+    monkeypatch.setattr("rfdetr_demo.media.audit.common.CONFIDENTIAL_AUDIT", audit_root)
+    return audit_root
 
 
 def test_evaluate_frame_audit_ok_for_stable_keypoints() -> None:
@@ -52,7 +56,11 @@ def test_confidential_frame_audit_logger_writes_files(audit_dir: Path) -> None:
     source.parent.mkdir(parents=True, exist_ok=True)
     source.write_bytes(b"fake")
 
-    audit_logger = ConfidentialFrameAuditLogger(source_path=source, task="keypoint", run_id="test-run")
+    audit_logger = ConfidentialFrameAuditLogger(
+        source_path=source,
+        task="keypoint",
+        run_id="test-run",
+    )
     frame = np.zeros((32, 48, 3), dtype=np.uint8)
     record = audit_logger.maybe_record(
         frame_bgr=frame,
@@ -66,3 +74,11 @@ def test_confidential_frame_audit_logger_writes_files(audit_dir: Path) -> None:
     assert summary is not None
     assert summary.frames_logged == 1
     assert (audit_dir / "frame-runs" / "test-run" / "summary.json").is_file()
+
+    jsonl_path = audit_dir / "frame-audit.jsonl"
+    line = json.loads(jsonl_path.read_text(encoding="utf-8").strip())
+    assert line["audit_kind"] == "frame"
+    assert line["classification"] == "CONFIDENTIAL"
+    assert line["run_id"] == "test-run"
+    assert "frame_index" in line
+    assert "source_relpath" in line

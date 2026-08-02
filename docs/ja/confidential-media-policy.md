@@ -10,7 +10,9 @@ gitignore 以上のガバナンスで、機密動画の誤コミット・IDE/AI 
 |------|------|-----|-----------|
 | 機密入力 | `confidential/media/input/` | 非追跡 | **可**（同意後） |
 | 機密出力 | `confidential/media/output/` | 非追跡 | 不可 |
-| 監査ログ | `confidential/audit/` | 非追跡 | 不可 |
+| 監査ログ | `confidential/audit/`（`frame-audit.jsonl` / `tracking-audit.jsonl` / `*-runs/`） | 非追跡 | 不可 |
+
+監査 JSONL は `media/audit/common.py` の共通スキーマ（`classification=CONFIDENTIAL`, `audit_kind`, `run_id`, `source_relpath`, `frame_index`）を使う。
 | 非機密デモ | `sample/` | 非追跡 | **不可**（既定） |
 | 一般成果物 | `artifacts/demo/` | 非追跡 | 不可 |
 

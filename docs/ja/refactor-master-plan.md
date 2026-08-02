@@ -206,9 +206,9 @@ AGENTS.md が禁じる「scripts へのビジネスロジック」最大の違�
 3. `media_guard` 経由の機密書き込み証跡を維持
 
 ### Definition of Done
-- [ ] 監査 JSONL スキーマ 1 種
-- [ ] `tracking_audit.py` 300 行以下
-- [ ] [confidential-media-policy.md](confidential-media-policy.md) と整合
+- [x] 監査 JSONL スキーマ 1 種（`audit_kind` + 共通ベースフィールド）
+- [x] `tracking_audit.py` 300 行以下（26 行 facade）
+- [x] [confidential-media-policy.md](confidential-media-policy.md) と整合
 
 ---
 
@@ -336,12 +336,19 @@ docs/ja/                 … 索引 + 本計画 DONE
 2. [x] mesh weight・rotation・rigid prop を `puppet_mesh.py`（149 行）へ抽出し、数値場と固定poseのcharacterization gateを追加する。rendererは510→411行。
 3. [x] continuous mesh composition を `puppet_continuous.py`（318 行）、layered composition を `puppet_layered.py`（156 行）へ分離し、`puppet_renderer.py` を 411→55 行の互換 router へ縮小する。
 4. [x] notebook/docs/builder を canonical import へ移行し、旧 facade のリポジトリ内実利用をゼロにする。
+5. [x] Phase 11 — `media/audit/` 共通抽出（`tracking_audit.py` 475→26 行 facade、JSONL スキーマ統一）。
 
 facade の削除は機械的な後続スライスにはしない。外部利用者向けの非互換変更になるため、明示的な deprecation 告知と versioned release 境界が決まるまでは維持し、その境界で legacy import/CLI 契約テストと一緒に sunset する。
 
 各スライスは挙動を変えず、`tests/rfdetr_demo`、`test_temporal_quality.py`、Ruff、strict mypy（新境界）、`check_import_cycles.py` を gate とする。mesh 描画を動かす変更では短尺動画または固定画像の visual parity も必須とする。
 
+### 次スライス（推奨）
+
+1. Phase 12 残存中型 — `vast/safety.py`（417）を `consent` / `transfer_log` / `guardrails` へ分割
+2. Phase 9 — demo facade 削除（`detection_stabilizer` 等の実利用を正規パスへ）
+3. Phase 8 — `scripts/` shim sunset
+
 ---
 
-**最終更新**: 2026-07-29
-**ステータス**: Phase 12 の animation 責務分割とリポジトリ内 consumer 移行を完了。次は Phase 12 残存負債を再計測して次スライスを選定する。
+**最終更新**: 2026-08-02
+**ステータス**: Phase 11（監査 common）完了。次は Phase 12 残存負債（`vast/safety.py`）または Phase 9 facade 削除。

@@ -15,16 +15,25 @@ Phase 13 時点の計測値。以降の PR は本ファイルと [refactor-debt-
 
 | パス | 行数 | 対象 Phase |
 |------|------|------------|
-| `media/tracking_audit.py` | 467 | Phase 18 |
+| `vast/safety.py` | 417 | Phase 12 |
 
-### Phase 17 で解消（400 行以下）
+### Phase 11 で解消（監査 common）
+
+| パス | 行数 | 分割先 |
+|------|------|--------|
+| `media/tracking_audit.py` | 26 | `media/audit/tracking_*.py` + facade |
+| `media/frame_audit.py` | 26 | `media/audit/frame.py` + facade |
+| `media/audit/frame.py` | 300 | フレーム監査オーケストレータ |
+| `media/audit/tracking_run.py` | 272 | トラッキング監査ランナー |
+
+### Phase 17 で解消（GUI controllers）
 
 | パス | 行数 | 分割先 |
 |------|------|--------|
 | `gui/panels/compute.py` | 339 | `controllers/vast_controller.py` |
 | `gui/panels/io_task.py` | 344 | `controllers/tune_controller.py` |
 | `gui/panels/job_runner.py` | 333 | `controllers/run_controller.py` |
-| `tracking/detection_stabilizer.py` | 76 | `tracking/pipeline.py` 等（Phase 15） |
+| `tracking/detection_stabilizer.py` | 76 | `tracking/pipeline.py` 等 |
 
 ### 移行済み（Phase 9）
 
@@ -78,7 +87,8 @@ Phase 13 時点の計測値。以降の PR は本ファイルと [refactor-debt-
 ## 目標達成状況
 
 - [x] GUI 400 行超ファイル **0 件**（Phase 17 完了）
-- [ ] `rfdetr_demo` 主要モジュール **400行以下**（`tracking_audit.py` が残 — Phase 18）
+- [x] 監査 common 抽出（Phase 11 — `media/audit/`、JSONL スキーマ統一）
+- [ ] `rfdetr_demo` 主要モジュール **400行以下**（`vast/safety.py` が残 — Phase 12）
 - [x] 公開 API 正規化（`probe_video_size`, `vast.cli.run_vast_cli`）
 - [x] GUI preflight 共通化（`gui/vast_preflight.py`）
 - [x] `TuneJobState` 統合

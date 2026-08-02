@@ -10,10 +10,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from rfdetr_demo.gui.theme import preflight_icon_for_status, preflight_style_for_status
 from rfdetr_demo.gui.vast_preflight import (
     preflight_blocks_start,
+    preflight_icon_for_status,
     preflight_overall_status,
+    preflight_style_for_status,
     run_gui_vast_preflight,
 )
 from rfdetr_demo.media.guard import is_vast_transfer_allowed
