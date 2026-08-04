@@ -53,15 +53,24 @@ Phase 13–15 計画（tracking 統合）の計測基準。差分比較は本フ
 
 ### 400 行超（現行）
 
-| パス | 行数 | 次フェーズ |
-|------|------|-----------|
-| `vast/safety.py` | 417 | Phase 12（中型仕上げ） |
+| パス | 行数 | 状態 |
+|------|------|------|
+| （なし） | — | `vast/safety.py` は Phase 12 で分割済 |
+
+### Phase 12 Vast safety 分割
+
+| パス | 行数 | 役割 |
+|------|------|------|
+| `vast/safety.py` | 29 | 互換 facade |
+| `vast/safety_settings.py` | 65 | `VastSafetySettings` |
+| `vast/safety_lease.py` | 137 | lease persistence |
+| `vast/safety_guardrails.py` | 264 | destroy / orphan / emergency |
 
 ### テスト
 
 | スイート | 件数 |
 |---------|------|
-| `tests/rfdetr_demo/` | **147+**（収集） |
+| `tests/rfdetr_demo/` | **157** |
 
 ---
 

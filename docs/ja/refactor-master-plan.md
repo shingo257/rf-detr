@@ -357,11 +357,11 @@ facade の削除は機械的な後続スライスにはしない。外部利用�
 
 ### 次スライス（推奨）
 
-1. Phase 12 残存中型 — `vast/safety.py`（417）を `consent` / `transfer_log` / `guardrails` へ分割
-2. Phase 9 — 残 facade 削除（`vast/runner` 等）
+1. [x] Phase 12 — `vast/safety.py`（417）を `safety_settings` / `safety_lease` / `safety_guardrails` へ分割
+2. Phase 9 — 残 facade 削除（`vast/runner` / `compat` / `inference.pipeline` 等）
 3. Phase 8 — `scripts/` shim sunset
 
 ---
 
-**最終更新**: 2026-08-02
-**ステータス**: Phase 13–15（tracking 統合）+ Phase 11（監査 common）完了。次は Phase 12（`vast/safety.py`）または Phase 9 facade 削除。
+**最終更新**: 2026-08-04
+**ステータス**: Phase 13–15 + Phase 11 + Phase 12（Vast safety）完了。次は Phase 9 facade 削除または Phase 8 shim sunset。

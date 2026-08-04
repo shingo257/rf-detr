@@ -2,7 +2,7 @@
 
 [refactor-master-plan.md](refactor-master-plan.md)（Phase 7–13 体系）の実行トラッキング用。**2026-06-28 実測で全面更新**（旧 Phase 13–20 体系の記録は破棄）。
 
-**最終更新**: 2026-08-02
+**最終更新**: 2026-08-04
 
 ---
 
@@ -48,7 +48,7 @@
 | パス | 行数 | 分割方針 | Phase |
 |------|------|---------|-------|
 | `media/tracking_audit.py` | 26 | `media/audit/` 抽出済（facade） | 11 ✅ |
-| `vast/safety.py` | 417 | `consent`/`transfer_log`/`guardrails` | 12 |
+| `vast/safety.py` | 29 | `safety_settings` / `safety_lease` / `safety_guardrails` 抽出済（facade） | 12 ✅ |
 | `inference/runner.py` | 355 | callback 組立を `callbacks` へ | 12 |
 | `tracking/track_store.py` | 354 | hold/ghost 状態機械を分離 | 12 |
 | `gui/panels/io_task.py` | 348 | `io_task_sections.py` 移譲 | 12 |
