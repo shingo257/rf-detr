@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`rfdetr_demo` Phase 12b:** Split GUI mid-size panels/controllers under 300 lines:
+  - `gui/panels/io_task` → continued `io_task_sections` (IO/task builders)
+  - `gui/panels/compute` → `compute_vast` handlers mixin
+  - `gui/panels/job_runner` → `job_runner_lifecycle` + `RunController` startup/complete log plans
+  - `gui/controllers/vast_controller` → `vast_offers` / `vast_progress_ui` (facade retained)
 - **`rfdetr_demo` Phase 12a:** Split `tracking/track_store.py` into `track_models` / `track_match` / `track_hold` (orchestration stays in `track_store`). Moved inference task callback assembly from `inference/runner.py` into `inference/task_callback.py`.
 
 ### Removed

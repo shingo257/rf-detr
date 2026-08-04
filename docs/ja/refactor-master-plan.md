@@ -372,17 +372,15 @@ facade の削除は機械的な後続スライスにはしない。外部利用�
 
 - [x] `tracking/track_store.py` → `track_models` / `track_match` / `track_hold`（195 行）
 - [x] `inference/runner.py` → `task_callback.py`（238 行）
-- [ ] GUI panels / vast_controller / analyze_clip / temporal keypoints（300 行超残り）
+- [x] Phase 12b — GUI: `io_task` / `compute` / `job_runner` / `vast_controller` すべて &lt;300
+- [ ] `analyze_clip` / `temporal/keypoints`（300 行超残り; `puppet_continuous` は意図的維持）
 
 ### 次スライス（推奨）
 
-1. [x] Phase 12 — `vast/safety.py` 分割
-2. [x] Phase 9 — 残 facade 削除
-3. [x] Phase 8 — `scripts/` shim sunset
-4. Phase 12b — GUI panels（`io_task` / `compute` / `job_runner` / `vast_controller`）または `analyze_clip`
-5. Phase 10 — `run_mzoo_benchmark.py` tools 化
+1. Phase 12c — `analyze_clip` または `temporal/keypoints` 分割（DoD: 300 行超 ≤2）
+2. Phase 10 — `run_mzoo_benchmark.py` tools 化
 
 ---
 
 **最終更新**: 2026-08-04
-**ステータス**: Phase 13–15 + 11 + 12a + 9 + 8 完了。Phase 12 は 300 行超がまだ残る（GUI / analyze / temporal / puppet）。
+**ステータス**: Phase 13–15 + 11 + 12a/b + 9 + 8 完了。300 行超は `analyze_clip` / `keypoints` / `puppet_continuous` の 3 本。

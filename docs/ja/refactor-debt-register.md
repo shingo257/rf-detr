@@ -55,14 +55,14 @@
 | `vast/safety.py` | 29 | `safety_settings` / `safety_lease` / `safety_guardrails` 抽出済（facade） | 12 ✅ |
 | `tracking/track_store.py` | 195 | `track_models` / `track_match` / `track_hold` 抽出済 | 12 ✅ |
 | `inference/runner.py` | 238 | `task_callback.py` 抽出済 | 12 ✅ |
-| `gui/panels/io_task.py` | 348 | `io_task_sections.py` 移譲 | 12 |
-| `gui/panels/compute.py` | 346 | view と `VastController` 境界 | 12 |
-| `gui/panels/job_runner.py` | 324 | 進捗/ログを `RunController` へ | 12 |
-| `gui/controllers/vast_controller.py` | 326 | offer 探索 / progress 分離 | 12 |
+| `gui/panels/io_task.py` | 266 | `io_task_sections` へ IO/task 移譲済 | 12 ✅ |
+| `gui/panels/compute.py` | 182 | `compute_vast.py` 抽出済 | 12 ✅ |
+| `gui/panels/job_runner.py` | 175 | lifecycle + `RunController` ログ計画へ移譲済 | 12 ✅ |
+| `gui/controllers/vast_controller.py` | 271 | `vast_offers` / `vast_progress_ui` 抽出済 | 12 ✅ |
 | `tuning/analyze_clip.py` | 319 | コアのみ残す | 12 |
 | `media/frame_audit.py` | 26 | `media/audit/frame.py` 抽出済（facade） | 11 ✅ |
 | `inference/temporal/keypoints.py` | 311 | 設定 dataclass を `types` へ | 12 |
-| `media/audit/frame.py` | 300 | 境界付近 | 12 |
+| `media/audit/frame.py` | 300 | 境界 | 12 |
 | `animation/puppet_continuous.py` | 318 | 凝集のため行数のみでは再分割しない | — |
 
 ### 2026-07-29 animation 追加実測
