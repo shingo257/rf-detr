@@ -40,7 +40,7 @@ RF-DETR 動画デモ（`rfdetr_demo`）において、画面上の人数と GUI 
 
 ### 2.3 診断スクリプト
 
-`scripts/probe_person_count.py` を実行すると、フレームごとの bbox 中心 x 座標と件数が `artifacts/person_count_probe.json` に記録されます。
+`uv run rfdetr-demo probe-count` を実行すると、フレームごとの bbox 中心 x 座標と件数が `artifacts/person_count_probe.json` に記録されます。
 
 閾値 0.6 での傾向:
 
@@ -181,7 +181,7 @@ RF-DETR の公開 API `RFDETR.predict()` は **静止画（または互いに独
 | RF-DETR API | `src/rfdetr/detr.py` |
 | 人物対応付け | `src/rfdetr_demo/tracking/person_associator.py` |
 | 関節時間フィルタ | `src/rfdetr_demo/inference/temporal_filter.py` |
-| 人数診断 | `scripts/probe_person_count.py` → `artifacts/person_count_probe.json`（`--mode raw\|nms\|stabilize`） |
+| 人数診断 | `uv run rfdetr-demo probe-count` → `artifacts/person_count_probe.json`（`--mode raw\|nms\|stabilize`） |
 | 検出安定化 | `src/rfdetr_demo/tracking/pipeline.py`（`PersonTrackPipeline`、既定 ON、`RFDETR_DETECTION_STABILIZER=0` で無効） |
 | 機密フレーム監査 | `src/rfdetr_demo/media/frame_audit.py` → `confidential/audit/` |
 | 監査無効化 | 環境変数 `RFDETR_FRAME_AUDIT=0` |

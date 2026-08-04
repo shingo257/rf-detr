@@ -25,7 +25,7 @@
 | パターン | 用途 | 参考実装 |
 |---------|------|----------|
 | **A. 永続 Pod** | 推論 API を常時（またはセッション中）起動。SSH トンネルで HTTP 呼び出し | FlashFind `backend/app/vast_client.py`, `gpu_pod_lease.py` |
-| **B. エフェメラルジョブ** | 1 ジョブごとにインスタンス作成 → 処理 → destroy | rf-detr `scripts/vast_ai_runner.py` |
+| **B. エフェメラルジョブ** | 1 ジョブごとにインスタンス作成 → 処理 → destroy | rf-detr `rfdetr_demo.vast.video_job` |
 
 どちらも **API キー解決・安全停止・進捗表示** の考え方は共通です。
 
@@ -68,10 +68,10 @@ FlashFind では RTX 4090 + Vast PyTorch テンプレート（`/venv/main`）を
 | 6 | FlashFind `.env` | `FlashFind/backend/.env` |
 | 7 | vastai CLI 設定 | `~/.config/vastai/vast_api_key` |
 
-rf-detr 実装: `scripts/vast_api_config.py`
+rf-detr 実装: `src/rfdetr_demo/vast/api_config.py`
 
 ```python
-from vast_api_config import resolve_vast_api_key_info
+from rfdetr_demo.vast.api_config import resolve_vast_api_key_info
 
 info = resolve_vast_api_key_info(explicit=None)
 print(info.source, info.masked)  # 読み込み元を UI に表示
@@ -105,16 +105,15 @@ MYAPP_VAST_API_KEY=
 
 | ファイル | 役割 |
 |----------|------|
-| `scripts/vast_api_config.py` | API キー解決・`.env` パース・ローカル保存 |
-| `scripts/vast_safety.py` | リース永続化、orphan 回収、destroy リトライ、`atexit`/シグナル |
-| `scripts/vast_start_phases.py` | 起動シーケンスフェーズ定義（FlashFind 互換） |
-| `scripts/vast_start_progress.py` | Tkinter ステップ進捗 UI |
-| `scripts/vast_preflight.py` | 実行前チェックリスト |
-| `scripts/vast_ai_runner.py` | エフェメラルジョブ本体（要カスタム） |
-| `scripts/vast_cleanup_orphans.py` | 手動 orphan 回収 CLI |
+| `src/rfdetr_demo/vast/api_config.py` | API キー解決・`.env` パース・ローカル保存 |
+| `src/rfdetr_demo/vast/safety.py`（settings / lease / guardrails） | リース永続化、orphan 回収、destroy リトライ、`atexit`/シグナル |
+| `src/rfdetr_demo/vast/start_phases.py` | 起動シーケンスフェーズ定義（FlashFind 互換） |
+| `src/rfdetr_demo/vast/start_progress.py` | Tkinter ステップ進捗 UI |
+| `src/rfdetr_demo/vast/preflight.py` | 実行前チェックリスト |
+| `src/rfdetr_demo/vast/video_job.py` | エフェメラルジョブ本体 |
+| `uv run rfdetr-vast-cleanup` | 手動 orphan 回収 CLI |
 
-GUI 例: `scripts/video_demo_gui.py`  
-起動: `scripts/run_demo_gui.cmd`
+GUI: `uv run rfdetr-demo-gui`（Windows: `scripts/run_demo_gui.cmd`）  
 
 ---
 
@@ -198,7 +197,7 @@ rf-detr `VAST_JOB_STEPS`（FlashFind 4 ステップ + ジョブ 3 ステップ�
 | 6 | 結果のダウンロード | `downloading` |
 | 7 | インスタンスの破棄 | `cleanup` |
 
-進捗イベント型: `VastProgressUpdate`（`scripts/vast_start_phases.py`）
+進捗イベント型: `VastProgressUpdate`（`src/rfdetr_demo/vast/start_phases.py`）
 
 ### 6.3 環境変数（rf-detr）
 
@@ -287,7 +286,7 @@ vastai copy INSTANCE_ID:/workspace/job/output.dat local:.\output.dat
 vastai destroy instance INSTANCE_ID
 ```
 
-**rf-detr（Phase 12）:** `src/rfdetr_demo/` パッケージと `vast/remote_runner.py` を `/workspace/rfdetr_job/package/` に SCP し、`PYTHONPATH` 経由で `remote_runner.py`（内部で `rfdetr_demo.cli`）を実行します。`scripts/run_video_demo.py` への依存はありません。実装: `src/rfdetr_demo/vast/video_job.py`。
+**rf-detr（Phase 12）:** `src/rfdetr_demo/` パッケージと `vast/remote_runner.py` を `/workspace/rfdetr_job/package/` に SCP し、`PYTHONPATH` 経由で `remote_runner.py`（内部で `rfdetr_demo.cli`）を実行します。実装: `src/rfdetr_demo/vast/video_job.py`。
 
 ### Step 5 — 進捗 UI
 
@@ -329,7 +328,7 @@ artifacts/vast/
 vastai search offers "rentable=true verified=true num_gpus=1 reliability>0.95 dph_total<0.80" --order dph --limit 10 --raw
 ```
 
-rf-detr GUI の「GPU 検索」は同一条件を `scripts/vast_ai_runner.py` の `search_gpu_offers()` で実行。
+rf-detr GUI の「GPU 検索」は同一条件を `rfdetr_demo.vast.offers.search_gpu_offers()` で実行。
 
 インスタンス作成:
 
@@ -349,7 +348,7 @@ vastai create instance OFFER_ID ^
 | API キー未設定 | FlashFind `.env` または `vastai set api-key` |
 | 起動が 5 分超 | `BOOT_TIMEOUT_SEC` 確認、別オファーを選択 |
 | 課金が止まらない | `vastai show instances --raw` → `destroy instance ID` |
-| 前回クラッシュで orphan | `scripts/vast_cleanup_orphans.cmd` |
+| 前回クラッシュで orphan | `uv run rfdetr-vast-cleanup`（または `scripts/vast_cleanup_orphans.cmd`） |
 | destroy 失敗 | ログの CRITICAL を確認、手動 destroy |
 | scp 失敗 | 大文字 `-P`、Direct SSH、`touch ~/.no_auto_tmux`（[Vast SSH ドキュメント](https://docs.vast.ai/guides/instances/connect/ssh)） |
 | リモート pip が遅い | Docker イメージに依存を事前 bake |
@@ -374,7 +373,7 @@ vastai create instance OFFER_ID ^
 | プロジェクト | パターン | 主要パス |
 |-------------|---------|----------|
 | **FlashFind** | 永続 Pod + SSH トンネル | `FlashFind/backend/app/vast_client.py`, `docs/deploy_vastai.md` |
-| **rf-detr** | エフェメラル動画ジョブ + GUI | `rf-detr/scripts/vast_*.py`, `scripts/video_demo_gui.py` |
+| **rf-detr** | エフェメラル動画ジョブ + GUI | `src/rfdetr_demo/vast/*`, `uv run rfdetr-demo-gui` |
 | **One-Shot-Learning** | （Vast 未使用） | ローカル YOLO パイプラインのみ |
 
 新規プロジェクトでは **用途に応じて A か B を選び**、本ドキュメント §3（API キー）と §5/§6（安全装置）を必ず取り込んでください。

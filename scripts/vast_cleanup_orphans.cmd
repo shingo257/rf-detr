@@ -5,4 +5,4 @@ if not exist ".venv\Scripts\python.exe" (
   echo [.venv not found] Run: uv sync
   exit /b 1
 )
-".venv\Scripts\python.exe" scripts\vast_cleanup_orphans.py %*
+uv run rfdetr-vast-cleanup %*

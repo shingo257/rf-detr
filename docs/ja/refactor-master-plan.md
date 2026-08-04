@@ -53,7 +53,7 @@ ER-FlowScan モノレポ内 `rf-detr` フォーク向けの、**長年蓄積し�
 
 | ID | カテゴリ | 実体 | 規模 |
 |----|---------|------|------|
-| **A** | scripts shim | `scripts/*.py` の3行 `from ... import *` | ~15 |
+| **A** | scripts shim | （Phase 8 で 19 本削除済; mzoo / animation tooling は別 Phase） | 0（shim） |
 | **B** | demo facade | （Phase 9 で 6 本すべて削除済） | 0 |
 | **C** | 不完全な移行 | （Phase 9 で解消） | 解消済 |
 | **D** | scripts ロジック | `scripts/run_mzoo_benchmark.py` 518 行（AGENTS.md 違反） | 1 |
@@ -140,9 +140,12 @@ flowchart LR
 3. 参照ゼロの shim を削除。残すべきものは `[project.scripts]` に正規化。
 
 ### Definition of Done
-- [ ] `scripts/` の `.py` は `launch_gui.py` + `check_import_cycles.py` のみ（または 0）
-- [ ] `.cmd` は thin launcher のみ
-- [ ] 全 entry point が `uv run rfdetr-demo ...` で動作
+- [x] Phase 8 対象の shim / thin wrapper（19 本）を削除
+- [x] `.cmd` は thin launcher（`vast_cleanup_orphans.cmd` → `uv run rfdetr-vast-cleanup`）
+- [x] 全 entry point が `uv run rfdetr-demo ...` で動作
+- [ ] 厳密 DoD「`launch_gui.py` + `check_import_cycles.py` のみ」は Phase 10（mzoo）と animation tooling 残存により未達
+
+残存 `scripts/*.py`（意図的）: `launch_gui.py`, `check_import_cycles.py`, `run_mzoo_benchmark.py`, `kirby_*`, `fukkachan_*`, `build_kirby_*`。
 
 ---
 
@@ -369,9 +372,10 @@ facade の削除は機械的な後続スライスにはしない。外部利用�
 
 1. [x] Phase 12 — `vast/safety.py`（417）を `safety_settings` / `safety_lease` / `safety_guardrails` へ分割
 2. [x] Phase 9 — 残 facade 削除
-3. Phase 8 — `scripts/` shim sunset
+3. [x] Phase 8 — `scripts/` shim sunset（19 本削除; mzoo / animation tooling は残存）
+4. Phase 10 — `run_mzoo_benchmark.py` tools 化、または Phase 12 中型仕上げ
 
 ---
 
 **最終更新**: 2026-08-04
-**ステータス**: Phase 13–15 + Phase 11 + Phase 12 + Phase 9 完了。次は Phase 8 shim sunset。
+**ステータス**: Phase 13–15 + Phase 11 + Phase 12 + Phase 9 + Phase 8（shim）完了。次は Phase 10（mzoo）または Phase 12 中型仕上げ。

@@ -265,6 +265,7 @@ def run_video_demo_on_vast(
             destroyed = guard.destroy_if_needed(reason="job_finished")
             if not destroyed:
                 logger.critical(
-                    "Instance %s may still be running — run: scripts\\vast_cleanup_orphans.cmd",
+                    "Instance %s may still be running — run: uv run rfdetr-vast-cleanup"
+                    " (or scripts\\vast_cleanup_orphans.cmd)",
                     instance_id,
                 )

@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- **Breaking (`rfdetr_demo` / scripts):** Removed deprecated `scripts/` shim and thin CLI wrappers (19 files). Use package entry points instead:
+  - `uv run rfdetr-demo` / `rfdetr-demo probe-count` / `audit-tracking` / `analyze-clip`
+  - `uv run rfdetr-demo-gui`
+  - `uv run rfdetr-vast-cleanup` (Windows: `scripts/vast_cleanup_orphans.cmd`)
+  - Import libraries from `rfdetr_demo.*` (e.g. `rfdetr_demo.vast.api_config`, `rfdetr_demo.media.guard`) — not `scripts/*.py`
 - **Breaking (`rfdetr_demo`):** Removed deprecated facade modules. Import from the canonical modules instead:
   - `rfdetr_demo.tracking.detection_stabilizer` → `rfdetr_demo.tracking.pipeline` / `stabilizer` / `bbox`
   - `rfdetr_demo.vast.runner` / `rfdetr_demo.vast.compat` → `rfdetr_demo.vast.cli` / `offers` / `video_job` / `types`

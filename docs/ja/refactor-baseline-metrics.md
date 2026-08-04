@@ -38,7 +38,7 @@ Phase 13–15 計画（tracking 統合）の計測基準。差分比較は本フ
 |------|-----------|
 | `src/rfdetr/` | 100 |
 | `src/rfdetr_demo/` | 116 |
-| `scripts/` | 27 |
+| `scripts/` | 8（shim 削除後; launcher / cycle check / mzoo / animation） |
 
 ### Tracking 分割結果
 
@@ -112,6 +112,7 @@ Sticky 有効時の目標（全 713 フレーム）: 中央 ID 切替 **31 → �
 - [x] `detection_stabilizer.py` は 300 行以下の deprecated facade → Phase 9 で削除
 - [x] Phase 12: `vast/safety.py` → settings / lease / guardrails
 - [x] Phase 9: 6 deprecated facade 削除（tracking / vast / inference / gui）
+- [x] Phase 8: scripts shim / thin wrapper 19 本削除
 - [ ] 全編 sticky 監査（mn1-2.mov）— 機密動画はローカル実行
 
 ## 関連

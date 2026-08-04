@@ -31,17 +31,19 @@
 
 ---
 
-## 2. `scripts/` shim（Phase 8 対象）
+## 2. `scripts/` shim（Phase 8 ✅ 完了）
 
-3行 `from ... import *` shim と 18 行 wrapper。entry point に一本化し削除。
+3行 `from ... import *` shim と thin CLI wrapper を削除し、`[project.scripts]` entry point に一本化。
 
 | 種別 | ファイル | 移行先 | 状態 |
 |------|---------|--------|------|
-| 診断 wrapper | `probe_person_count.py`, `audit_center_tracking.py` | `rfdetr-demo probe-count` / `audit-tracking` | Phase 14 ✅ |
-| 18行 wrapper | `run_video_demo.py`, `video_demo_gui.py`, `vast_cleanup_orphans.py` | `[project.scripts]` entry point | DeprecationWarning thin |
-| 3行 shim（~12） | `vast_*.py`, `media_guard.py`, … | 対応する `rfdetr_demo/*` | Phase 8 残 |
+| 診断 wrapper | `probe_person_count.py`, `audit_center_tracking.py`, `analyze_keypoint_clip.py` | `rfdetr-demo probe-count` / `audit-tracking` / `analyze-clip` | ✅ 削除 |
+| 18行 wrapper | `run_video_demo.py`, `video_demo_gui.py`, `vast_cleanup_orphans.py` | `rfdetr-demo` / `rfdetr-demo-gui` / `rfdetr-vast-cleanup` | ✅ 削除 |
+| 3行 shim（13） | `vast_*.py`, `media_guard.py`, … | `rfdetr_demo.*` 直 import | ✅ 削除 |
+| `.cmd` | `vast_cleanup_orphans.cmd` | `uv run rfdetr-vast-cleanup` | ✅ 更新 |
 | 残すロジック | `run_mzoo_benchmark.py`（518） | `rfdetr_demo/benchmark/` | Phase 10 残 |
-| 維持 | `launch_gui.py`, `check_import_cycles.py`, `*.cmd` | thin launcher | ✅ |
+| 残すアセット tooling | `kirby_*`, `fukkachan_*`, `build_kirby_*` | animation ツール | 維持 |
+| 維持 | `launch_gui.py`, `check_import_cycles.py`, `*.cmd` | thin launcher / gate | ✅ |
 
 ---
 
