@@ -38,7 +38,7 @@ Phase 13–15 計画（tracking 統合）の計測基準。差分比較は本フ
 |------|-----------|
 | `src/rfdetr/` | 100 |
 | `src/rfdetr_demo/` | 116 |
-| `scripts/` | 8（shim 削除後; launcher / cycle check / mzoo / animation） |
+| `scripts/` | 8（shim 削除後; launcher / cycle check / mzoo thin / animation） |
 
 ### Tracking 分割結果
 
@@ -75,7 +75,7 @@ Phase 13–15 計画（tracking 統合）の計測基準。差分比較は本フ
 
 | スイート | 件数 |
 |---------|------|
-| `tests/rfdetr_demo/` | **169** |
+| `tests/rfdetr_demo/` | **185**（cloud GUI import は tkinter 欠如で skip/fail し得る） |
 
 ---
 
@@ -89,6 +89,7 @@ Phase 13–15 計画（tracking 統合）の計測基準。差分比較は本フ
 | 中央トラック監査 | `uv run rfdetr-demo audit-tracking` |
 | クリップ品質解析 | `uv run rfdetr-demo analyze-clip` |
 | Vast orphan 回収 | `uv run rfdetr-vast-cleanup` |
+| MZoo ベンチマーク | `uv run rfdetr-mzoo-benchmark` |
 | 旧 scripts | DeprecationWarning 付き thin wrapper |
 
 ---
@@ -121,6 +122,7 @@ Sticky 有効時の目標（全 713 フレーム）: 中央 ID 切替 **31 → �
 - [x] Phase 12a: `track_store` → models/match/hold、`runner` → `task_callback`
 - [x] Phase 12b: GUI panels / vast_controller 分割（すべて &lt;300）
 - [x] Phase 12c: `analyze_clip` / `temporal/keypoints` 分割 — DoD 達成（300 超は puppet のみ）
+- [x] Phase 10: `run_mzoo_benchmark` → `rfdetr_demo.benchmark` + `rfdetr-mzoo-benchmark`（scripts 200 行超 0）
 - [ ] 全編 sticky 監査（mn1-2.mov）— 機密動画はローカル実行
 
 ## 関連

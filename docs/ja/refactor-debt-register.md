@@ -41,7 +41,7 @@
 | 18行 wrapper | `run_video_demo.py`, `video_demo_gui.py`, `vast_cleanup_orphans.py` | `rfdetr-demo` / `rfdetr-demo-gui` / `rfdetr-vast-cleanup` | ✅ 削除 |
 | 3行 shim（13） | `vast_*.py`, `media_guard.py`, … | `rfdetr_demo.*` 直 import | ✅ 削除 |
 | `.cmd` | `vast_cleanup_orphans.cmd` | `uv run rfdetr-vast-cleanup` | ✅ 更新 |
-| 残すロジック | `run_mzoo_benchmark.py`（518） | `rfdetr_demo/benchmark/` | Phase 10 残 |
+| 残すロジック | `run_mzoo_benchmark.py`（thin） | `rfdetr_demo/benchmark/` + `rfdetr-mzoo-benchmark` | Phase 10 ✅ |
 | 残すアセット tooling | `kirby_*`, `fukkachan_*`, `build_kirby_*` | animation ツール | 維持 |
 | 維持 | `launch_gui.py`, `check_import_cycles.py`, `*.cmd` | thin launcher / gate | ✅ |
 

@@ -56,7 +56,7 @@ ER-FlowScan モノレポ内 `rf-detr` フォーク向けの、**長年蓄積し�
 | **A** | scripts shim | （Phase 8 で 19 本削除済; mzoo / animation tooling は別 Phase） | 0（shim） |
 | **B** | demo facade | （Phase 9 で 6 本すべて削除済） | 0 |
 | **C** | 不完全な移行 | （Phase 9 で解消） | 解消済 |
-| **D** | scripts ロジック | `scripts/run_mzoo_benchmark.py` 518 行（AGENTS.md 違反） | 1 |
+| **D** | scripts ロジック | `run_mzoo_benchmark.py` → `rfdetr_demo.benchmark`（thin launcher 残） | 0 |
 | **E** | 中型ファイル | 下表 11 件（300–475 行） | 11 |
 | **F** | 監査2系統 | `frame_audit.py` + `tracking_audit.py` に JSONL/評価/画像 I/O 重複 | 重複 |
 | **G** | CRLF チャーン | `.gitattributes` 変更で 91 ファイル modified 表示・実差分は 8 ファイル | 衛生 |
@@ -143,9 +143,9 @@ flowchart LR
 - [x] Phase 8 対象の shim / thin wrapper（19 本）を削除
 - [x] `.cmd` は thin launcher（`vast_cleanup_orphans.cmd` → `uv run rfdetr-vast-cleanup`）
 - [x] 全 entry point が `uv run rfdetr-demo ...` で動作
-- [ ] 厳密 DoD「`launch_gui.py` + `check_import_cycles.py` のみ」は Phase 10（mzoo）と animation tooling 残存により未達
+- [ ] 厳密 DoD「`launch_gui.py` + `check_import_cycles.py` のみ」は animation tooling 残存により未達
 
-残存 `scripts/*.py`（意図的）: `launch_gui.py`, `check_import_cycles.py`, `run_mzoo_benchmark.py`, `kirby_*`, `fukkachan_*`, `build_kirby_*`。
+残存 `scripts/*.py`（意図的）: `launch_gui.py`, `check_import_cycles.py`, `run_mzoo_benchmark.py`（thin launcher）, `kirby_*`, `fukkachan_*`, `build_kirby_*`。
 
 ---
 
@@ -193,7 +193,9 @@ AGENTS.md が禁じる「scripts へのビジネスロジック」最大の違�
 3. ベンチ結果スキーマを `artifacts/` 出力規約に合わせる。
 
 ### Definition of Done
-- [ ] `scripts/` に 200 行超の `.py` がゼロ
+- [x] `scripts/` に 200 行超の `.py` がゼロ
+- [x] ロジックは `rfdetr_demo.benchmark`（`jobs` / `environment` / `runner` / `report` / `cli`）
+- [x] entry point: `uv run rfdetr-mzoo-benchmark`（`scripts/run_mzoo_benchmark.py` は DeprecationWarning 付き thin launcher）
 
 ---
 
@@ -378,10 +380,10 @@ facade の削除は機械的な後続スライスにはしない。外部利用�
 
 ### 次スライス（推奨）
 
-1. Phase 10 — `run_mzoo_benchmark.py` tools 化
-2. Phase 13 — 公開 API 凍結・ドキュメント統一
+1. Phase 13 — 公開 API 凍結・ドキュメント統一
+2. 全編 sticky 監査（mn1-2.mov）— 機密動画はローカル実行
 
 ---
 
 **最終更新**: 2026-08-04
-**ステータス**: Phase 7–12（中型含む）+ 13–15 tracking 完了。次は Phase 10（mzoo）または Phase 13（API 凍結）。
+**ステータス**: Phase 7–12（中型含む）+ Phase 10（mzoo tools 化）+ 13–15 tracking 完了。次は Phase 13（API 凍結）。

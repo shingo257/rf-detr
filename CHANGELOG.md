@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`rfdetr_demo` Phase 10:** Moved MZoo video benchmark logic from `scripts/run_mzoo_benchmark.py` into `rfdetr_demo.benchmark` (`jobs` / `environment` / `runner` / `report` / `cli`). Prefer `uv run rfdetr-mzoo-benchmark` (or `python -m rfdetr_demo.benchmark`). The scripts path remains as a DeprecationWarning thin launcher. `scripts/` no longer has any `.py` over 200 lines.
 - **`rfdetr_demo` Phase 12c:** Split `tuning/analyze_clip.py` into `analyze_clip_types` / `analyze_clip_issues`, and `inference/temporal/keypoints.py` into `keypoints_state`. Phase 12 mid-size DoD met (only intentional `puppet_continuous` remains over 300 lines).
 - **`rfdetr_demo` Phase 12b:** Split GUI mid-size panels/controllers under 300 lines:
   - `gui/panels/io_task` → continued `io_task_sections` (IO/task builders)
@@ -17,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `gui/controllers/vast_controller` → `vast_offers` / `vast_progress_ui` (facade retained)
 - **`rfdetr_demo` Phase 12a:** Split `tracking/track_store.py` into `track_models` / `track_match` / `track_hold` (orchestration stays in `track_store`). Moved inference task callback assembly from `inference/runner.py` into `inference/task_callback.py`.
 
+### Added
+
+- **`[project.scripts]`:** `rfdetr-mzoo-benchmark` entry point for the MZoo RF-DETR video-demo benchmark. Host RAM/CPU physical-core reporting uses optional `psutil` when installed; otherwise those fields fall back.
 ### Removed
 
 - **Breaking (`rfdetr_demo` / scripts):** Removed deprecated `scripts/` shim and thin CLI wrappers (19 files). Use package entry points instead:
