@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from dataclasses import dataclass, field
 from pathlib import Path
 
 import cv2
@@ -25,41 +24,8 @@ from rfdetr_demo.inference.video_io import probe_video_size
 from rfdetr_demo.paths import resolve_default_source
 from rfdetr_demo.tracking.keypoints_ops import attach_track_ids
 from rfdetr_demo.tracking.person_associator import PersonAssociator
-
-
-@dataclass
-class JointFrameMetric:
-    joint_index: int
-    joint_name: str
-    x: float
-    y: float
-    confidence: float
-    speed_px_per_sec: float | None
-    displacement_px: float | None
-    covariance_trace: float | None
-
-
-@dataclass
-class FrameMetric:
-    frame_index: int
-    person_count: int
-    joints: list[JointFrameMetric] = field(default_factory=list)
-    max_joint_speed: float | None = None
-    low_confidence_joints: int = 0
-
-
-@dataclass
-class ClipAnalysis:
-    source: str
-    duration_sec: float
-    fps: float
-    frame_stride: int
-    frames_analyzed: int
-    avg_persons: float
-    motion_speed_rejections: int
-    motion_oscillation_corrections: int
-    issues: list[str] = field(default_factory=list)
-    frame_metrics: list[FrameMetric] = field(default_factory=list)
+from rfdetr_demo.tuning.analyze_clip_issues import derive_issues
+from rfdetr_demo.tuning.analyze_clip_types import ClipAnalysis, FrameMetric, JointFrameMetric
 
 
 def _covariance_trace(key_points: object, det: int, joint: int) -> float | None:
@@ -82,6 +48,7 @@ def analyze_clip(
     keypoint_threshold: float,
     motion_settings: MotionPlausibilitySettings,
 ) -> ClipAnalysis:
+    """Run keypoint inference on a short clip and return quality metrics."""
     width, height, fps = probe_video_size(source_path)
     diagonal = float(np.hypot(width, height))
     max_speed_px = motion_settings.max_speed_fraction_per_sec * diagonal
@@ -201,78 +168,12 @@ def analyze_clip(
         motion_oscillation_corrections=temporal_filter.stats.oscillation_corrections,
         frame_metrics=frame_metrics,
     )
-    analysis.issues = _derive_issues(analysis, max_speed_px=max_speed_px, fps=fps)
+    analysis.issues = derive_issues(analysis, max_speed_px=max_speed_px, fps=fps)
     return analysis
 
 
-def _derive_issues(analysis: ClipAnalysis, *, max_speed_px: float, fps: float) -> list[str]:
-    issues: list[str] = []
-    if analysis.frames_analyzed == 0:
-        issues.append("解析フレームが 0 - 動画を開けなかったか、長さが不足しています。")
-        return issues
-
-    speeds = [
-        joint.speed_px_per_sec
-        for frame in analysis.frame_metrics
-        for joint in frame.joints
-        if joint.speed_px_per_sec is not None
-    ]
-    if speeds:
-        peak_speed = max(speeds)
-        over_limit = sum(1 for s in speeds if s > max_speed_px)
-        if over_limit > 0:
-            issues.append(
-                f"人体上限 ({max_speed_px:.0f} px/s) を超える関節移動が {over_limit} 回 "
-                f"(ピーク {peak_speed:.0f} px/s) - ハンチングや誤検出の可能性。"
-            )
-
-    if analysis.motion_speed_rejections > 0:
-        issues.append(
-            f"時系列フィルタが速度異常を {analysis.motion_speed_rejections} 回補正しました。"
-        )
-    if analysis.motion_oscillation_corrections > 0:
-        issues.append(
-            f"時系列フィルタが振動ハンチングを {analysis.motion_oscillation_corrections} 回抑制しました。"
-        )
-
-    person_counts = [f.person_count for f in analysis.frame_metrics]
-    if max(person_counts) != min(person_counts):
-        issues.append(
-            f"フレーム間で検出人数が変動 ({min(person_counts)}-{max(person_counts)} 人) - "
-            "トラッキング不安定または閾値調整が必要。"
-        )
-    if analysis.avg_persons < 0.5:
-        issues.append("人物検出がほぼゼロ - 閾値を下げるか、入力解像度・画質を確認してください。")
-
-    low_conf_total = sum(f.low_confidence_joints for f in analysis.frame_metrics)
-    if low_conf_total > analysis.frames_analyzed * 3:
-        issues.append(
-            f"低信頼 (conf<0.5) 関節が多い ({low_conf_total} 件) - "
-            "関節信頼度フィルタまたは σ/不透明度の調整を検討。"
-        )
-
-    confidences = [j.confidence for f in analysis.frame_metrics for j in f.joints]
-    if confidences and float(np.mean(confidences)) < 0.55:
-        issues.append(
-            f"平均関節信頼度が低い ({np.mean(confidences):.2f}) - モデル・照明・被写体サイズを確認。"
-        )
-
-    traces = [j.covariance_trace for f in analysis.frame_metrics for j in f.joints if j.covariance_trace]
-    if traces and float(np.max(traces)) > float(np.median(traces)) * 8:
-        issues.append(
-            "一部関節で共分散（不確実性）が他より極端に大きい - "
-            "遮蔽・モーションブラー・フレーム外の可能性。"
-        )
-
-    if fps < 20:
-        issues.append(f"FPS が低い ({fps:.1f}) - 速度推定の精度が落ちます。")
-
-    if not issues:
-        issues.append("1 秒 clip では重大な異常は検出されませんでした（より長い試走を推奨）。")
-    return issues
-
-
 def main(argv: list[str] | None = None) -> int:
+    """CLI entry for short-clip analysis (also used by ``rfdetr-demo analyze-clip``)."""
     parser = argparse.ArgumentParser(description="Analyze keypoint quality on a short clip.")
     parser.add_argument("--source", type=Path, default=None)
     parser.add_argument("--seconds", type=float, default=1.0)

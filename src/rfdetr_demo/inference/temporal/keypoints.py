@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import cast
 
 import numpy as np
@@ -15,71 +14,15 @@ import supervision as sv
 
 from rfdetr_demo.inference.temporal.bone_length import apply_bone_length_constraint
 from rfdetr_demo.inference.temporal.config import MotionFilterStats, MotionPlausibilitySettings
+from rfdetr_demo.inference.temporal.keypoints_state import (
+    JointState,
+    TrackState,
+    covariance_trace,
+    detection_centroid,
+    frame_diagonal,
+)
 from rfdetr_demo.inference.temporal.one_euro import OneEuroFilter
 from rfdetr_demo.tracking.keypoints_ops import is_track_ghost, track_ids_from_key_points
-
-
-@dataclass
-class _JointState:
-    """Mutable temporal state for one tracked joint."""
-
-    last_xy: np.ndarray | None = None
-    last_velocity: np.ndarray | None = None
-    flip_count: int = 0
-    consecutive_holds: int = 0
-    last_frame_index: int | None = None
-    one_euro_x: OneEuroFilter | None = None
-    one_euro_y: OneEuroFilter | None = None
-
-
-@dataclass
-class _TrackState:
-    """Mutable temporal state for one tracked person."""
-
-    joints: list[_JointState] = field(default_factory=list)
-    last_centroid: np.ndarray | None = None
-    last_frame_index: int = -1
-    reference_bone_lengths: dict[tuple[int, int], float] = field(default_factory=dict)
-
-
-def _frame_diagonal(frame_width: int, frame_height: int) -> float:
-    """Return the frame diagonal in pixels."""
-    return float(np.hypot(frame_width, frame_height))
-
-
-def _detection_centroid(key_points: sv.KeyPoints, detection_index: int) -> np.ndarray | None:
-    """Return a hip-biased centroid for one detection."""
-    xy = key_points.xy[detection_index]
-    visible = key_points.visible
-    if visible is not None:
-        mask = visible[detection_index]
-        points = xy[mask]
-    else:
-        points = xy[~np.all(np.isclose(xy, 0), axis=1)]
-    if len(points) == 0:
-        return None
-    hip_indices = (11, 12)
-    hip_points = [xy[index] for index in hip_indices if index < len(xy) and not np.allclose(xy[index], 0)]
-    if hip_points:
-        return cast(
-            np.ndarray,
-            np.asarray(np.mean(np.asarray(hip_points, dtype=np.float64), axis=0), dtype=np.float64),
-        )
-    return cast(np.ndarray, np.asarray(np.mean(points.astype(np.float64), axis=0), dtype=np.float64))
-
-
-def _covariance_trace(key_points: sv.KeyPoints, detection_index: int, joint_index: int) -> float | None:
-    """Return the covariance trace for one joint when metadata is valid."""
-    covariance_raw = key_points.data.get("covariance")
-    if covariance_raw is None:
-        return None
-    covariance = np.asarray(covariance_raw, dtype=np.float64)
-    if covariance.shape[:2] != key_points.xy.shape[:2]:
-        return None
-    matrix = covariance[detection_index, joint_index]
-    if not np.isfinite(matrix).all():
-        return None
-    return float(matrix[0, 0] + matrix[1, 1])
 
 
 class KeypointTemporalFilter:
@@ -100,9 +43,9 @@ class KeypointTemporalFilter:
         self.frame_height = frame_height
         self.fps = max(fps, 1.0)
         self.frame_stride = max(frame_stride, 1)
-        self.diagonal = _frame_diagonal(frame_width, frame_height)
+        self.diagonal = frame_diagonal(frame_width, frame_height)
         self.stats = MotionFilterStats()
-        self._tracks: list[_TrackState] = []
+        self._tracks: list[TrackState] = []
         self._last_frame_index: int | None = None
 
     def reset(self) -> None:
@@ -125,7 +68,7 @@ class KeypointTemporalFilter:
         """Allocate state slots for every resolved track id."""
         max_id = max((track_id for track_id in track_ids if track_id is not None), default=-1)
         while len(self._tracks) <= max_id:
-            self._tracks.append(_TrackState())
+            self._tracks.append(TrackState())
 
     def _effective_dt_sec(self, frame_index: int, previous_frame_index: int | None) -> float:
         """Return elapsed seconds since the joint was last observed."""
@@ -135,10 +78,10 @@ class KeypointTemporalFilter:
         return delta_frames / self.fps
 
     @staticmethod
-    def _ensure_joint_states(track: _TrackState, num_joints: int) -> None:
+    def _ensure_joint_states(track: TrackState, num_joints: int) -> None:
         """Allocate state slots for every joint in a track."""
         while len(track.joints) < num_joints:
-            track.joints.append(_JointState())
+            track.joints.append(JointState())
 
     def apply(self, key_points: sv.KeyPoints, frame_index: int) -> sv.KeyPoints:
         """Return a copy of ``key_points`` with implausible motion corrected."""
@@ -164,7 +107,7 @@ class KeypointTemporalFilter:
         for detection_index, track_id in enumerate(track_ids):
             if track_id is None:
                 continue
-            centroid = _detection_centroid(filtered, detection_index)
+            centroid = detection_centroid(filtered, detection_index)
             if centroid is not None:
                 self._tracks[track_id].last_centroid = centroid.copy()
             self._tracks[track_id].last_frame_index = self._last_frame_index or 0
@@ -202,7 +145,7 @@ class KeypointTemporalFilter:
                         self.stats.speed_rejections += 1
 
                     if not rejected and self.settings.use_covariance_gate and distance > 0:
-                        trace_current = _covariance_trace(filtered, detection_index, joint_index)
+                        trace_current = covariance_trace(filtered, detection_index, joint_index)
                         if trace_current is not None:
                             sigma_scale = self.settings.covariance_sigma_multiplier * np.sqrt(
                                 max(trace_current, 1e-6),

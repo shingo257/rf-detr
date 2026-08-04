@@ -59,10 +59,10 @@
 | `gui/panels/compute.py` | 182 | `compute_vast.py` 抽出済 | 12 ✅ |
 | `gui/panels/job_runner.py` | 175 | lifecycle + `RunController` ログ計画へ移譲済 | 12 ✅ |
 | `gui/controllers/vast_controller.py` | 271 | `vast_offers` / `vast_progress_ui` 抽出済 | 12 ✅ |
-| `tuning/analyze_clip.py` | 319 | コアのみ残す | 12 |
+| `tuning/analyze_clip.py` | 220 | `analyze_clip_types` / `analyze_clip_issues` 抽出済 | 12 ✅ |
 | `media/frame_audit.py` | 26 | `media/audit/frame.py` 抽出済（facade） | 11 ✅ |
-| `inference/temporal/keypoints.py` | 311 | 設定 dataclass を `types` へ | 12 |
-| `media/audit/frame.py` | 300 | 境界 | 12 |
+| `inference/temporal/keypoints.py` | 254 | `keypoints_state` 抽出済 | 12 ✅ |
+| `media/audit/frame.py` | 300 | 境界（≤300） | 12 ✅ |
 | `animation/puppet_continuous.py` | 318 | 凝集のため行数のみでは再分割しない | — |
 
 ### 2026-07-29 animation 追加実測

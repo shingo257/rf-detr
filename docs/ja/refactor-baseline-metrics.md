@@ -75,7 +75,7 @@ Phase 13–15 計画（tracking 統合）の計測基準。差分比較は本フ
 
 | スイート | 件数 |
 |---------|------|
-| `tests/rfdetr_demo/` | **166** |
+| `tests/rfdetr_demo/` | **169** |
 
 ---
 
@@ -120,6 +120,7 @@ Sticky 有効時の目標（全 713 フレーム）: 中央 ID 切替 **31 → �
 - [x] Phase 8: scripts shim / thin wrapper 19 本削除
 - [x] Phase 12a: `track_store` → models/match/hold、`runner` → `task_callback`
 - [x] Phase 12b: GUI panels / vast_controller 分割（すべて &lt;300）
+- [x] Phase 12c: `analyze_clip` / `temporal/keypoints` 分割 — DoD 達成（300 超は puppet のみ）
 - [ ] 全編 sticky 監査（mn1-2.mov）— 機密動画はローカル実行
 
 ## 関連

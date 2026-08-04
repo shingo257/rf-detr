@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`rfdetr_demo` Phase 12c:** Split `tuning/analyze_clip.py` into `analyze_clip_types` / `analyze_clip_issues`, and `inference/temporal/keypoints.py` into `keypoints_state`. Phase 12 mid-size DoD met (only intentional `puppet_continuous` remains over 300 lines).
 - **`rfdetr_demo` Phase 12b:** Split GUI mid-size panels/controllers under 300 lines:
   - `gui/panels/io_task` → continued `io_task_sections` (IO/task builders)
   - `gui/panels/compute` → `compute_vast` handlers mixin

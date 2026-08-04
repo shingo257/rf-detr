@@ -222,9 +222,9 @@ AGENTS.md が禁じる「scripts へのビジネスロジック」最大の違�
 インベントリ §3.3 の 11 ファイルを 300 行以下へ。各々は既存の分割パターン踏襲で済む。
 
 ### Definition of Done
-- [ ] `src/rfdetr_demo/` に 400 行超 **0**
-- [ ] 300 行超 **≤2**（境界ファイルのみ許容）
-- [ ] 各分割で回帰テスト green
+- [x] `src/rfdetr_demo/` に 400 行超 **0**
+- [x] 300 行超 **≤2**（現行: `puppet_continuous` のみ。意図的維持）
+- [x] 各分割で回帰テスト green
 
 ---
 
@@ -368,19 +368,20 @@ facade の削除は機械的な後続スライスにはしない。外部利用�
 - [x] `tracking/__init__.py` は pipeline API のみ export
 - [x] CHANGELOG `[Unreleased]` に breaking note
 
-### Phase 12 中型仕上げ（進行中）
+### Phase 12 中型仕上げ（完了）
 
-- [x] `tracking/track_store.py` → `track_models` / `track_match` / `track_hold`（195 行）
-- [x] `inference/runner.py` → `task_callback.py`（238 行）
-- [x] Phase 12b — GUI: `io_task` / `compute` / `job_runner` / `vast_controller` すべて &lt;300
-- [ ] `analyze_clip` / `temporal/keypoints`（300 行超残り; `puppet_continuous` は意図的維持）
+- [x] `tracking/track_store.py` → `track_models` / `track_match` / `track_hold`
+- [x] `inference/runner.py` → `task_callback.py`
+- [x] Phase 12b — GUI panels / vast_controller
+- [x] Phase 12c — `analyze_clip` → types/issues、`temporal/keypoints` → `keypoints_state`
+- [x] DoD: 400 行超 0、300 行超 ≤2（残りは `puppet_continuous` のみ・意図的）
 
 ### 次スライス（推奨）
 
-1. Phase 12c — `analyze_clip` または `temporal/keypoints` 分割（DoD: 300 行超 ≤2）
-2. Phase 10 — `run_mzoo_benchmark.py` tools 化
+1. Phase 10 — `run_mzoo_benchmark.py` tools 化
+2. Phase 13 — 公開 API 凍結・ドキュメント統一
 
 ---
 
 **最終更新**: 2026-08-04
-**ステータス**: Phase 13–15 + 11 + 12a/b + 9 + 8 完了。300 行超は `analyze_clip` / `keypoints` / `puppet_continuous` の 3 本。
+**ステータス**: Phase 7–12（中型含む）+ 13–15 tracking 完了。次は Phase 10（mzoo）または Phase 13（API 凍結）。
