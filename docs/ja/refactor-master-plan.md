@@ -232,27 +232,32 @@ AGENTS.md が禁じる「scripts へのビジネスロジック」最大の違�
 
 ## 11. Phase 13 — 公開 API 凍結・ドキュメント統一
 
-### 公開 API（案）
+### 公開 API
 
 ```python
-# rfdetr_demo.public または __init__ 明示 export
-run_demo(...)                    # inference.runner
-PersonTrackPipeline              # tracking.pipeline
-ConfidentialAuditLogger          # media.audit facade
-run_vast_cli(...)                # vast.cli
-DEFAULT_PARAMETERS               # tuning.auto_tune
+# rfdetr_demo / rfdetr_demo.public（PUBLIC_API 許可リスト）
+run_demo(...)                         # inference.runner
+PersonTrackPipeline                   # tracking.pipeline
+ConfidentialFrameAuditLogger          # media.audit.frame
+run_center_tracking_audit(...)        # media.audit.tracking
+run_vast_cli(...)                     # vast.cli
+DEFAULT_PARAMETERS                    # tuning.auto_tune
 ```
 
 ### タスク
 1. `rfdetr_demo/public.py` — 許可リスト export
-2. 内部モジュールに `_` prefix / `internal/`、`gui → vast.safety` 直 import 禁止 lint
+2. 内部モジュールに `_` prefix / `internal/`、`gui → vast.safety_*` 直 import 禁止 lint
 3. `docs/ja/README.md` 索引更新、本計画 DONE チェック、`CHANGELOG.md` に Phase 7–13 breaking 集約
 4. `tests/rfdetr_demo` を 60+ 件・カバレッジ 80% へ。ID 切替・人数レンジを golden JSON 固定
 
 ### Definition of Done
-- [ ] `rfdetr_demo` 0.2.0 タグ可能
-- [ ] facade・shim ゼロ
-- [ ] 計画文書 DONE
+- [x] `rfdetr_demo` 0.2.0（`__version__`）— タグ可能
+- [x] Phase 9 facade・scripts shim ゼロ（意図的 thin facade: `vast.safety` / media audit / `puppet_render` は互換維持）
+- [x] `public.py` + パッケージ root 遅延 export
+- [x] GUI→Vast safety 内部モジュール境界 lint（`check_import_cycles.py`）
+- [x] golden: `tests/rfdetr_demo/golden/tracking_audit_baseline.json`
+- [x] 計画文書 / `docs/ja/README.md` / CHANGELOG 更新
+- [x] `tests/rfdetr_demo` ≥60（現行 185+）
 
 ---
 
@@ -380,10 +385,10 @@ facade の削除は機械的な後続スライスにはしない。外部利用�
 
 ### 次スライス（推奨）
 
-1. Phase 13 — 公開 API 凍結・ドキュメント統一
-2. 全編 sticky 監査（mn1-2.mov）— 機密動画はローカル実行
+1. 全編 sticky 監査（mn1-2.mov）— 機密動画はローカル実行（ID 切替 31 → ≤15）
+2. 意図的 thin facade（`puppet_render` / media audit / `vast.safety`）の versioned sunset（必要時）
 
 ---
 
 **最終更新**: 2026-08-04
-**ステータス**: Phase 7–12（中型含む）+ Phase 10（mzoo tools 化）+ 13–15 tracking 完了。次は Phase 13（API 凍結）。
+**ステータス**: Phase 7–13（公開 API 凍結含む）+ Phase 10 + 13–15 tracking 完了。残機能ゲートは sticky 全編監査。

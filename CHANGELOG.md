@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`rfdetr_demo` Phase 13 (0.2.0):** Froze the demo-layer public API in `rfdetr_demo.public` (`PUBLIC_API` allowlist) and re-exported the same symbols from the package root with lazy loading. Bumped `__version__` to `0.2.0`. Extended `scripts/check_import_cycles.py` to reject GUI imports of Vast safety internals (`safety_guardrails` / `safety_lease` / `safety_settings`; use `vast.safety` facade). Added tracking-audit golden fixture and refreshed `docs/ja/` index / boundary docs.
 - **`rfdetr_demo` Phase 10:** Moved MZoo video benchmark logic from `scripts/run_mzoo_benchmark.py` into `rfdetr_demo.benchmark` (`jobs` / `environment` / `runner` / `report` / `cli`). Prefer `uv run rfdetr-mzoo-benchmark` (or `python -m rfdetr_demo.benchmark`). The scripts path remains as a DeprecationWarning thin launcher. `scripts/` no longer has any `.py` over 200 lines.
 - **`rfdetr_demo` Phase 12c:** Split `tuning/analyze_clip.py` into `analyze_clip_types` / `analyze_clip_issues`, and `inference/temporal/keypoints.py` into `keypoints_state`. Phase 12 mid-size DoD met (only intentional `puppet_continuous` remains over 300 lines).
 - **`rfdetr_demo` Phase 12b:** Split GUI mid-size panels/controllers under 300 lines:
@@ -21,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`[project.scripts]`:** `rfdetr-mzoo-benchmark` entry point for the MZoo RF-DETR video-demo benchmark. Host RAM/CPU physical-core reporting uses optional `psutil` when installed; otherwise those fields fall back.
+- **Public API (`rfdetr_demo` 0.2.0):** `run_demo`, `PersonTrackPipeline`, `ConfidentialFrameAuditLogger`, `run_center_tracking_audit`, `run_vast_cli`, `DEFAULT_PARAMETERS`.
+- **Golden fixture:** `tests/rfdetr_demo/golden/tracking_audit_baseline.json` (mn1-2 baseline ID switches / missing counts + sticky target ≤15).
+
 ### Removed
 
 - **Breaking (`rfdetr_demo` / scripts):** Removed deprecated `scripts/` shim and thin CLI wrappers (19 files). Use package entry points instead:
@@ -35,6 +39,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `rfdetr_demo.inference.uncertainty_viz` → `rfdetr_demo.inference.uncertainty`
   - `rfdetr_demo.gui.controller` → `rfdetr_demo.gui.state.job_state.TuneJobState`
   - `rfdetr_demo.tracking` package `__init__` now exports only the `PersonTrackPipeline` public API (no `DetectionStabilizer` / `PersonAssociator` re-exports)
+
+### Phase 7–13 breaking summary
+
+| Phase | Breaking change |
+|-------|-----------------|
+| 8 | scripts shim / thin CLI wrappers removed → entry points |
+| 9 | deprecated facade modules removed → canonical imports |
+| 10 | mzoo benchmark lives in `rfdetr_demo.benchmark`; scripts path deprecated |
+| 13 | demo public API frozen at 0.2.0 via `rfdetr_demo.public` |
 
 ---
 

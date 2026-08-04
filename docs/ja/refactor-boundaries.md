@@ -17,6 +17,8 @@
 2. 新機能は `src/rfdetr_demo/` にのみ追加
 3. 機密動画は `confidential/media/input/` のみ Vast 転送可（`media_guard`）
 4. `scripts/` への新規ロジック追加禁止 — `rfdetr_demo` へ
+5. 外部向け安定 API は `rfdetr_demo.public`（およびパッケージ root の同名 re-export）のみ
+6. GUI は `rfdetr_demo.vast.safety` facade 経由。`safety_guardrails` / `safety_lease` / `safety_settings` 直 import 禁止（`scripts/check_import_cycles.py` が検査）
 
 ## Definition of Done（各 PR）
 
@@ -24,3 +26,4 @@
 - [ ] 新規/変更モジュールに型ヒント
 - [ ] 機密パスを扱う場合 `media_guard` 経由
 - [ ] `docs/ja/` 索引更新（ユーザー向け変更時）
+- [ ] 公開シンボル追加時は `PUBLIC_API` と `tests/rfdetr_demo/test_public_api.py` を更新

@@ -14,9 +14,27 @@ upstream の [rfdetr.roboflow.com](https://rfdetr.roboflow.com) とは別に、�
 | [confidential-media-policy.md](confidential-media-policy.md) | 機密動画区画・Vast 転送ガバナンス |
 | [refactor-boundaries.md](refactor-boundaries.md) | upstream / fork / confidential の責務境界 |
 | [refactor-baseline-metrics.md](refactor-baseline-metrics.md) | リファクタ baseline メトリクス |
-| [refactor-master-plan.md](refactor-master-plan.md) | **Phase 13–20 完全リファクタ計画** |
+| [refactor-master-plan.md](refactor-master-plan.md) | **Phase 7–13 リファクタ計画**（公開 API 凍結まで） |
+| [refactor-debt-register.md](refactor-debt-register.md) | 負債登録簿・実行トラッキング |
 | [frame-independent-detection.md](frame-independent-detection.md) | フレーム独立推論と検出人数点滅の原因・対策 |
 | [スイート横断対策](../../../docs/rfdetr-person-count-flicker-cross-app.md) | FlashFind / One-Shot 知見を踏まえた改善ロードマップ（モノレポ `docs/`） |
+
+---
+
+## 公開 API（`rfdetr_demo` 0.2.0）
+
+安定シンボルは `rfdetr_demo` / `rfdetr_demo.public` から import してください。
+
+| シンボル | 正規モジュール |
+|----------|----------------|
+| `run_demo` | `inference.runner` |
+| `PersonTrackPipeline` | `tracking.pipeline` |
+| `ConfidentialFrameAuditLogger` | `media.audit.frame` |
+| `run_center_tracking_audit` | `media.audit.tracking` |
+| `run_vast_cli` | `vast.cli` |
+| `DEFAULT_PARAMETERS` | `tuning.auto_tune` |
+
+詳細はソースの `src/rfdetr_demo/public.py`（`PUBLIC_API` 許可リスト）を参照。
 
 ---
 
@@ -28,14 +46,15 @@ upstream の [rfdetr.roboflow.com](https://rfdetr.roboflow.com) とは別に、�
 | 人数プローブ | `uv run rfdetr-demo probe-count --mode stabilize --frames 20` |
 | 中央トラック監査 | `uv run rfdetr-demo audit-tracking --max-frames 60` |
 | クリップ品質解析 | `uv run rfdetr-demo analyze-clip --seconds 1` |
+| MZoo ベンチマーク | `uv run rfdetr-mzoo-benchmark` |
 | 動画デモ（GUI） | `uv run rfdetr-demo-gui` または `scripts\run_demo_gui.cmd` |
-| import 循環チェック | `uv run python scripts/check_import_cycles.py` |
+| import / 境界チェック | `uv run python scripts/check_import_cycles.py` |
 | 機密入力動画 | `confidential/media/input/` |
 | Vast orphan 回収 | `uv run rfdetr-vast-cleanup` または `scripts\vast_cleanup_orphans.cmd` |
 | 機密メディア規程 | [confidential/README.md](../../confidential/README.md) |
 | FlashFind Vast デプロイ | `../FlashFind/docs/deploy_vastai.md` |
 
-旧 `scripts/*.py` 診断スクリプトは **DeprecationWarning** 付き thin wrapper のみ（Phase 14）。
+旧 `scripts/*.py` 診断スクリプトは削除済み。互換が必要なものは DeprecationWarning 付き thin launcher のみ（`run_mzoo_benchmark.py`, `launch_gui.py`）。
 
 ---
 

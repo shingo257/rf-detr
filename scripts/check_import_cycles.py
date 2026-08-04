@@ -1,4 +1,4 @@
-"""Detect circular imports within the rfdetr_demo package (stdlib only)."""
+"""Detect circular imports and layer-boundary violations in rfdetr_demo."""
 
 from __future__ import annotations
 
@@ -6,6 +6,13 @@ import ast
 import sys
 from collections import defaultdict
 from pathlib import Path
+
+# GUI may use the Vast safety *facade*, but must not reach into split internals.
+_GUI_FORBIDDEN_VAST_INTERNALS: tuple[str, ...] = (
+    "rfdetr_demo.vast.safety_guardrails",
+    "rfdetr_demo.vast.safety_lease",
+    "rfdetr_demo.vast.safety_settings",
+)
 
 
 def _repo_root() -> Path:
@@ -78,6 +85,18 @@ def _find_cycles(graph: dict[str, set[str]]) -> list[list[str]]:
     return cycles
 
 
+def _find_gui_vast_internal_imports(graph: dict[str, set[str]]) -> list[str]:
+    """Return GUI modules that import Vast safety internals (bypass facade)."""
+    violations: list[str] = []
+    for module, deps in sorted(graph.items()):
+        if not module.startswith("rfdetr_demo.gui"):
+            continue
+        for forbidden in _GUI_FORBIDDEN_VAST_INTERNALS:
+            if forbidden in deps or any(dep.startswith(f"{forbidden}.") for dep in deps):
+                violations.append(f"{module} -> {forbidden}")
+    return violations
+
+
 def main() -> int:
     root = _repo_root()
     package_root = root / "src" / "rfdetr_demo"
@@ -88,17 +107,30 @@ def main() -> int:
 
     graph = _build_graph(package_root, package_prefix)
     cycles = _find_cycles(graph)
+    boundary_violations = _find_gui_vast_internal_imports(graph)
     module_count = len({node for node in graph} | {n for deps in graph.values() for n in deps})
 
     print(f"Scanned {module_count} rfdetr_demo modules")
-    if not cycles:
-        print("No import cycles detected.")
-        return 0
+    exit_code = 0
 
-    print(f"Found {len(cycles)} cycle(s):")
-    for index, cycle in enumerate(cycles, start=1):
-        print(f"  {index}. {' -> '.join(cycle)}")
-    return 1
+    if cycles:
+        exit_code = 1
+        print(f"Found {len(cycles)} cycle(s):")
+        for index, cycle in enumerate(cycles, start=1):
+            print(f"  {index}. {' -> '.join(cycle)}")
+    else:
+        print("No import cycles detected.")
+
+    if boundary_violations:
+        exit_code = 1
+        print(f"Found {len(boundary_violations)} GUI→Vast safety-internal import(s):")
+        for item in boundary_violations:
+            print(f"  - {item}")
+        print("Use rfdetr_demo.vast.safety facade from GUI code instead.")
+    else:
+        print("No GUI→Vast safety-internal boundary violations.")
+
+    return exit_code
 
 
 if __name__ == "__main__":

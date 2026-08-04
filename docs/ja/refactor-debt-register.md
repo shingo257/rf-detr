@@ -140,7 +140,20 @@ uv run rfdetr-demo audit-tracking --max-frames 60
 
 ## 8. import 循環
 
-`scripts/check_import_cycles.py` で検出。Phase 13 以降: **0 件**（2026-08-02 確認）。
+`scripts/check_import_cycles.py` で検出。Phase 13 以降: **0 件**（循環）。加えて GUI→`vast.safety_*` 内部モジュール直 import も同スクリプトで禁止。
+
+---
+
+## 9. 公開 API（Phase 13 ✅）
+
+| 項目 | 状態 |
+|------|------|
+| `rfdetr_demo.public.PUBLIC_API` | ✅ allowlist |
+| `__version__` | **0.2.0** |
+| golden tracking baseline | `tests/rfdetr_demo/golden/tracking_audit_baseline.json` |
+| docs 索引 | `docs/ja/README.md` 更新済 |
+
+意図的 thin facade（versioned sunset 待ち）: `vast.safety`, `media/frame_audit.py`, `media/tracking_audit.py`, `animation/puppet_render.py`。
 
 ---
 

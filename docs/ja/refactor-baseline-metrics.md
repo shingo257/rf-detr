@@ -75,7 +75,7 @@ Phase 13–15 計画（tracking 統合）の計測基準。差分比較は本フ
 
 | スイート | 件数 |
 |---------|------|
-| `tests/rfdetr_demo/` | **185**（cloud GUI import は tkinter 欠如で skip/fail し得る） |
+| `tests/rfdetr_demo/` | **198** collected / **195** passed（cloud: tkinter 欠如で GUI 1 fail + 2 skip） |
 
 ---
 
@@ -89,8 +89,9 @@ Phase 13–15 計画（tracking 統合）の計測基準。差分比較は本フ
 | 中央トラック監査 | `uv run rfdetr-demo audit-tracking` |
 | クリップ品質解析 | `uv run rfdetr-demo analyze-clip` |
 | Vast orphan 回収 | `uv run rfdetr-vast-cleanup` |
+| import / 境界チェック | `python scripts/check_import_cycles.py` |
 | MZoo ベンチマーク | `uv run rfdetr-mzoo-benchmark` |
-| 旧 scripts | DeprecationWarning 付き thin wrapper |
+| 公開 API | `from rfdetr_demo import run_demo, PersonTrackPipeline, …` |
 
 ---
 
@@ -123,6 +124,7 @@ Sticky 有効時の目標（全 713 フレーム）: 中央 ID 切替 **31 → �
 - [x] Phase 12b: GUI panels / vast_controller 分割（すべて &lt;300）
 - [x] Phase 12c: `analyze_clip` / `temporal/keypoints` 分割 — DoD 達成（300 超は puppet のみ）
 - [x] Phase 10: `run_mzoo_benchmark` → `rfdetr_demo.benchmark` + `rfdetr-mzoo-benchmark`（scripts 200 行超 0）
+- [x] Phase 13（API 凍結）: `public.py` / 0.2.0 / GUI→Vast safety 内部境界 lint / golden baseline
 - [ ] 全編 sticky 監査（mn1-2.mov）— 機密動画はローカル実行
 
 ## 関連

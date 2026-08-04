@@ -1,0 +1,21 @@
+{
+  "description": "Sticky-center tracking audit baseline from confidential mn1-2.mov full run (Phase 13–15 golden).",
+  "source": "confidential/media/input/mn1-2.mov",
+  "run_id": "20260620T101049Z-ed8dabe5",
+  "frame_count": 713,
+  "metrics": {
+    "center_missing_stabilized_count": 68,
+    "track_id_change_count": 31,
+    "max_consecutive_missing_span": [543, 571]
+  },
+  "targets": {
+    "sticky_enabled_max_track_id_changes": 15,
+    "notes": "Full-video sticky regression remains a local/confidential manual gate."
+  },
+  "summary_keys": [
+    "verdict",
+    "center_missing_stabilized_count",
+    "track_id_change_count",
+    "issues"
+  ]
+}
