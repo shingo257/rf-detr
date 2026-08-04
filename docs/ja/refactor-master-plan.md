@@ -54,8 +54,8 @@ ER-FlowScan モノレポ内 `rf-detr` フォーク向けの、**長年蓄積し�
 | ID | カテゴリ | 実体 | 規模 |
 |----|---------|------|------|
 | **A** | scripts shim | `scripts/*.py` の3行 `from ... import *` | ~15 |
-| **B** | demo facade | `inference/pipeline.py`, `inference/uncertainty_viz.py`, `gui/controller.py`, `tracking/detection_stabilizer.py`, `vast/runner.py`, `vast/compat.py` | 6 |
-| **C** | 不完全な移行 | `detection_stabilizer.py` は "deprecated facade" を名乗るが実モジュール6本が import。`vast/runner.py` も同様 | 移行未完 |
+| **B** | demo facade | （Phase 9 で 6 本すべて削除済） | 0 |
+| **C** | 不完全な移行 | （Phase 9 で解消） | 解消済 |
 | **D** | scripts ロジック | `scripts/run_mzoo_benchmark.py` 518 行（AGENTS.md 違反） | 1 |
 | **E** | 中型ファイル | 下表 11 件（300–475 行） | 11 |
 | **F** | 監査2系統 | `frame_audit.py` + `tracking_audit.py` に JSONL/評価/画像 I/O 重複 | 重複 |
@@ -172,9 +172,10 @@ flowchart LR
 `detection_stabilizer` は挙動コア。`PersonTrackPipeline` 移行は **feature flag `RFDETR_TRACK_PIPELINE=v1|v2`** で並走し、`mn1-2.mov` で ID 切替・ゴースト表示の parity を確認後に v1 削除。
 
 ### Definition of Done
-- [ ] 上記6 facade すべて削除
-- [ ] `tracking/__init__.py` が pipeline のみ公開
-- [ ] 回帰テスト green
+- [x] 上記6 facade すべて削除
+- [x] `tracking/__init__.py` が pipeline のみ公開
+- [x] 回帰テスト green
+- [x] `CHANGELOG.md` に breaking 記載
 
 ---
 
@@ -351,17 +352,26 @@ facade の削除は機械的な後続スライスにはしない。外部利用�
 - [x] Phase 15b — `TrackStore`、temporal `_associator` 除去
 - [x] Phase 15c — `PersonTrackPipeline`、`max_missed` / sticky 設定昇格
 - [x] Phase 14 — `probe-count` / `audit-tracking` サブコマンド + scripts wrapper
-- [x] `detection_stabilizer.py` ≤300 行 facade（現行 57 行）
+- [x] `detection_stabilizer.py` ≤300 行 facade（現行 57 行）→ Phase 9 で削除済
 
 回帰手順: [refactor-baseline-metrics.md](refactor-baseline-metrics.md)。全編 sticky 監査（ID 切替 ≤15）は機密動画のローカル実行が残件。
+
+### Phase 9 facade 削除（完了）
+
+- [x] `tracking/detection_stabilizer.py` 削除（`pipeline` / `stabilizer` / `bbox` を直接利用）
+- [x] `vast/runner.py` / `vast/compat.py` 削除
+- [x] `inference/pipeline.py` / `inference/uncertainty_viz.py` 削除
+- [x] `gui/controller.py` 削除
+- [x] `tracking/__init__.py` は pipeline API のみ export
+- [x] CHANGELOG `[Unreleased]` に breaking note
 
 ### 次スライス（推奨）
 
 1. [x] Phase 12 — `vast/safety.py`（417）を `safety_settings` / `safety_lease` / `safety_guardrails` へ分割
-2. Phase 9 — 残 facade 削除（`vast/runner` / `compat` / `inference.pipeline` 等）
+2. [x] Phase 9 — 残 facade 削除
 3. Phase 8 — `scripts/` shim sunset
 
 ---
 
 **最終更新**: 2026-08-04
-**ステータス**: Phase 13–15 + Phase 11 + Phase 12（Vast safety）完了。次は Phase 9 facade 削除または Phase 8 shim sunset。
+**ステータス**: Phase 13–15 + Phase 11 + Phase 12 + Phase 9 完了。次は Phase 8 shim sunset。

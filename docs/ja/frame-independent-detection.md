@@ -182,7 +182,7 @@ RF-DETR の公開 API `RFDETR.predict()` は **静止画（または互いに独
 | 人物対応付け | `src/rfdetr_demo/tracking/person_associator.py` |
 | 関節時間フィルタ | `src/rfdetr_demo/inference/temporal_filter.py` |
 | 人数診断 | `scripts/probe_person_count.py` → `artifacts/person_count_probe.json`（`--mode raw\|nms\|stabilize`） |
-| 検出安定化 | `src/rfdetr_demo/tracking/detection_stabilizer.py`（既定 ON、`RFDETR_DETECTION_STABILIZER=0` で無効） |
+| 検出安定化 | `src/rfdetr_demo/tracking/pipeline.py`（`PersonTrackPipeline`、既定 ON、`RFDETR_DETECTION_STABILIZER=0` で無効） |
 | 機密フレーム監査 | `src/rfdetr_demo/media/frame_audit.py` → `confidential/audit/` |
 | 監査無効化 | 環境変数 `RFDETR_FRAME_AUDIT=0` |
 

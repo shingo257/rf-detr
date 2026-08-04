@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Breaking (`rfdetr_demo`):** Removed deprecated facade modules. Import from the canonical modules instead:
+  - `rfdetr_demo.tracking.detection_stabilizer` → `rfdetr_demo.tracking.pipeline` / `stabilizer` / `bbox`
+  - `rfdetr_demo.vast.runner` / `rfdetr_demo.vast.compat` → `rfdetr_demo.vast.cli` / `offers` / `video_job` / `types`
+  - `rfdetr_demo.inference.pipeline` → `rfdetr_demo.inference.runner` / `rfdetr_demo.cli.run_video`
+  - `rfdetr_demo.inference.uncertainty_viz` → `rfdetr_demo.inference.uncertainty`
+  - `rfdetr_demo.gui.controller` → `rfdetr_demo.gui.state.job_state.TuneJobState`
+  - `rfdetr_demo.tracking` package `__init__` now exports only the `PersonTrackPipeline` public API (no `DetectionStabilizer` / `PersonAssociator` re-exports)
+
 ---
 
 ## [1.8.1] — 2026-06-19

@@ -2,7 +2,7 @@
 
 Phase 13–15 計画（tracking 統合）の計測基準。差分比較は本ファイルと [refactor-debt-register.md](refactor-debt-register.md) を使う。
 
-**最終更新**: 2026-08-02
+**最終更新**: 2026-08-04
 
 ---
 
@@ -44,7 +44,7 @@ Phase 13–15 計画（tracking 統合）の計測基準。差分比較は本フ
 
 | パス | 行数 | 状態 |
 |------|------|------|
-| `tracking/detection_stabilizer.py` | 57 | deprecated facade |
+| `tracking/detection_stabilizer.py` | — | Phase 9 で削除 |
 | `tracking/pipeline.py` | 79 | `PersonTrackPipeline` |
 | `tracking/track_store.py` | 396 | NMS / associate / hold |
 | `tracking/bbox.py` | 136 | IoU / NMS |
@@ -102,14 +102,16 @@ Sticky 有効時の目標（全 713 フレーム）: 中央 ID 切替 **31 → �
 
 ---
 
-## 目標達成状況（Phase 13–15）
+## 目標達成状況（Phase 13–15 + 12 + 9）
 
 - [x] Phase 13: baseline / debt register / import cycle checker
 - [x] Phase 15a: `types.py` + `bbox.py` 抽出
 - [x] Phase 15b: `TrackStore` 統合、`KeypointTemporalFilter` から `_associator` 除去
 - [x] Phase 15c: `PersonTrackPipeline` + `RFDETR_MAX_MISSED` / `RFDETR_STICKY_CENTER_TRACK`
 - [x] Phase 14: `probe-count` / `audit-tracking` CLI サブコマンド + scripts wrapper
-- [x] `detection_stabilizer.py` は 300 行以下の deprecated facade
+- [x] `detection_stabilizer.py` は 300 行以下の deprecated facade → Phase 9 で削除
+- [x] Phase 12: `vast/safety.py` → settings / lease / guardrails
+- [x] Phase 9: 6 deprecated facade 削除（tracking / vast / inference / gui）
 - [ ] 全編 sticky 監査（mn1-2.mov）— 機密動画はローカル実行
 
 ## 関連

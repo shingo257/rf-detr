@@ -6,18 +6,20 @@
 
 ---
 
-## 1. Deprecation facade（Phase 9 対象）
+## 1. Deprecation facade（Phase 9 ✅ 完了）
 
-"deprecated facade" を名乗りながら実コードが依存している不完全移行。**利用を正規パスへ移し facade を削除する。**
+旧 "deprecated facade" 6 本を削除し、正規パスのみを公開 API とした。
 
-| facade | 行数 | 実利用 | 移行先 | 状態 |
-|--------|------|--------|--------|------|
-| `tracking/detection_stabilizer.py` | 57 | re-export + compat | `tracking/pipeline.py` / `stabilizer.py` | Phase 15 ✅（削除は別途） |
-| `vast/runner.py` | 55 | re-export | `vast/cli.py`, `offers.py`, `instance.py` | 未着手 |
-| `vast/compat.py` | 58 | private alias | `vast/cli.py`, `instance.py`, `remote_io.py` | 未着手 |
-| `inference/pipeline.py` | 11 | re-export | `cli/run_video.py`, `inference/runner.py` | 未着手 |
-| `inference/uncertainty_viz.py` | 57 | re-export | `inference/uncertainty/` | 未着手 |
-| `gui/controller.py` | 10 | re-export | `gui/state/job_state.py` | 未着手 |
+| 旧 facade | 移行先 | 状態 |
+|-----------|--------|------|
+| `tracking/detection_stabilizer.py` | `tracking/pipeline.py` / `stabilizer.py` / `bbox.py` | ✅ 削除 |
+| `vast/runner.py` | `vast/cli.py`, `offers.py`, `video_job.py`, `types.py` | ✅ 削除 |
+| `vast/compat.py` | `vast/cli.py`, `instance.py`, `remote_io.py` | ✅ 削除 |
+| `inference/pipeline.py` | `cli/run_video.py`, `inference/runner.py` | ✅ 削除 |
+| `inference/uncertainty_viz.py` | `inference/uncertainty/` | ✅ 削除 |
+| `gui/controller.py` | `gui/state/job_state.py` | ✅ 削除 |
+
+`tracking/__init__.py` は `PersonTrackPipeline` 系 API のみを export する。scripts shim（`vast_ai_runner.py`, `keypoint_uncertainty_viz.py`）は正規モジュールへ直接 import する。
 
 ### Phase 13–15 構造的重複（解消済）
 
