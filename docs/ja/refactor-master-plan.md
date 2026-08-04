@@ -368,14 +368,21 @@ facade の削除は機械的な後続スライスにはしない。外部利用�
 - [x] `tracking/__init__.py` は pipeline API のみ export
 - [x] CHANGELOG `[Unreleased]` に breaking note
 
+### Phase 12 中型仕上げ（進行中）
+
+- [x] `tracking/track_store.py` → `track_models` / `track_match` / `track_hold`（195 行）
+- [x] `inference/runner.py` → `task_callback.py`（238 行）
+- [ ] GUI panels / vast_controller / analyze_clip / temporal keypoints（300 行超残り）
+
 ### 次スライス（推奨）
 
-1. [x] Phase 12 — `vast/safety.py`（417）を `safety_settings` / `safety_lease` / `safety_guardrails` へ分割
+1. [x] Phase 12 — `vast/safety.py` 分割
 2. [x] Phase 9 — 残 facade 削除
-3. [x] Phase 8 — `scripts/` shim sunset（19 本削除; mzoo / animation tooling は残存）
-4. Phase 10 — `run_mzoo_benchmark.py` tools 化、または Phase 12 中型仕上げ
+3. [x] Phase 8 — `scripts/` shim sunset
+4. Phase 12b — GUI panels（`io_task` / `compute` / `job_runner` / `vast_controller`）または `analyze_clip`
+5. Phase 10 — `run_mzoo_benchmark.py` tools 化
 
 ---
 
 **最終更新**: 2026-08-04
-**ステータス**: Phase 13–15 + Phase 11 + Phase 12 + Phase 9 + Phase 8（shim）完了。次は Phase 10（mzoo）または Phase 12 中型仕上げ。
+**ステータス**: Phase 13–15 + 11 + 12a + 9 + 8 完了。Phase 12 は 300 行超がまだ残る（GUI / analyze / temporal / puppet）。

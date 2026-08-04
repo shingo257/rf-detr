@@ -46,9 +46,14 @@ Phase 13–15 計画（tracking 統合）の計測基準。差分比較は本フ
 |------|------|------|
 | `tracking/detection_stabilizer.py` | — | Phase 9 で削除 |
 | `tracking/pipeline.py` | 79 | `PersonTrackPipeline` |
-| `tracking/track_store.py` | 396 | NMS / associate / hold |
+| `tracking/track_store.py` | 195 | NMS / associate オーケストレーション |
+| `tracking/track_hold.py` | 161 | hold / motion / ghost / cap |
+| `tracking/track_models.py` | 72 | `TrackSnapshot` + geometry |
+| `tracking/track_match.py` | 49 | Hungarian IoU match |
 | `tracking/bbox.py` | 136 | IoU / NMS |
 | `tracking/types.py` | 157 | settings + diagnostics |
+| `inference/runner.py` | 238 | `run_demo` I/O |
+| `inference/task_callback.py` | 145 | task callback 組立 |
 | `media/tracking_audit.py` | 26 | `media/audit/` facade |
 
 ### 400 行超（現行）
@@ -70,7 +75,7 @@ Phase 13–15 計画（tracking 統合）の計測基準。差分比較は本フ
 
 | スイート | 件数 |
 |---------|------|
-| `tests/rfdetr_demo/` | **157** |
+| `tests/rfdetr_demo/` | **161** |
 
 ---
 
@@ -113,6 +118,7 @@ Sticky 有効時の目標（全 713 フレーム）: 中央 ID 切替 **31 → �
 - [x] Phase 12: `vast/safety.py` → settings / lease / guardrails
 - [x] Phase 9: 6 deprecated facade 削除（tracking / vast / inference / gui）
 - [x] Phase 8: scripts shim / thin wrapper 19 本削除
+- [x] Phase 12a: `track_store` → models/match/hold、`runner` → `task_callback`
 - [ ] 全編 sticky 監査（mn1-2.mov）— 機密動画はローカル実行
 
 ## 関連

@@ -49,7 +49,7 @@ def test_run_demo_rejects_invalid_frame_stride(tmp_path: Path) -> None:
 @patch("rfdetr_demo.inference.runner.finalize_video_path")
 @patch("rfdetr_demo.inference.runner.process_video")
 @patch("rfdetr_demo.inference.runner.probe_video_size", return_value=(640, 480, 30.0))
-@patch("rfdetr_demo.inference.runner.build_detection_model")
+@patch("rfdetr_demo.inference.task_callback.build_detection_model")
 def test_run_demo_detection_returns_summary(
     mock_build_model: MagicMock,
     _mock_probe: MagicMock,

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`rfdetr_demo` Phase 12a:** Split `tracking/track_store.py` into `track_models` / `track_match` / `track_hold` (orchestration stays in `track_store`). Moved inference task callback assembly from `inference/runner.py` into `inference/task_callback.py`.
+
 ### Removed
 
 - **Breaking (`rfdetr_demo` / scripts):** Removed deprecated `scripts/` shim and thin CLI wrappers (19 files). Use package entry points instead:
