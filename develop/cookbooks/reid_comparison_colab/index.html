@@ -87,7 +87,7 @@
   
   
   
-  <meta property="article:modified_time" content="2026-08-06T15:02:21">
+  <meta property="article:modified_time" content="2026-08-06T15:41:21">
   
   <script type="application/ld+json">
   {
@@ -102,7 +102,7 @@
     "inLanguage": "en",
     "keywords": "RF-DETR, rfdetr, object detection, instance segmentation, computer vision, Roboflow",
     "datePublished": "2025-03-01",
-    "dateModified": "2026-08-06T15:02:21",
+    "dateModified": "2026-08-06T15:41:21",
     "image": "https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png",
     "author": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
     "publisher": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
@@ -3354,6 +3354,7 @@ pd.DataFrame(rows)   # pick the highest similarity that still cuts ids while mea
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="5-visual-check-id-labeled-off-vs-on">5. Visual check — id-labeled OFF vs ON<a class="anchor-link" href="#5-visual-check-id-labeled-off-vs-on">¶</a></h2><p>Render both videos from the <strong>same detections</strong> with track ids drawn (the number by each box; a trailing <code>*</code> means the track is being held through an occlusion). Set <code>--reid-similarity</code> to the value you picked from the sweep.</p>
+<p>The clips are written to <code>compare_out/</code> on the Colab VM (ephemeral local disk, <strong>not</strong> Google Drive) and are transcoded to H.264 for inline playback. To keep or view them elsewhere: <code>from google.colab import files; files.download('compare_out/reid_on.mp4')</code>.</p>
 <p><strong>What to look for:</strong></p>
 <ul>
 <li>✅ Good: in <strong>ON</strong>, a person keeps the same id/color across a brief occlusion, where <strong>OFF</strong> flips them to a new id.</li>
@@ -3381,14 +3382,18 @@ pd.DataFrame(rows)   # pick the highest similarity that still cuts ids while mea
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Write id-labeled OFF and ON videos from one run (same detections), then play both inline.</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Write id-labeled OFF and ON videos from one run (same detections).</span>
 <span class="err">!</span><span class="n">rfdetr</span><span class="o">-</span><span class="n">demo</span> <span class="n">compare</span><span class="o">-</span><span class="n">reid</span> <span class="o">--</span><span class="n">source</span> <span class="p">{</span><span class="n">VIDEO</span><span class="p">}</span> <span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">frames</span> <span class="mi">600</span> <span class="o">--</span><span class="n">reid</span><span class="o">-</span><span class="n">similarity</span> <span class="mf">0.85</span> <span class="o">--</span><span class="n">write</span><span class="o">-</span><span class="n">video</span> <span class="o">--</span><span class="n">out</span><span class="o">-</span><span class="nb">dir</span> <span class="n">compare_out</span>
 
+<span class="c1"># cv2 writes the mp4v codec, which browsers can't decode inline — transcode to H.264 first.</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">base64</span><span class="w"> </span><span class="kn">import</span> <span class="n">b64encode</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span><span class="p">,</span> <span class="n">display</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
-    <span class="n">mp4</span> <span class="o">=</span> <span class="n">b64encode</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+    <span class="n">dst</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'.mp4'</span><span class="p">,</span> <span class="s1">'_h264.mp4'</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">'ffmpeg -y -loglevel error -i "</span><span class="si">{</span><span class="n">src</span><span class="si">}</span><span class="s1">" -vcodec libx264 -pix_fmt yuv420p "</span><span class="si">{</span><span class="n">dst</span><span class="si">}</span><span class="s1">"'</span><span class="p">)</span>
+    <span class="n">mp4</span> <span class="o">=</span> <span class="n">b64encode</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
     <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span>
         <span class="sa">f</span><span class="s1">'&lt;p&gt;&lt;b&gt;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s1">&lt;/b&gt; — number = track id, &lt;code&gt;*&lt;/code&gt; = held during occlusion&lt;/p&gt;'</span>
         <span class="sa">f</span><span class="s1">'&lt;video width=640 controls&gt;&lt;source src="data:video/mp4;base64,</span><span class="si">{</span><span class="n">mp4</span><span class="si">}</span><span class="s1">" type="video/mp4"&gt;&lt;/video&gt;'</span>
@@ -3397,14 +3402,18 @@ pd.DataFrame(rows)   # pick the highest similarity that still cuts ids while mea
 <span class="n">show</span><span class="p">(</span><span class="s1">'compare_out/reid_off.mp4'</span><span class="p">,</span> <span class="s1">'ReID OFF'</span><span class="p">)</span>
 <span class="n">show</span><span class="p">(</span><span class="s1">'compare_out/reid_on.mp4'</span><span class="p">,</span> <span class="s1">'ReID ON (similarity 0.85)'</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6"># Write id-labeled OFF and ON videos from one run (same detections), then play both inline.
+<div class="clipboard-copy-txt" id="cell-6"># Write id-labeled OFF and ON videos from one run (same detections).
 !rfdetr-demo compare-reid --source {VIDEO} --max-frames 600 --reid-similarity 0.85 --write-video --out-dir compare_out
 
+# cv2 writes the mp4v codec, which browsers can't decode inline — transcode to H.264 first.
+import os
 from base64 import b64encode
 from IPython.display import HTML, display
 
-def show(path, label):
-    mp4 = b64encode(open(path, 'rb').read()).decode()
+def show(src, label):
+    dst = src.replace('.mp4', '_h264.mp4')
+    os.system(f'ffmpeg -y -loglevel error -i "{src}" -vcodec libx264 -pix_fmt yuv420p "{dst}"')
+    mp4 = b64encode(open(dst, 'rb').read()).decode()
     display(HTML(
         f'&lt;p&gt;&lt;b&gt;{label}&lt;/b&gt; — number = track id, &lt;code&gt;*&lt;/code&gt; = held during occlusion&lt;/p&gt;'
         f'&lt;video width=640 controls&gt;&lt;source src="data:video/mp4;base64,{mp4}" type="video/mp4"&gt;&lt;/video&gt;'
@@ -3499,7 +3508,7 @@ show('compare_out/reid_on.mp4', 'ReID ON (similarity 0.85)')</div>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 6, 2026 15:02:21 UTC">2026-08-06 15:02:21</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 6, 2026 15:41:21 UTC">2026-08-06 15:41:21</span>
   </span>
 
     
