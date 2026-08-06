@@ -87,7 +87,7 @@
   
   
   
-  <meta property="article:modified_time" content="2026-08-06T14:37:38">
+  <meta property="article:modified_time" content="2026-08-06T15:02:21">
   
   <script type="application/ld+json">
   {
@@ -102,7 +102,7 @@
     "inLanguage": "en",
     "keywords": "RF-DETR, rfdetr, object detection, instance segmentation, computer vision, Roboflow",
     "datePublished": "2025-03-01",
-    "dateModified": "2026-08-06T14:37:38",
+    "dateModified": "2026-08-06T15:02:21",
     "image": "https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png",
     "author": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
     "publisher": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
@@ -2272,10 +2272,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-sweep-the-revival-threshold" class="md-nav__link">
+  <a href="#4-sweep-the-thresholds" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Sweep the revival threshold
+        4. Sweep the thresholds
       
     </span>
   </a>
@@ -2283,10 +2283,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-visual-check-annotated-video-with-reid-on" class="md-nav__link">
+  <a href="#5-visual-check-id-labeled-off-vs-on" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Visual check — annotated video with ReID on
+        5. Visual check — id-labeled OFF vs ON
       
     </span>
   </a>
@@ -3269,7 +3269,7 @@ print('\n' + json.dumps(json.load(open('reid_metrics.json')), indent=2, ensure_a
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="4-sweep-the-revival-threshold">4. Sweep the revival threshold<a class="anchor-link" href="#4-sweep-the-revival-threshold">¶</a></h2><p>Find a good <code>--reid-similarity</code>: you want <code>unique ids</code> to drop <strong>while</strong> <code>mean active</code> stays roughly constant. Too low a threshold merges different people (mean drops); too high revives nobody (no change vs off).</p>
+<h2 id="4-sweep-the-thresholds">4. Sweep the thresholds<a class="anchor-link" href="#4-sweep-the-thresholds">¶</a></h2><p>Vary both the cost-blend <code>--reid-weight</code> and the revival <code>--reid-similarity</code>. <code>weight=0.0</code> isolates gallery revival (no per-frame appearance blend). Pick the <strong>highest</strong> <code>similarity</code> that still consolidates ids (<code>ids_on</code> well below <code>ids_off</code>) <strong>while</strong> <code>mean_on</code> stays close to <code>mean_off</code> — that is the setting most resistant to merging different people. If <code>ids_on</code> stays flat across low thresholds, the descriptor separates cleanly and the useful knob is <code>weight</code>, not <code>similarity</code>.</p>
 </div>
 </div>
 </div>
@@ -3296,49 +3296,51 @@ print('\n' + json.dumps(json.load(open('reid_metrics.json')), indent=2, ensure_a
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">similarity</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]:</span>
-    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-        <span class="p">[</span><span class="s1">'rfdetr-demo'</span><span class="p">,</span> <span class="s1">'compare-reid'</span><span class="p">,</span> <span class="s1">'--source'</span><span class="p">,</span> <span class="n">VIDEO</span><span class="p">,</span> <span class="s1">'--max-frames'</span><span class="p">,</span> <span class="s1">'600'</span><span class="p">,</span>
-         <span class="s1">'--reid-similarity'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">similarity</span><span class="p">),</span> <span class="s1">'--json'</span><span class="p">,</span> <span class="s1">'sweep.json'</span><span class="p">],</span>
-        <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">'sweep.json'</span><span class="p">))</span>
-    <span class="n">off</span><span class="p">,</span> <span class="n">on</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">'reid_off'</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">'reid_on'</span><span class="p">]</span>
-    <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-        <span class="s1">'similarity'</span><span class="p">:</span> <span class="n">similarity</span><span class="p">,</span>
-        <span class="s1">'ids_off'</span><span class="p">:</span> <span class="n">off</span><span class="p">[</span><span class="s1">'unique_ids'</span><span class="p">],</span>
-        <span class="s1">'ids_on'</span><span class="p">:</span> <span class="n">on</span><span class="p">[</span><span class="s1">'unique_ids'</span><span class="p">],</span>
-        <span class="s1">'mean_off'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">off</span><span class="p">[</span><span class="s1">'mean_active'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span>
-        <span class="s1">'mean_on'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">on</span><span class="p">[</span><span class="s1">'mean_active'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span>
-        <span class="s1">'std_off'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">off</span><span class="p">[</span><span class="s1">'count_std'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span>
-        <span class="s1">'std_on'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">on</span><span class="p">[</span><span class="s1">'count_std'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span>
-    <span class="p">})</span>
+<span class="k">for</span> <span class="n">weight</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]:</span>            <span class="c1"># 0.0 = gallery revival only (no cost blend)</span>
+    <span class="k">for</span> <span class="n">similarity</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">]:</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s1">'rfdetr-demo'</span><span class="p">,</span> <span class="s1">'compare-reid'</span><span class="p">,</span> <span class="s1">'--source'</span><span class="p">,</span> <span class="n">VIDEO</span><span class="p">,</span> <span class="s1">'--max-frames'</span><span class="p">,</span> <span class="s1">'600'</span><span class="p">,</span>
+             <span class="s1">'--reid-weight'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">weight</span><span class="p">),</span> <span class="s1">'--reid-similarity'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">similarity</span><span class="p">),</span> <span class="s1">'--json'</span><span class="p">,</span> <span class="s1">'sweep.json'</span><span class="p">],</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">'sweep.json'</span><span class="p">))</span>
+        <span class="n">off</span><span class="p">,</span> <span class="n">on</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">'reid_off'</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">'reid_on'</span><span class="p">]</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s1">'weight'</span><span class="p">:</span> <span class="n">weight</span><span class="p">,</span>
+            <span class="s1">'similarity'</span><span class="p">:</span> <span class="n">similarity</span><span class="p">,</span>
+            <span class="s1">'ids_off'</span><span class="p">:</span> <span class="n">off</span><span class="p">[</span><span class="s1">'unique_ids'</span><span class="p">],</span>
+            <span class="s1">'ids_on'</span><span class="p">:</span> <span class="n">on</span><span class="p">[</span><span class="s1">'unique_ids'</span><span class="p">],</span>
+            <span class="s1">'mean_off'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">off</span><span class="p">[</span><span class="s1">'mean_active'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="s1">'mean_on'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">on</span><span class="p">[</span><span class="s1">'mean_active'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="s1">'std_on'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">on</span><span class="p">[</span><span class="s1">'count_std'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="p">})</span>
 
-<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>   <span class="c1"># pick the highest similarity that still cuts ids while mean_on stays ~ mean_off</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-5">import json, subprocess
 import pandas as pd
 
 rows = []
-for similarity in [0.3, 0.4, 0.5, 0.6, 0.7]:
-    subprocess.run(
-        ['rfdetr-demo', 'compare-reid', '--source', VIDEO, '--max-frames', '600',
-         '--reid-similarity', str(similarity), '--json', 'sweep.json'],
-        check=True,
-    )
-    data = json.load(open('sweep.json'))
-    off, on = data['reid_off'], data['reid_on']
-    rows.append({
-        'similarity': similarity,
-        'ids_off': off['unique_ids'],
-        'ids_on': on['unique_ids'],
-        'mean_off': round(off['mean_active'], 2),
-        'mean_on': round(on['mean_active'], 2),
-        'std_off': round(off['count_std'], 2),
-        'std_on': round(on['count_std'], 2),
-    })
+for weight in [0.0, 0.3, 0.6]:            # 0.0 = gallery revival only (no cost blend)
+    for similarity in [0.5, 0.7, 0.8, 0.9, 0.95]:
+        subprocess.run(
+            ['rfdetr-demo', 'compare-reid', '--source', VIDEO, '--max-frames', '600',
+             '--reid-weight', str(weight), '--reid-similarity', str(similarity), '--json', 'sweep.json'],
+            check=True,
+        )
+        data = json.load(open('sweep.json'))
+        off, on = data['reid_off'], data['reid_on']
+        rows.append({
+            'weight': weight,
+            'similarity': similarity,
+            'ids_off': off['unique_ids'],
+            'ids_on': on['unique_ids'],
+            'mean_off': round(off['mean_active'], 2),
+            'mean_on': round(on['mean_active'], 2),
+            'std_on': round(on['count_std'], 2),
+        })
 
-pd.DataFrame(rows)</div>
+pd.DataFrame(rows)   # pick the highest similarity that still cuts ids while mean_on stays ~ mean_off</div>
 </div>
 </div>
 </div>
@@ -3351,7 +3353,12 @@ pd.DataFrame(rows)</div>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="5-visual-check-annotated-video-with-reid-on">5. Visual check — annotated video with ReID on<a class="anchor-link" href="#5-visual-check-annotated-video-with-reid-on">¶</a></h2><p>Render the annotated MP4 with your chosen setting and play it inline. Watch whether a person who is briefly occluded keeps the same skeleton id when they reappear.</p>
+<h2 id="5-visual-check-id-labeled-off-vs-on">5. Visual check — id-labeled OFF vs ON<a class="anchor-link" href="#5-visual-check-id-labeled-off-vs-on">¶</a></h2><p>Render both videos from the <strong>same detections</strong> with track ids drawn (the number by each box; a trailing <code>*</code> means the track is being held through an occlusion). Set <code>--reid-similarity</code> to the value you picked from the sweep.</p>
+<p><strong>What to look for:</strong></p>
+<ul>
+<li>✅ Good: in <strong>ON</strong>, a person keeps the same id/color across a brief occlusion, where <strong>OFF</strong> flips them to a new id.</li>
+<li>⚠️ Over-merge: in <strong>ON</strong>, two clearly different people share one id/color → raise <code>--reid-similarity</code>.</li>
+</ul>
 </div>
 </div>
 </div>
@@ -3374,21 +3381,37 @@ pd.DataFrame(rows)</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="err">!</span><span class="n">RFDETR_TRACK_REID</span><span class="o">=</span><span class="mi">1</span> <span class="n">RFDETR_REID_SIMILARITY</span><span class="o">=</span><span class="mf">0.5</span> <span class="n">rfdetr</span><span class="o">-</span><span class="n">demo</span> <span class="n">video</span> <span class="o">--</span><span class="n">task</span> <span class="n">keypoint</span> <span class="o">--</span><span class="n">source</span> <span class="p">{</span><span class="n">VIDEO</span><span class="p">}</span> <span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">frames</span> <span class="mi">600</span> <span class="o">--</span><span class="n">output</span> <span class="n">reid_on</span><span class="o">.</span><span class="n">mp4</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Write id-labeled OFF and ON videos from one run (same detections), then play both inline.</span>
+<span class="err">!</span><span class="n">rfdetr</span><span class="o">-</span><span class="n">demo</span> <span class="n">compare</span><span class="o">-</span><span class="n">reid</span> <span class="o">--</span><span class="n">source</span> <span class="p">{</span><span class="n">VIDEO</span><span class="p">}</span> <span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">frames</span> <span class="mi">600</span> <span class="o">--</span><span class="n">reid</span><span class="o">-</span><span class="n">similarity</span> <span class="mf">0.85</span> <span class="o">--</span><span class="n">write</span><span class="o">-</span><span class="n">video</span> <span class="o">--</span><span class="n">out</span><span class="o">-</span><span class="nb">dir</span> <span class="n">compare_out</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">base64</span><span class="w"> </span><span class="kn">import</span> <span class="n">b64encode</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span><span class="p">,</span> <span class="n">display</span>
 
-<span class="n">mp4</span> <span class="o">=</span> <span class="n">b64encode</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">'reid_on.mp4'</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
-<span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s1">'&lt;video width=640 controls&gt;&lt;source src="data:video/mp4;base64,</span><span class="si">{</span><span class="n">mp4</span><span class="si">}</span><span class="s1">" type="video/mp4"&gt;&lt;/video&gt;'</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+    <span class="n">mp4</span> <span class="o">=</span> <span class="n">b64encode</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'&lt;p&gt;&lt;b&gt;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s1">&lt;/b&gt; — number = track id, &lt;code&gt;*&lt;/code&gt; = held during occlusion&lt;/p&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;video width=640 controls&gt;&lt;source src="data:video/mp4;base64,</span><span class="si">{</span><span class="n">mp4</span><span class="si">}</span><span class="s1">" type="video/mp4"&gt;&lt;/video&gt;'</span>
+    <span class="p">))</span>
+
+<span class="n">show</span><span class="p">(</span><span class="s1">'compare_out/reid_off.mp4'</span><span class="p">,</span> <span class="s1">'ReID OFF'</span><span class="p">)</span>
+<span class="n">show</span><span class="p">(</span><span class="s1">'compare_out/reid_on.mp4'</span><span class="p">,</span> <span class="s1">'ReID ON (similarity 0.85)'</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6">!RFDETR_TRACK_REID=1 RFDETR_REID_SIMILARITY=0.5 rfdetr-demo video --task keypoint --source {VIDEO} --max-frames 600 --output reid_on.mp4
+<div class="clipboard-copy-txt" id="cell-6"># Write id-labeled OFF and ON videos from one run (same detections), then play both inline.
+!rfdetr-demo compare-reid --source {VIDEO} --max-frames 600 --reid-similarity 0.85 --write-video --out-dir compare_out
 
 from base64 import b64encode
-from IPython.display import HTML
+from IPython.display import HTML, display
 
-mp4 = b64encode(open('reid_on.mp4', 'rb').read()).decode()
-HTML(f'&lt;video width=640 controls&gt;&lt;source src="data:video/mp4;base64,{mp4}" type="video/mp4"&gt;&lt;/video&gt;')</div>
+def show(path, label):
+    mp4 = b64encode(open(path, 'rb').read()).decode()
+    display(HTML(
+        f'&lt;p&gt;&lt;b&gt;{label}&lt;/b&gt; — number = track id, &lt;code&gt;*&lt;/code&gt; = held during occlusion&lt;/p&gt;'
+        f'&lt;video width=640 controls&gt;&lt;source src="data:video/mp4;base64,{mp4}" type="video/mp4"&gt;&lt;/video&gt;'
+    ))
+
+show('compare_out/reid_off.mp4', 'ReID OFF')
+show('compare_out/reid_on.mp4', 'ReID ON (similarity 0.85)')</div>
 </div>
 </div>
 </div>
@@ -3476,7 +3499,7 @@ HTML(f'&lt;video width=640 controls&gt;&lt;source src="data:video/mp4;base64,{mp
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 6, 2026 14:37:38 UTC">2026-08-06 14:37:38</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 6, 2026 15:02:21 UTC">2026-08-06 15:02:21</span>
   </span>
 
     
