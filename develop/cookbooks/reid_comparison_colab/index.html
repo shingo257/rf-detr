@@ -87,7 +87,7 @@
   
   
   
-  <meta property="article:modified_time" content="2026-08-06T15:41:21">
+  <meta property="article:modified_time" content="2026-08-06T16:21:24">
   
   <script type="application/ld+json">
   {
@@ -102,7 +102,7 @@
     "inLanguage": "en",
     "keywords": "RF-DETR, rfdetr, object detection, instance segmentation, computer vision, Roboflow",
     "datePublished": "2025-03-01",
-    "dateModified": "2026-08-06T15:41:21",
+    "dateModified": "2026-08-06T16:21:24",
     "image": "https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png",
     "author": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
     "publisher": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
@@ -2294,6 +2294,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#6-stronger-reid-with-an-onnx-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Stronger ReID with an ONNX embedding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-detection-recall-how-many-people-are-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Detection recall (how many people are found)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#tuning-cheatsheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3053,8 +3075,8 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="rf-detr-appearance-reid-tracking-comparison-colab">RF-DETR — Appearance ReID tracking comparison (Colab)<a class="anchor-link" href="#rf-detr-appearance-reid-tracking-comparison-colab">¶</a></h1><p>Compare person tracking with appearance <strong>ReID off vs on</strong> over one clip.</p>
-<p>The <strong>same detections</strong> are fed through two tracking pipelines that differ only in <code>reid_enabled</code>, so any change in track-id stability is attributable to ReID alone. The lightweight ReID is a CPU-friendly HSV torso-color histogram (no embedding model, no extra dependencies).</p>
-<p><strong>How to read the results:</strong> if <code>mean active</code> (average people per frame) stays about the same while <code>unique track ids</code> drops, ReID is successfully reviving ids for people who left and returned. If the average count itself drops, ids are being wrongly merged — raise <code>--reid-similarity</code>.</p>
+<p>The <strong>same detections</strong> feed two tracking pipelines that differ only in <code>reid_enabled</code>, so any change in track-id stability is attributable to ReID alone. The default lightweight ReID is a CPU-only HSV torso-color histogram (no extra dependencies); section 6 upgrades to a CNN embedding for grayscale/IR footage.</p>
+<p><strong>How to read the results:</strong> if <code>mean active</code> (average people per frame) stays about the same while <code>unique track ids</code> drops, ReID is reviving ids for people who left and returned. If the average count itself drops, ids are being wrongly merged — raise <code>--reid-similarity</code>.</p>
 <blockquote>
 <p>Tip: <code>Runtime → Change runtime type → GPU</code> before running (keypoint inference is slow on CPU).</p>
 </blockquote>
@@ -3151,7 +3173,7 @@ print('\nInstalled. If imports fail below, use Runtime &gt; Restart session, the
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2-choose-a-video">2. Choose a video<a class="anchor-link" href="#2-choose-a-video">¶</a></h2><p>Defaults to a public <em>people-walking</em> clip (people occlude each other — good for ReID). To use your own footage, uncomment the upload lines. The bundled <code>sample/*.mov</code> files are private and are <strong>not</strong> in the repo, so they are not available here.</p>
+<h2 id="2-choose-a-video">2. Choose a video<a class="anchor-link" href="#2-choose-a-video">¶</a></h2><p>Defaults to a public <em>people-walking</em> clip (people occlude each other — good for ReID). To use your own footage, uncomment the upload lines. The bundled <code>sample/*.mov</code> files are private and are <strong>not</strong> in the repo.</p>
 </div>
 </div>
 </div>
@@ -3177,7 +3199,6 @@ print('\nInstalled. If imports fail below, use Runtime &gt; Restart session, the
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
 
-<span class="c1"># Default: a public people-walking clip (people occlude each other — good for ReID).</span>
 <span class="n">VIDEO_URL</span> <span class="o">=</span> <span class="s1">'https://media.roboflow.com/supervision/video-examples/people-walking.mp4'</span>
 <span class="n">VIDEO</span> <span class="o">=</span> <span class="s1">'demo.mp4'</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">VIDEO</span><span class="p">):</span>
@@ -3197,7 +3218,6 @@ print('\nInstalled. If imports fail below, use Runtime &gt; Restart session, the
 <div class="clipboard-copy-txt" id="cell-3">import os
 import cv2
 
-# Default: a public people-walking clip (people occlude each other — good for ReID).
 VIDEO_URL = 'https://media.roboflow.com/supervision/video-examples/people-walking.mp4'
 VIDEO = 'demo.mp4'
 if not os.path.exists(VIDEO):
@@ -3225,7 +3245,7 @@ cap.release()</div>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3-run-the-comparison-reid-off-vs-on">3. Run the comparison (ReID off vs on)<a class="anchor-link" href="#3-run-the-comparison-reid-off-vs-on">¶</a></h2><p>The first run downloads the keypoint model weights. <code>--max-frames</code> keeps it quick; raise or drop it for your clip.</p>
+<h2 id="3-run-the-comparison-reid-off-vs-on">3. Run the comparison (ReID off vs on)<a class="anchor-link" href="#3-run-the-comparison-reid-off-vs-on">¶</a></h2><p>The first run downloads the keypoint model weights. <code>--max-frames</code> keeps it quick.</p>
 </div>
 </div>
 </div>
@@ -3269,7 +3289,7 @@ print('\n' + json.dumps(json.load(open('reid_metrics.json')), indent=2, ensure_a
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="4-sweep-the-thresholds">4. Sweep the thresholds<a class="anchor-link" href="#4-sweep-the-thresholds">¶</a></h2><p>Vary both the cost-blend <code>--reid-weight</code> and the revival <code>--reid-similarity</code>. <code>weight=0.0</code> isolates gallery revival (no per-frame appearance blend). Pick the <strong>highest</strong> <code>similarity</code> that still consolidates ids (<code>ids_on</code> well below <code>ids_off</code>) <strong>while</strong> <code>mean_on</code> stays close to <code>mean_off</code> — that is the setting most resistant to merging different people. If <code>ids_on</code> stays flat across low thresholds, the descriptor separates cleanly and the useful knob is <code>weight</code>, not <code>similarity</code>.</p>
+<h2 id="4-sweep-the-thresholds">4. Sweep the thresholds<a class="anchor-link" href="#4-sweep-the-thresholds">¶</a></h2><p>Vary the cost-blend <code>--reid-weight</code> and the revival <code>--reid-similarity</code>. <code>weight=0.0</code> isolates gallery revival. Pick the <strong>highest</strong> <code>similarity</code> that still consolidates ids (<code>ids_on</code> well below <code>ids_off</code>) <strong>while</strong> <code>mean_on</code> stays close to <code>mean_off</code> — that is the setting most resistant to merging different people.</p>
 </div>
 </div>
 </div>
@@ -3296,7 +3316,7 @@ print('\n' + json.dumps(json.load(open('reid_metrics.json')), indent=2, ensure_a
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">weight</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]:</span>            <span class="c1"># 0.0 = gallery revival only (no cost blend)</span>
+<span class="k">for</span> <span class="n">weight</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]:</span>
     <span class="k">for</span> <span class="n">similarity</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">]:</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
             <span class="p">[</span><span class="s1">'rfdetr-demo'</span><span class="p">,</span> <span class="s1">'compare-reid'</span><span class="p">,</span> <span class="s1">'--source'</span><span class="p">,</span> <span class="n">VIDEO</span><span class="p">,</span> <span class="s1">'--max-frames'</span><span class="p">,</span> <span class="s1">'600'</span><span class="p">,</span>
@@ -3305,23 +3325,18 @@ print('\n' + json.dumps(json.load(open('reid_metrics.json')), indent=2, ensure_a
         <span class="p">)</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">'sweep.json'</span><span class="p">))</span>
         <span class="n">off</span><span class="p">,</span> <span class="n">on</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">'reid_off'</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">'reid_on'</span><span class="p">]</span>
-        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-            <span class="s1">'weight'</span><span class="p">:</span> <span class="n">weight</span><span class="p">,</span>
-            <span class="s1">'similarity'</span><span class="p">:</span> <span class="n">similarity</span><span class="p">,</span>
-            <span class="s1">'ids_off'</span><span class="p">:</span> <span class="n">off</span><span class="p">[</span><span class="s1">'unique_ids'</span><span class="p">],</span>
-            <span class="s1">'ids_on'</span><span class="p">:</span> <span class="n">on</span><span class="p">[</span><span class="s1">'unique_ids'</span><span class="p">],</span>
-            <span class="s1">'mean_off'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">off</span><span class="p">[</span><span class="s1">'mean_active'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span>
-            <span class="s1">'mean_on'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">on</span><span class="p">[</span><span class="s1">'mean_active'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span>
-            <span class="s1">'std_on'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">on</span><span class="p">[</span><span class="s1">'count_std'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span>
-        <span class="p">})</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">'weight'</span><span class="p">:</span> <span class="n">weight</span><span class="p">,</span> <span class="s1">'similarity'</span><span class="p">:</span> <span class="n">similarity</span><span class="p">,</span>
+                     <span class="s1">'ids_off'</span><span class="p">:</span> <span class="n">off</span><span class="p">[</span><span class="s1">'unique_ids'</span><span class="p">],</span> <span class="s1">'ids_on'</span><span class="p">:</span> <span class="n">on</span><span class="p">[</span><span class="s1">'unique_ids'</span><span class="p">],</span>
+                     <span class="s1">'mean_off'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">off</span><span class="p">[</span><span class="s1">'mean_active'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span> <span class="s1">'mean_on'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">on</span><span class="p">[</span><span class="s1">'mean_active'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span>
+                     <span class="s1">'std_on'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">on</span><span class="p">[</span><span class="s1">'count_std'</span><span class="p">],</span> <span class="mi">2</span><span class="p">)})</span>
 
-<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>   <span class="c1"># pick the highest similarity that still cuts ids while mean_on stays ~ mean_off</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-5">import json, subprocess
 import pandas as pd
 
 rows = []
-for weight in [0.0, 0.3, 0.6]:            # 0.0 = gallery revival only (no cost blend)
+for weight in [0.0, 0.3, 0.6]:
     for similarity in [0.5, 0.7, 0.8, 0.9, 0.95]:
         subprocess.run(
             ['rfdetr-demo', 'compare-reid', '--source', VIDEO, '--max-frames', '600',
@@ -3330,17 +3345,12 @@ for weight in [0.0, 0.3, 0.6]:            # 0.0 = gallery revival only (no cost 
         )
         data = json.load(open('sweep.json'))
         off, on = data['reid_off'], data['reid_on']
-        rows.append({
-            'weight': weight,
-            'similarity': similarity,
-            'ids_off': off['unique_ids'],
-            'ids_on': on['unique_ids'],
-            'mean_off': round(off['mean_active'], 2),
-            'mean_on': round(on['mean_active'], 2),
-            'std_on': round(on['count_std'], 2),
-        })
+        rows.append({'weight': weight, 'similarity': similarity,
+                     'ids_off': off['unique_ids'], 'ids_on': on['unique_ids'],
+                     'mean_off': round(off['mean_active'], 2), 'mean_on': round(on['mean_active'], 2),
+                     'std_on': round(on['count_std'], 2)})
 
-pd.DataFrame(rows)   # pick the highest similarity that still cuts ids while mean_on stays ~ mean_off</div>
+pd.DataFrame(rows)</div>
 </div>
 </div>
 </div>
@@ -3353,12 +3363,12 @@ pd.DataFrame(rows)   # pick the highest similarity that still cuts ids while mea
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="5-visual-check-id-labeled-off-vs-on">5. Visual check — id-labeled OFF vs ON<a class="anchor-link" href="#5-visual-check-id-labeled-off-vs-on">¶</a></h2><p>Render both videos from the <strong>same detections</strong> with track ids drawn (the number by each box; a trailing <code>*</code> means the track is being held through an occlusion). Set <code>--reid-similarity</code> to the value you picked from the sweep.</p>
-<p>The clips are written to <code>compare_out/</code> on the Colab VM (ephemeral local disk, <strong>not</strong> Google Drive) and are transcoded to H.264 for inline playback. To keep or view them elsewhere: <code>from google.colab import files; files.download('compare_out/reid_on.mp4')</code>.</p>
+<h2 id="5-visual-check-id-labeled-off-vs-on">5. Visual check — id-labeled OFF vs ON<a class="anchor-link" href="#5-visual-check-id-labeled-off-vs-on">¶</a></h2><p>Render both videos from the <strong>same detections</strong> with track ids drawn (number by each box; trailing <code>*</code> = held through an occlusion). Set <code>--reid-similarity</code> to the value you picked.</p>
+<p>Clips are written to <code>compare_out/</code> on the Colab VM (ephemeral, <strong>not</strong> Google Drive) and transcoded to H.264 for inline playback. To keep them: <code>from google.colab import files; files.download('compare_out/reid_on.mp4')</code>.</p>
 <p><strong>What to look for:</strong></p>
 <ul>
-<li>✅ Good: in <strong>ON</strong>, a person keeps the same id/color across a brief occlusion, where <strong>OFF</strong> flips them to a new id.</li>
-<li>⚠️ Over-merge: in <strong>ON</strong>, two clearly different people share one id/color → raise <code>--reid-similarity</code>.</li>
+<li>Good: in <strong>ON</strong>, a person keeps the same id/color across a brief occlusion where <strong>OFF</strong> flips them to a new id.</li>
+<li>Over-merge: in <strong>ON</strong>, two clearly different people share one id/color -&gt; raise <code>--reid-similarity</code>.</li>
 </ul>
 </div>
 </div>
@@ -3382,10 +3392,8 @@ pd.DataFrame(rows)   # pick the highest similarity that still cuts ids while mea
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Write id-labeled OFF and ON videos from one run (same detections).</span>
-<span class="err">!</span><span class="n">rfdetr</span><span class="o">-</span><span class="n">demo</span> <span class="n">compare</span><span class="o">-</span><span class="n">reid</span> <span class="o">--</span><span class="n">source</span> <span class="p">{</span><span class="n">VIDEO</span><span class="p">}</span> <span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">frames</span> <span class="mi">600</span> <span class="o">--</span><span class="n">reid</span><span class="o">-</span><span class="n">similarity</span> <span class="mf">0.85</span> <span class="o">--</span><span class="n">write</span><span class="o">-</span><span class="n">video</span> <span class="o">--</span><span class="n">out</span><span class="o">-</span><span class="nb">dir</span> <span class="n">compare_out</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="err">!</span><span class="n">rfdetr</span><span class="o">-</span><span class="n">demo</span> <span class="n">compare</span><span class="o">-</span><span class="n">reid</span> <span class="o">--</span><span class="n">source</span> <span class="p">{</span><span class="n">VIDEO</span><span class="p">}</span> <span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">frames</span> <span class="mi">600</span> <span class="o">--</span><span class="n">reid</span><span class="o">-</span><span class="n">similarity</span> <span class="mf">0.85</span> <span class="o">--</span><span class="n">write</span><span class="o">-</span><span class="n">video</span> <span class="o">--</span><span class="n">out</span><span class="o">-</span><span class="nb">dir</span> <span class="n">compare_out</span>
 
-<span class="c1"># cv2 writes the mp4v codec, which browsers can't decode inline — transcode to H.264 first.</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">base64</span><span class="w"> </span><span class="kn">import</span> <span class="n">b64encode</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span><span class="p">,</span> <span class="n">display</span>
@@ -3395,17 +3403,15 @@ pd.DataFrame(rows)   # pick the highest similarity that still cuts ids while mea
     <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">'ffmpeg -y -loglevel error -i "</span><span class="si">{</span><span class="n">src</span><span class="si">}</span><span class="s1">" -vcodec libx264 -pix_fmt yuv420p "</span><span class="si">{</span><span class="n">dst</span><span class="si">}</span><span class="s1">"'</span><span class="p">)</span>
     <span class="n">mp4</span> <span class="o">=</span> <span class="n">b64encode</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
     <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s1">'&lt;p&gt;&lt;b&gt;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s1">&lt;/b&gt; — number = track id, &lt;code&gt;*&lt;/code&gt; = held during occlusion&lt;/p&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;p&gt;&lt;b&gt;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s1">&lt;/b&gt; &amp;mdash; number = track id, &lt;code&gt;*&lt;/code&gt; = held during occlusion&lt;/p&gt;'</span>
         <span class="sa">f</span><span class="s1">'&lt;video width=640 controls&gt;&lt;source src="data:video/mp4;base64,</span><span class="si">{</span><span class="n">mp4</span><span class="si">}</span><span class="s1">" type="video/mp4"&gt;&lt;/video&gt;'</span>
     <span class="p">))</span>
 
 <span class="n">show</span><span class="p">(</span><span class="s1">'compare_out/reid_off.mp4'</span><span class="p">,</span> <span class="s1">'ReID OFF'</span><span class="p">)</span>
 <span class="n">show</span><span class="p">(</span><span class="s1">'compare_out/reid_on.mp4'</span><span class="p">,</span> <span class="s1">'ReID ON (similarity 0.85)'</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6"># Write id-labeled OFF and ON videos from one run (same detections).
-!rfdetr-demo compare-reid --source {VIDEO} --max-frames 600 --reid-similarity 0.85 --write-video --out-dir compare_out
+<div class="clipboard-copy-txt" id="cell-6">!rfdetr-demo compare-reid --source {VIDEO} --max-frames 600 --reid-similarity 0.85 --write-video --out-dir compare_out
 
-# cv2 writes the mp4v codec, which browsers can't decode inline — transcode to H.264 first.
 import os
 from base64 import b64encode
 from IPython.display import HTML, display
@@ -3415,12 +3421,198 @@ def show(src, label):
     os.system(f'ffmpeg -y -loglevel error -i "{src}" -vcodec libx264 -pix_fmt yuv420p "{dst}"')
     mp4 = b64encode(open(dst, 'rb').read()).decode()
     display(HTML(
-        f'&lt;p&gt;&lt;b&gt;{label}&lt;/b&gt; — number = track id, &lt;code&gt;*&lt;/code&gt; = held during occlusion&lt;/p&gt;'
+        f'&lt;p&gt;&lt;b&gt;{label}&lt;/b&gt; &amp;mdash; number = track id, &lt;code&gt;*&lt;/code&gt; = held during occlusion&lt;/p&gt;'
         f'&lt;video width=640 controls&gt;&lt;source src="data:video/mp4;base64,{mp4}" type="video/mp4"&gt;&lt;/video&gt;'
     ))
 
 show('compare_out/reid_off.mp4', 'ReID OFF')
 show('compare_out/reid_on.mp4', 'ReID ON (similarity 0.85)')</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="6-stronger-reid-with-an-onnx-embedding">6. Stronger ReID with an ONNX embedding<a class="anchor-link" href="#6-stronger-reid-with-an-onnx-embedding">¶</a></h2><p>The color histogram is weak on <strong>grayscale/IR</strong> footage or when everyone wears similar colors. A CNN <strong>embedding</strong> is robust to both. The next cell exports a small MobileNetV3 feature extractor to <code>reid.onnx</code> using torchvision weights (always downloadable), then runs the comparison with <code>--reid-backend embedding</code>.</p>
+<p>Model contract: input <code>1x3x256x128</code> (RGB, ImageNet-normalized); output one embedding vector (L2-normalized internally). The embedding uses <strong>cosine</strong> similarity, so start <code>--reid-similarity</code> around <strong>0.5-0.7</strong>.</p>
+<p>For best quality use a <strong>person-ReID-trained</strong> model (OSNet). If torchreid installs cleanly, replace the export cell with:</p>
+<div class="highlight"><pre><span></span><span class="err">!</span><span class="n">pip</span> <span class="o">-</span><span class="n">q</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">KaiyangZhou</span><span class="o">/</span><span class="n">deep</span><span class="o">-</span><span class="n">person</span><span class="o">-</span><span class="n">reid</span><span class="o">.</span><span class="n">git</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span><span class="o">,</span><span class="w"> </span><span class="nn">torchreid</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">torchreid</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">build_model</span><span class="p">(</span><span class="s1">'osnet_x0_25'</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">256</span><span class="p">,</span><span class="mi">128</span><span class="p">),</span> <span class="s1">'reid.onnx'</span><span class="p">,</span>
+                  <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'input'</span><span class="p">],</span> <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'output'</span><span class="p">],</span> <span class="n">opset_version</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Reliable export: MobileNetV3 features -&gt; reid.onnx (torchvision weights always download).</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision</span>
+
+<span class="n">backbone</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">mobilenet_v3_small</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="s1">'DEFAULT'</span><span class="p">)</span>
+<span class="n">extractor</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">backbone</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveAvgPool2d</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">())</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">extractor</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">128</span><span class="p">))</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">extractor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="s1">'reid.onnx'</span><span class="p">,</span>
+                  <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'input'</span><span class="p">],</span> <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'output'</span><span class="p">],</span> <span class="n">opset_version</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'wrote reid.onnx (embedding dim </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s1">)'</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-7"># Reliable export: MobileNetV3 features -&gt; reid.onnx (torchvision weights always download).
+import torch
+import torch.nn as nn
+import torchvision
+
+backbone = torchvision.models.mobilenet_v3_small(weights='DEFAULT')
+extractor = nn.Sequential(backbone.features, nn.AdaptiveAvgPool2d(1), nn.Flatten()).eval()
+with torch.no_grad():
+    dim = int(extractor(torch.randn(1, 3, 256, 128)).shape[1])
+torch.onnx.export(extractor, torch.randn(1, 3, 256, 128), 'reid.onnx',
+                  input_names=['input'], output_names=['output'], opset_version=12)
+print(f'wrote reid.onnx (embedding dim {dim})')</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="err">!</span><span class="n">pip</span> <span class="o">-</span><span class="n">q</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="s1">'.[reid]'</span>
+<span class="err">!</span><span class="n">rfdetr</span><span class="o">-</span><span class="n">demo</span> <span class="n">compare</span><span class="o">-</span><span class="n">reid</span> <span class="o">--</span><span class="n">source</span> <span class="p">{</span><span class="n">VIDEO</span><span class="p">}</span> <span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">frames</span> <span class="mi">600</span> \
+    <span class="o">--</span><span class="n">reid</span><span class="o">-</span><span class="n">backend</span> <span class="n">embedding</span> <span class="o">--</span><span class="n">reid</span><span class="o">-</span><span class="n">model</span> <span class="n">reid</span><span class="o">.</span><span class="n">onnx</span> <span class="o">--</span><span class="n">reid</span><span class="o">-</span><span class="n">similarity</span> <span class="mf">0.6</span> <span class="o">--</span><span class="n">json</span> <span class="n">reid_embed</span><span class="o">.</span><span class="n">json</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">'reid_embed.json'</span><span class="p">)),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-8">!pip -q install -e '.[reid]'
+!rfdetr-demo compare-reid --source {VIDEO} --max-frames 600 \
+    --reid-backend embedding --reid-model reid.onnx --reid-similarity 0.6 --json reid_embed.json
+
+import json
+print(json.dumps(json.load(open('reid_embed.json')), indent=2, ensure_ascii=False))</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="7-detection-recall-how-many-people-are-found">7. Detection recall (how many people are found)<a class="anchor-link" href="#7-detection-recall-how-many-people-are-found">¶</a></h2><p>Tracking can only follow <strong>detected</strong> people; in dense/top-down scenes many are missed. Two levers on <code>compare-reid</code>:</p>
+<ul>
+<li><code>--threshold</code> — lower detects more (and more false positives).</li>
+<li><code>--resolution</code> — higher detects smaller/distant people (slower). It must satisfy the model's patch divisibility; the cell below tries values and <strong>skips</strong> any the model rejects.</li>
+</ul>
+<p>Watch <code>mean_people</code> / <code>max_people</code> (the ReID-off detection counts) climb as recall improves. This is upstream of tracking and is usually the biggest lever for person-count accuracy.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">threshold</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.35</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">resolution</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">840</span><span class="p">,</span> <span class="mi">1008</span><span class="p">]:</span>   <span class="c1"># 840, 1008 = multiples of lcm(12,14); skipped if rejected</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'rfdetr-demo'</span><span class="p">,</span> <span class="s1">'compare-reid'</span><span class="p">,</span> <span class="s1">'--source'</span><span class="p">,</span> <span class="n">VIDEO</span><span class="p">,</span> <span class="s1">'--max-frames'</span><span class="p">,</span> <span class="s1">'300'</span><span class="p">,</span>
+               <span class="s1">'--threshold'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">threshold</span><span class="p">),</span> <span class="s1">'--json'</span><span class="p">,</span> <span class="s1">'recall.json'</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">resolution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">'--resolution'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">resolution</span><span class="p">)]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'resolution </span><span class="si">{</span><span class="n">resolution</span><span class="si">}</span><span class="s1"> rejected by the model; skipping'</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">off</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">'recall.json'</span><span class="p">))[</span><span class="s1">'reid_off'</span><span class="p">]</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">'threshold'</span><span class="p">:</span> <span class="n">threshold</span><span class="p">,</span> <span class="s1">'resolution'</span><span class="p">:</span> <span class="n">resolution</span> <span class="ow">or</span> <span class="s1">'default'</span><span class="p">,</span>
+                     <span class="s1">'mean_people'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">off</span><span class="p">[</span><span class="s1">'mean_active'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span> <span class="s1">'max_people'</span><span class="p">:</span> <span class="n">off</span><span class="p">[</span><span class="s1">'max_active'</span><span class="p">]})</span>
+
+<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-9">import json, subprocess
+import pandas as pd
+
+rows = []
+for threshold in [0.5, 0.35, 0.25]:
+    for resolution in [None, 840, 1008]:   # 840, 1008 = multiples of lcm(12,14); skipped if rejected
+        cmd = ['rfdetr-demo', 'compare-reid', '--source', VIDEO, '--max-frames', '300',
+               '--threshold', str(threshold), '--json', 'recall.json']
+        if resolution is not None:
+            cmd += ['--resolution', str(resolution)]
+        try:
+            subprocess.run(cmd, check=True, capture_output=True)
+        except subprocess.CalledProcessError:
+            print(f'resolution {resolution} rejected by the model; skipping')
+            continue
+        off = json.load(open('recall.json'))['reid_off']
+        rows.append({'threshold': threshold, 'resolution': resolution or 'default',
+                     'mean_people': round(off['mean_active'], 2), 'max_people': off['max_active']})
+
+pd.DataFrame(rows)</div>
 </div>
 </div>
 </div>
@@ -3451,6 +3643,18 @@ show('compare_out/reid_on.mp4', 'ReID ON (similarity 0.85)')</div>
 <td>off</td>
 </tr>
 <tr>
+<td><code>RFDETR_REID_BACKEND</code></td>
+<td><code>--reid-backend</code></td>
+<td><code>histogram</code> (color, no deps) or <code>embedding</code> (ONNX, grayscale-robust)</td>
+<td>histogram</td>
+</tr>
+<tr>
+<td><code>RFDETR_REID_MODEL</code></td>
+<td><code>--reid-model</code></td>
+<td>ONNX ReID model path (embedding backend)</td>
+<td>—</td>
+</tr>
+<tr>
 <td><code>RFDETR_REID_WEIGHT</code></td>
 <td><code>--reid-weight</code></td>
 <td>Appearance vs IoU cost blend (0..1)</td>
@@ -3459,7 +3663,7 @@ show('compare_out/reid_on.mp4', 'ReID ON (similarity 0.85)')</div>
 <tr>
 <td><code>RFDETR_REID_SIMILARITY</code></td>
 <td><code>--reid-similarity</code></td>
-<td>Min histogram match to revive an id</td>
+<td>Min match to revive an id (intersection or cosine)</td>
 <td>0.5</td>
 </tr>
 <tr>
@@ -3474,9 +3678,21 @@ show('compare_out/reid_on.mp4', 'ReID ON (similarity 0.85)')</div>
 <td>Descriptor smoothing (0..1)</td>
 <td>0.9</td>
 </tr>
+<tr>
+<td>—</td>
+<td><code>--threshold</code></td>
+<td>Detection threshold (lower = more recall)</td>
+<td>0.5</td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>--resolution</code></td>
+<td>Keypoint model input resolution (higher = smaller people)</td>
+<td>model default</td>
+</tr>
 </tbody>
 </table>
-<p>If the color histogram proves too weak for your footage (e.g. everyone wears similar colors), the descriptor in <code>src/rfdetr_demo/tracking/appearance.py</code> can later be swapped for a small ONNX/OSNet embedding behind the same interface.</p>
+<p>The histogram backend is CPU-only and dependency-free but weak on grayscale/IR footage. Prefer the embedding backend (section 6) for surveillance/IR feeds. For person-count accuracy, detection recall (section 7) is usually the bigger lever than tracking.</p>
 </div>
 </div>
 </div>
@@ -3508,7 +3724,7 @@ show('compare_out/reid_on.mp4', 'ReID ON (similarity 0.85)')</div>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 6, 2026 15:41:21 UTC">2026-08-06 15:41:21</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 6, 2026 16:21:24 UTC">2026-08-06 16:21:24</span>
   </span>
 
     
