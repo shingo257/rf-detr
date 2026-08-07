@@ -275,6 +275,7 @@ def make_detection_track_callback(
         stats["frame_ghost_tracks"] = frame_stats.ghost_count
         stats["frame_live_tracks"] = frame_stats.active_track_count - frame_stats.ghost_count
         stats["total_detections"] += frame_stats.active_track_count
+        stats["total_live_detections"] = stats.get("total_live_detections", 0) + stats["frame_live_tracks"]
         seen_ids.update(tid for tid in track_ids_from_key_points(result.key_points) if tid is not None)
         stats["unique_track_ids"] = len(seen_ids)
         annotated = _draw_tracked_boxes(frame_bgr, result.key_points)
@@ -384,6 +385,8 @@ def make_keypoint_callback(
         )
         active_count = stats.get("frame_active_tracks", len(display_points))
         stats["total_detections"] += active_count
+        live_count = stats.get("frame_live_tracks", active_count)
+        stats["total_live_detections"] = stats.get("total_live_detections", 0) + live_count
         return render_keypoint_overlay(frame_bgr, key_points, overlay_settings)
 
     return callback

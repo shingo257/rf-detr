@@ -412,6 +412,13 @@ def run_demo(
             stats["total_detections"] / stats["processed_frames"],
             2,
         )
+        if "total_live_detections" in stats:
+            # Ghost-hold frames inflate avg_detections_per_frame; this excludes
+            # them, matching the "live" count shown in the overlay banner.
+            summary["avg_live_detections_per_frame"] = round(
+                stats["total_live_detections"] / stats["processed_frames"],
+                2,
+            )
         summary["avg_fps"] = round(stats["processed_frames"] / elapsed_sec, 2)
     if "unique_track_ids" in stats:
         summary["unique_track_ids"] = stats["unique_track_ids"]
