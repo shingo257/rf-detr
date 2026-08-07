@@ -87,7 +87,7 @@
   
   
   
-  <meta property="article:modified_time" content="2026-08-07T12:10:10">
+  <meta property="article:modified_time" content="2026-08-07T16:01:43">
   
   <script type="application/ld+json">
   {
@@ -102,7 +102,7 @@
     "inLanguage": "en",
     "keywords": "RF-DETR, rfdetr, object detection, instance segmentation, computer vision, Roboflow",
     "datePublished": "2025-03-01",
-    "dateModified": "2026-08-07T12:10:10",
+    "dateModified": "2026-08-07T16:01:43",
     "image": "https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png",
     "author": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
     "publisher": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
@@ -3651,7 +3651,7 @@ pd.DataFrame(rows)</div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="8-detection-based-tracking-counting-two-stage-stage-1">8. Detection-based tracking + counting (two-stage, Stage 1)<a class="anchor-link" href="#8-detection-based-tracking-counting-two-stage-stage-1">¶</a></h2><p>The person-<strong>detection</strong> model finds far more people than the keypoint model (≈28 vs ≈20 on this clip) and is faster. <code>--track</code> runs those detections through the same box-IoU tracker (motion prediction, gate, and appearance ReID all apply), drawing stable ids and a live count. This is the recommended pipeline for <strong>person counting / flow</strong>; add pose on a subset later (Stage 2).</p>
-<p>Add <code>--reid</code> (color histogram) or <code>--reid-model reid.onnx</code> (embedding, grayscale-robust) to reduce id fragmentation across occlusions. The cell below renders detect+track with and without ReID. Each run prints <strong><code>Unique track ids over clip: N</code></strong> — compare the two numbers: fewer with ReID (while the average count holds) means less fragmentation. If the average count itself drops, raise <code>--reid-similarity</code>.</p>
+<p>Add <code>--reid</code> (color histogram) or <code>--reid-model reid.onnx</code> (embedding, grayscale-robust) to reduce id fragmentation across occlusions. The cell below renders detect+track with and without ReID. Each run prints <strong><code>Unique track ids over clip: N</code></strong> — compare the two numbers: fewer with ReID (while the average count holds) means less fragmentation. If the average count itself drops, raise <code>--reid-similarity</code>. The embedding roughly halves FPS; add <code>--reid-stride N</code> to run it every Nth frame (motion-only in between) and recover most of the speed.</p>
 </div>
 </div>
 </div>
@@ -3840,7 +3840,7 @@ if os.path.exists('track_reid.mp4'):
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 7, 2026 12:10:10 UTC">2026-08-07 12:10:10</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 7, 2026 16:01:43 UTC">2026-08-07 16:01:43</span>
   </span>
 
     
