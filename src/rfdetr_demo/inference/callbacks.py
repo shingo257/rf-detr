@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 import cv2
 import numpy as np
@@ -19,11 +19,33 @@ from rfdetr.detr import RFDETR
 from rfdetr.visualize.keypoints import key_points_for_display
 from rfdetr_demo.inference.overlays.keypoint import KeypointOverlaySettings, render_keypoint_overlay
 from rfdetr_demo.inference.types import COCO_PERSON_CLASS_ID
+from rfdetr_demo.tracking.bbox import suppress_contained_detections
 from rfdetr_demo.tracking.keypoints_ops import (
     detections_to_key_points,
     is_track_ghost,
     track_ids_from_key_points,
 )
+
+
+def _suppress_tile_boundary_duplicates(
+    detections: sv.Detections,
+    containment_threshold: float = 0.8,
+) -> sv.Detections:
+    """Drop detections mostly contained within another, higher-confidence detection.
+
+    A second NMS pass on top of ``sv.InferenceSlicer``'s built-in tile-merge NMS:
+    a person straddling a tile boundary can yield a full-body box from one tile
+    and a smaller, partial-body box from the adjacent tile whose IoU stays below
+    a standard NMS threshold, double-counting the person.
+    """
+    if len(detections) <= 1 or detections.confidence is None:
+        return detections
+    keep = suppress_contained_detections(
+        detections.xyxy,
+        detections.confidence,
+        containment_threshold=containment_threshold,
+    )
+    return cast(sv.Detections, detections[keep])
 
 
 def _build_person_detector(
@@ -37,6 +59,8 @@ def _build_person_detector(
     When ``tile_size > 0`` the frame is split into overlapping tiles (SAHI-style)
     and each is run through the model, then merged with NMS — small/distant people
     that are tiny in the full frame become large within a tile and get detected.
+    An extra containment-based pass then drops any remaining tile-boundary
+    duplicates that the merge NMS's IoU threshold alone doesn't catch.
     """
     if tile_size and tile_size > 0:
         slicer = sv.InferenceSlicer(
@@ -45,7 +69,7 @@ def _build_person_detector(
             overlap_wh=(tile_overlap, tile_overlap),
             iou_threshold=0.5,
         )
-        return lambda frame_rgb: slicer(frame_rgb)
+        return lambda frame_rgb: _suppress_tile_boundary_duplicates(slicer(frame_rgb))
     return lambda frame_rgb: model.predict(frame_rgb, threshold=threshold, include_source_image=False)
 
 
@@ -251,6 +275,7 @@ def make_detection_track_callback(
         stats["frame_ghost_tracks"] = frame_stats.ghost_count
         stats["frame_live_tracks"] = frame_stats.active_track_count - frame_stats.ghost_count
         stats["total_detections"] += frame_stats.active_track_count
+        stats["total_live_detections"] = stats.get("total_live_detections", 0) + stats["frame_live_tracks"]
         seen_ids.update(tid for tid in track_ids_from_key_points(result.key_points) if tid is not None)
         stats["unique_track_ids"] = len(seen_ids)
         annotated = _draw_tracked_boxes(frame_bgr, result.key_points)
@@ -360,6 +385,8 @@ def make_keypoint_callback(
         )
         active_count = stats.get("frame_active_tracks", len(display_points))
         stats["total_detections"] += active_count
+        live_count = stats.get("frame_live_tracks", active_count)
+        stats["total_live_detections"] = stats.get("total_live_detections", 0) + live_count
         return render_keypoint_overlay(frame_bgr, key_points, overlay_settings)
 
     return callback

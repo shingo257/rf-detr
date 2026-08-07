@@ -82,6 +82,34 @@ def test_detection_track_callback_assigns_stable_ids() -> None:
     assert stats["unique_track_ids"] == 2
 
 
+def test_detection_track_callback_accumulates_live_detections_excluding_ghosts() -> None:
+    # Frame 0: two people detected. Frame 1: only one is detected, so the
+    # tracker holds the missing one as a ghost (default max_missed=2) rather
+    # than dropping it immediately.
+    frame0 = _person_detections([(100.0, 100.0, 160.0, 300.0), (400.0, 100.0, 460.0, 300.0)])
+    frame1 = _person_detections([(110.0, 100.0, 170.0, 300.0)])
+    model = _FakeDetectionModel([frame0, frame1])
+    pipeline = PersonTrackPipeline(settings=PersonTrackSettings(enabled=True), frame_width=640)
+    stats: dict[str, int] = {
+        "processed_frames": 0,
+        "total_detections": 0,
+        "total_live_detections": 0,
+    }
+
+    callback = make_detection_track_callback(model, 0.5, True, stats, pipeline)
+    blank = np.zeros((480, 640, 3), dtype=np.uint8)
+    callback(blank, 0)
+    callback(blank, 1)
+
+    # Frame 0: 2 live, 0 ghosts. Frame 1: 1 live + 1 held ghost.
+    assert stats["frame_ghost_tracks"] == 1
+    assert stats["frame_live_tracks"] == 1
+    # total_detections (the legacy metric) includes the held ghost: 2 + 2 = 4.
+    assert stats["total_detections"] == 4
+    # total_live_detections excludes ghost holds: 2 + 1 = 3.
+    assert stats["total_live_detections"] == 3
+
+
 def test_tiled_detector_runs_model_per_tile_and_merges() -> None:
     from rfdetr_demo.inference.callbacks import _build_person_detector
 
@@ -106,6 +134,52 @@ def test_tiled_detector_runs_model_per_tile_and_merges() -> None:
     # A 512x512 frame with 256px tiles is split into multiple tiles (model called > once).
     assert model.calls > 1
     assert len(detections) >= 1
+
+
+def test_tile_boundary_duplicate_survives_iou_nms_but_not_containment_pass() -> None:
+    from rfdetr_demo.inference.callbacks import _suppress_tile_boundary_duplicates
+
+    # Simulates a person straddling a tile boundary: a full-body box merged
+    # from one tile and a much smaller, lower-confidence partial-body box left
+    # over from the adjacent tile. Their IoU (0.04) is far below a typical 0.5
+    # merge-NMS threshold — the union is dominated by the large box — but the
+    # smaller box is 100% inside the larger one (containment ratio 1.0).
+    detections = sv.Detections(
+        xyxy=np.asarray(
+            [
+                [100.0, 100.0, 300.0, 300.0],  # full body, high confidence
+                [100.0, 100.0, 140.0, 140.0],  # partial body, fully contained
+            ],
+            dtype=np.float32,
+        ),
+        confidence=np.asarray([0.9, 0.4], dtype=np.float32),
+        class_id=np.ones((2,), dtype=np.int64),
+    )
+
+    merged = _suppress_tile_boundary_duplicates(detections)
+
+    assert len(merged) == 1
+    assert merged.confidence[0] == np.float32(0.9)
+
+
+def test_containment_pass_keeps_genuinely_distinct_people() -> None:
+    from rfdetr_demo.inference.callbacks import _suppress_tile_boundary_duplicates
+
+    detections = sv.Detections(
+        xyxy=np.asarray(
+            [
+                [100.0, 100.0, 140.0, 200.0],
+                [300.0, 100.0, 340.0, 200.0],  # a different person, no overlap
+            ],
+            dtype=np.float32,
+        ),
+        confidence=np.asarray([0.9, 0.85], dtype=np.float32),
+        class_id=np.ones((2,), dtype=np.int64),
+    )
+
+    merged = _suppress_tile_boundary_duplicates(detections)
+
+    assert len(merged) == 2
 
 
 class _FakePoseModel:
