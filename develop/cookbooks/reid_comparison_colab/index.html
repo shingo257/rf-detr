@@ -87,7 +87,7 @@
   
   
   
-  <meta property="article:modified_time" content="2026-08-07T16:01:43">
+  <meta property="article:modified_time" content="2026-08-07T16:07:14">
   
   <script type="application/ld+json">
   {
@@ -102,7 +102,7 @@
     "inLanguage": "en",
     "keywords": "RF-DETR, rfdetr, object detection, instance segmentation, computer vision, Roboflow",
     "datePublished": "2025-03-01",
-    "dateModified": "2026-08-07T16:01:43",
+    "dateModified": "2026-08-07T16:07:14",
     "image": "https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png",
     "author": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
     "publisher": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
@@ -2327,6 +2327,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#9-two-stage-pose-on-a-foreground-subset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Two-stage: pose on a foreground subset
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#tuning-cheatsheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3741,6 +3752,64 @@ if os.path.exists('track_reid.mp4'):
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="9-two-stage-pose-on-a-foreground-subset">9. Two-stage: pose on a foreground subset<a class="anchor-link" href="#9-two-stage-pose-on-a-foreground-subset">¶</a></h2><p><code>--pose-topk N</code> keeps the fast detect+track counter for <strong>everyone</strong> and additionally runs high-precision <strong>pose</strong> on the N largest (closest/foreground) tracked boxes, drawing skeletons on them. Each box is cropped so the person fills the frame — accurate joints even for people who are small in the full view.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="err">!</span><span class="n">rfdetr</span><span class="o">-</span><span class="n">demo</span> <span class="n">video</span> <span class="o">--</span><span class="n">task</span> <span class="n">detect</span> <span class="o">--</span><span class="n">person</span><span class="o">-</span><span class="n">only</span> <span class="o">--</span><span class="n">track</span> <span class="o">--</span><span class="n">model</span> <span class="n">large</span> \
+    <span class="o">--</span><span class="n">resolution</span> <span class="mi">960</span> <span class="o">--</span><span class="n">threshold</span> <span class="mf">0.25</span> <span class="o">--</span><span class="n">pose</span><span class="o">-</span><span class="n">topk</span> <span class="mi">8</span> \
+    <span class="o">--</span><span class="n">source</span> <span class="p">{</span><span class="n">VIDEO</span><span class="p">}</span> <span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">frames</span> <span class="mi">200</span> <span class="o">--</span><span class="n">output</span> <span class="n">track_pose</span><span class="o">.</span><span class="n">mp4</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">base64</span><span class="w"> </span><span class="kn">import</span> <span class="n">b64encode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span><span class="p">,</span> <span class="n">display</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">'ffmpeg -y -loglevel error -i track_pose.mp4 -vcodec libx264 -pix_fmt yuv420p track_pose_h264.mp4'</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s1">'&lt;video width=760 controls&gt;&lt;source src="data:video/mp4;base64,'</span>
+             <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">b64encode</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">"track_pose_h264.mp4"</span><span class="p">,</span><span class="w"> </span><span class="s2">"rb"</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="si">}</span><span class="s1">" type="video/mp4"&gt;&lt;/video&gt;'</span><span class="p">))</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-11">!rfdetr-demo video --task detect --person-only --track --model large \
+    --resolution 960 --threshold 0.25 --pose-topk 8 \
+    --source {VIDEO} --max-frames 200 --output track_pose.mp4
+
+import os
+from base64 import b64encode
+from IPython.display import HTML, display
+
+os.system('ffmpeg -y -loglevel error -i track_pose.mp4 -vcodec libx264 -pix_fmt yuv420p track_pose_h264.mp4')
+display(HTML(f'&lt;video width=760 controls&gt;&lt;source src="data:video/mp4;base64,'
+             f'{b64encode(open("track_pose_h264.mp4", "rb").read()).decode()}" type="video/mp4"&gt;&lt;/video&gt;'))</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="tuning-cheatsheet">Tuning cheatsheet<a class="anchor-link" href="#tuning-cheatsheet">¶</a></h2><p>All default off; enable per run via env vars or the <code>compare-reid</code> flags.</p>
 <table>
 <thead>
@@ -3840,7 +3909,7 @@ if os.path.exists('track_reid.mp4'):
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 7, 2026 16:01:43 UTC">2026-08-07 16:01:43</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 7, 2026 16:07:14 UTC">2026-08-07 16:07:14</span>
   </span>
 
     
