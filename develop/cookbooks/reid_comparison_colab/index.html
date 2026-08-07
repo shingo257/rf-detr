@@ -87,7 +87,7 @@
   
   
   
-  <meta property="article:modified_time" content="2026-08-06T16:21:24">
+  <meta property="article:modified_time" content="2026-08-06T19:14:51">
   
   <script type="application/ld+json">
   {
@@ -102,7 +102,7 @@
     "inLanguage": "en",
     "keywords": "RF-DETR, rfdetr, object detection, instance segmentation, computer vision, Roboflow",
     "datePublished": "2025-03-01",
-    "dateModified": "2026-08-06T16:21:24",
+    "dateModified": "2026-08-06T19:14:51",
     "image": "https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png",
     "author": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
     "publisher": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
@@ -2316,6 +2316,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#8-detection-based-tracking-counting-two-stage-stage-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Detection-based tracking + counting (two-stage, Stage 1)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#tuning-cheatsheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3446,7 +3457,7 @@ show('compare_out/reid_on.mp4', 'ReID ON (similarity 0.85)')</div>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span><span class="o">,</span><span class="w"> </span><span class="nn">torchreid</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">torchreid</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">build_model</span><span class="p">(</span><span class="s1">'osnet_x0_25'</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 <span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">256</span><span class="p">,</span><span class="mi">128</span><span class="p">),</span> <span class="s1">'reid.onnx'</span><span class="p">,</span>
-                  <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'input'</span><span class="p">],</span> <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'output'</span><span class="p">],</span> <span class="n">opset_version</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+                  <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'input'</span><span class="p">],</span> <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'output'</span><span class="p">],</span> <span class="n">opset_version</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -3470,7 +3481,10 @@ show('compare_out/reid_on.mp4', 'ReID ON (similarity 0.85)')</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Reliable export: MobileNetV3 features -&gt; reid.onnx (torchvision weights always download).</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># torch.onnx.export on Colab's torch needs onnxscript for the default exporter.</span>
+<span class="err">!</span><span class="n">pip</span> <span class="o">-</span><span class="n">q</span> <span class="n">install</span> <span class="n">onnx</span> <span class="n">onnxscript</span>
+
+<span class="c1"># Reliable export: MobileNetV3 features -&gt; reid.onnx (torchvision weights always download).</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torchvision</span>
@@ -3480,10 +3494,13 @@ show('compare_out/reid_on.mp4', 'ReID ON (similarity 0.85)')</div>
 <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
     <span class="n">dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">extractor</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">128</span><span class="p">))</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">extractor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="s1">'reid.onnx'</span><span class="p">,</span>
-                  <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'input'</span><span class="p">],</span> <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'output'</span><span class="p">],</span> <span class="n">opset_version</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+                  <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'input'</span><span class="p">],</span> <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'output'</span><span class="p">],</span> <span class="n">opset_version</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'wrote reid.onnx (embedding dim </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s1">)'</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-7"># Reliable export: MobileNetV3 features -&gt; reid.onnx (torchvision weights always download).
+<div class="clipboard-copy-txt" id="cell-7"># torch.onnx.export on Colab's torch needs onnxscript for the default exporter.
+!pip -q install onnx onnxscript
+
+# Reliable export: MobileNetV3 features -&gt; reid.onnx (torchvision weights always download).
 import torch
 import torch.nn as nn
 import torchvision
@@ -3493,7 +3510,7 @@ extractor = nn.Sequential(backbone.features, nn.AdaptiveAvgPool2d(1), nn.Flatten
 with torch.no_grad():
     dim = int(extractor(torch.randn(1, 3, 256, 128)).shape[1])
 torch.onnx.export(extractor, torch.randn(1, 3, 256, 128), 'reid.onnx',
-                  input_names=['input'], output_names=['output'], opset_version=12)
+                  input_names=['input'], output_names=['output'], opset_version=18)
 print(f'wrote reid.onnx (embedding dim {dim})')</div>
 </div>
 </div>
@@ -3576,20 +3593,22 @@ print(json.dumps(json.load(open('reid_embed.json')), indent=2, ensure_ascii=Fals
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">threshold</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.35</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">]:</span>
-    <span class="k">for</span> <span class="n">resolution</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">840</span><span class="p">,</span> <span class="mi">1008</span><span class="p">]:</span>   <span class="c1"># 840, 1008 = multiples of lcm(12,14); skipped if rejected</span>
-        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'rfdetr-demo'</span><span class="p">,</span> <span class="s1">'compare-reid'</span><span class="p">,</span> <span class="s1">'--source'</span><span class="p">,</span> <span class="n">VIDEO</span><span class="p">,</span> <span class="s1">'--max-frames'</span><span class="p">,</span> <span class="s1">'300'</span><span class="p">,</span>
+<span class="k">for</span> <span class="n">threshold</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">resolution</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">768</span><span class="p">,</span> <span class="mi">960</span><span class="p">]:</span>   <span class="c1"># multiples of patch_size*4 = 48 (default is 576); rejects are skipped</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'rfdetr-demo'</span><span class="p">,</span> <span class="s1">'compare-reid'</span><span class="p">,</span> <span class="s1">'--source'</span><span class="p">,</span> <span class="n">VIDEO</span><span class="p">,</span> <span class="s1">'--max-frames'</span><span class="p">,</span> <span class="s1">'100'</span><span class="p">,</span>
                <span class="s1">'--threshold'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">threshold</span><span class="p">),</span> <span class="s1">'--json'</span><span class="p">,</span> <span class="s1">'recall.json'</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">resolution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">'--resolution'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">resolution</span><span class="p">)]</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'resolution </span><span class="si">{</span><span class="n">resolution</span><span class="si">}</span><span class="s1"> rejected by the model; skipping'</span><span class="p">)</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'thr=</span><span class="si">{</span><span class="n">threshold</span><span class="si">}</span><span class="s1"> res=</span><span class="si">{</span><span class="n">resolution</span><span class="si">}</span><span class="s1">: rejected (</span><span class="si">{</span><span class="n">error</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">error</span><span class="o">.</span><span class="n">stderr</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="n">error</span><span class="si">}</span><span class="s1">)'</span><span class="p">)</span>
             <span class="k">continue</span>
         <span class="n">off</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">'recall.json'</span><span class="p">))[</span><span class="s1">'reid_off'</span><span class="p">]</span>
-        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">'threshold'</span><span class="p">:</span> <span class="n">threshold</span><span class="p">,</span> <span class="s1">'resolution'</span><span class="p">:</span> <span class="n">resolution</span> <span class="ow">or</span> <span class="s1">'default'</span><span class="p">,</span>
-                     <span class="s1">'mean_people'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">off</span><span class="p">[</span><span class="s1">'mean_active'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span> <span class="s1">'max_people'</span><span class="p">:</span> <span class="n">off</span><span class="p">[</span><span class="s1">'max_active'</span><span class="p">]})</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'threshold'</span><span class="p">:</span> <span class="n">threshold</span><span class="p">,</span> <span class="s1">'resolution'</span><span class="p">:</span> <span class="n">resolution</span> <span class="ow">or</span> <span class="s1">'default (576)'</span><span class="p">,</span>
+               <span class="s1">'mean_people'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">off</span><span class="p">[</span><span class="s1">'mean_active'</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span> <span class="s1">'max_people'</span><span class="p">:</span> <span class="n">off</span><span class="p">[</span><span class="s1">'max_active'</span><span class="p">]}</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 
 <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
 </pre></div>
@@ -3597,22 +3616,81 @@ print(json.dumps(json.load(open('reid_embed.json')), indent=2, ensure_ascii=Fals
 import pandas as pd
 
 rows = []
-for threshold in [0.5, 0.35, 0.25]:
-    for resolution in [None, 840, 1008]:   # 840, 1008 = multiples of lcm(12,14); skipped if rejected
-        cmd = ['rfdetr-demo', 'compare-reid', '--source', VIDEO, '--max-frames', '300',
+for threshold in [0.5, 0.3, 0.2]:
+    for resolution in [None, 768, 960]:   # multiples of patch_size*4 = 48 (default is 576); rejects are skipped
+        cmd = ['rfdetr-demo', 'compare-reid', '--source', VIDEO, '--max-frames', '100',
                '--threshold', str(threshold), '--json', 'recall.json']
         if resolution is not None:
             cmd += ['--resolution', str(resolution)]
         try:
-            subprocess.run(cmd, check=True, capture_output=True)
-        except subprocess.CalledProcessError:
-            print(f'resolution {resolution} rejected by the model; skipping')
+            subprocess.run(cmd, check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as error:
+            print(f'thr={threshold} res={resolution}: rejected ({error.stderr.strip().splitlines()[-1] if error.stderr else error})')
             continue
         off = json.load(open('recall.json'))['reid_off']
-        rows.append({'threshold': threshold, 'resolution': resolution or 'default',
-                     'mean_people': round(off['mean_active'], 2), 'max_people': off['max_active']})
+        row = {'threshold': threshold, 'resolution': resolution or 'default (576)',
+               'mean_people': round(off['mean_active'], 2), 'max_people': off['max_active']}
+        rows.append(row)
+        print(row)
 
 pd.DataFrame(rows)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="8-detection-based-tracking-counting-two-stage-stage-1">8. Detection-based tracking + counting (two-stage, Stage 1)<a class="anchor-link" href="#8-detection-based-tracking-counting-two-stage-stage-1">¶</a></h2><p>The person-<strong>detection</strong> model finds far more people than the keypoint model (≈28 vs ≈20 on this clip) and is faster. <code>--track</code> runs those detections through the same box-IoU tracker (motion prediction, gate, and appearance ReID all apply), drawing stable ids and a live count. This is the recommended pipeline for <strong>person counting / flow</strong>; add pose on a subset later (Stage 2).</p>
+<p>ReID knobs still apply via env vars (e.g. <code>RFDETR_TRACK_REID=1</code>).</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="err">!</span><span class="n">rfdetr</span><span class="o">-</span><span class="n">demo</span> <span class="n">video</span> <span class="o">--</span><span class="n">task</span> <span class="n">detect</span> <span class="o">--</span><span class="n">person</span><span class="o">-</span><span class="n">only</span> <span class="o">--</span><span class="n">track</span> <span class="o">--</span><span class="n">model</span> <span class="n">large</span> \
+    <span class="o">--</span><span class="n">resolution</span> <span class="mi">960</span> <span class="o">--</span><span class="n">threshold</span> <span class="mf">0.25</span> <span class="o">--</span><span class="n">source</span> <span class="p">{</span><span class="n">VIDEO</span><span class="p">}</span> <span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">frames</span> <span class="mi">200</span> <span class="o">--</span><span class="n">output</span> <span class="n">track</span><span class="o">.</span><span class="n">mp4</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">base64</span><span class="w"> </span><span class="kn">import</span> <span class="n">b64encode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span><span class="p">,</span> <span class="n">display</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">'ffmpeg -y -loglevel error -i track.mp4 -vcodec libx264 -pix_fmt yuv420p track_h264.mp4'</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s1">'&lt;video width=760 controls&gt;&lt;source src="data:video/mp4;base64,'</span>
+             <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">b64encode</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">"track_h264.mp4"</span><span class="p">,</span><span class="w"> </span><span class="s2">"rb"</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="si">}</span><span class="s1">" type="video/mp4"&gt;&lt;/video&gt;'</span><span class="p">))</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-10">!rfdetr-demo video --task detect --person-only --track --model large \
+    --resolution 960 --threshold 0.25 --source {VIDEO} --max-frames 200 --output track.mp4
+
+import os
+from base64 import b64encode
+from IPython.display import HTML, display
+
+os.system('ffmpeg -y -loglevel error -i track.mp4 -vcodec libx264 -pix_fmt yuv420p track_h264.mp4')
+display(HTML(f'&lt;video width=760 controls&gt;&lt;source src="data:video/mp4;base64,'
+             f'{b64encode(open("track_h264.mp4", "rb").read()).decode()}" type="video/mp4"&gt;&lt;/video&gt;'))</div>
 </div>
 </div>
 </div>
@@ -3724,7 +3802,7 @@ pd.DataFrame(rows)</div>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 6, 2026 16:21:24 UTC">2026-08-06 16:21:24</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 6, 2026 19:14:51 UTC">2026-08-06 19:14:51</span>
   </span>
 
     
