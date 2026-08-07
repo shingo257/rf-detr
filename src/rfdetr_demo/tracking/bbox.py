@@ -47,6 +47,81 @@ def iou(box_a: np.ndarray, box_b: np.ndarray) -> float:
     return float(inter / union) if union > 0 else 0.0
 
 
+def containment_ratio(box_a: np.ndarray, box_b: np.ndarray) -> float:
+    """Return how much of the smaller box is covered by the other box.
+
+    Unlike IoU, this stays high when one box is a strict subset of a much
+    larger box (e.g. a tile-boundary detection split into a full-body box and
+    a smaller partial-body box), a case plain IoU-NMS can miss because the
+    union is dominated by the larger box's area.
+
+    Args:
+        box_a: First box as ``[x1, y1, x2, y2]``.
+        box_b: Second box as ``[x1, y1, x2, y2]``.
+
+    Returns:
+        Intersection area divided by the smaller of the two box areas, in
+        ``[0.0, 1.0]``. ``0.0`` if either box has non-positive area.
+    """
+    x1 = max(box_a[0], box_b[0])
+    y1 = max(box_a[1], box_b[1])
+    x2 = min(box_a[2], box_b[2])
+    y2 = min(box_a[3], box_b[3])
+    inter = max(0.0, x2 - x1) * max(0.0, y2 - y1)
+    if inter <= 0:
+        return 0.0
+    area_a = max(0.0, box_a[2] - box_a[0]) * max(0.0, box_a[3] - box_a[1])
+    area_b = max(0.0, box_b[2] - box_b[0]) * max(0.0, box_b[3] - box_b[1])
+    smaller_area = min(area_a, area_b)
+    if smaller_area <= 0:
+        return 0.0
+    return float(min(1.0, inter / smaller_area))
+
+
+def suppress_contained_detections(
+    xyxy: np.ndarray,
+    confidence: np.ndarray,
+    *,
+    containment_threshold: float = 0.8,
+) -> list[int]:
+    """Drop boxes that are mostly contained within a higher-confidence box.
+
+    Intended as an extra pass after tile-merge NMS (e.g. ``sv.InferenceSlicer``):
+    a person straddling a tile boundary can produce a full-body box from one
+    tile and a smaller, partial-body box from the adjacent tile. Their IoU can
+    stay below a standard NMS threshold even though the smaller box is
+    almost entirely inside the larger one, so plain IoU-NMS leaves both,
+    double-counting the person.
+
+    Args:
+        xyxy: Boxes as an ``(N, 4)`` array of ``[x1, y1, x2, y2]``.
+        confidence: Per-box detection confidence, shape ``(N,)``.
+        containment_threshold: Minimum :func:`containment_ratio` to treat the
+            smaller box as a duplicate of the larger, higher-confidence box.
+
+    Returns:
+        Sorted indices of the boxes to keep.
+    """
+    num_boxes = len(xyxy)
+    if num_boxes <= 1:
+        return list(range(num_boxes))
+
+    order = sorted(range(num_boxes), key=lambda index: float(confidence[index]), reverse=True)
+    suppressed: set[int] = set()
+    keep_indices: list[int] = []
+    for row in order:
+        if row in suppressed:
+            continue
+        keep_indices.append(row)
+        for other_row in order:
+            if other_row == row or other_row in suppressed:
+                continue
+            if containment_ratio(xyxy[other_row], xyxy[row]) >= containment_threshold:
+                suppressed.add(other_row)
+    keep_indices.sort()
+    return keep_indices
+
+
 def hungarian_maximize(cost: np.ndarray) -> list[tuple[int, int]]:
     """Return row/col pairs maximizing total cost (greedy fallback for small matrices)."""
     try:

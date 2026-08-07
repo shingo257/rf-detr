@@ -108,6 +108,52 @@ def test_tiled_detector_runs_model_per_tile_and_merges() -> None:
     assert len(detections) >= 1
 
 
+def test_tile_boundary_duplicate_survives_iou_nms_but_not_containment_pass() -> None:
+    from rfdetr_demo.inference.callbacks import _suppress_tile_boundary_duplicates
+
+    # Simulates a person straddling a tile boundary: a full-body box merged
+    # from one tile and a much smaller, lower-confidence partial-body box left
+    # over from the adjacent tile. Their IoU (0.04) is far below a typical 0.5
+    # merge-NMS threshold — the union is dominated by the large box — but the
+    # smaller box is 100% inside the larger one (containment ratio 1.0).
+    detections = sv.Detections(
+        xyxy=np.asarray(
+            [
+                [100.0, 100.0, 300.0, 300.0],  # full body, high confidence
+                [100.0, 100.0, 140.0, 140.0],  # partial body, fully contained
+            ],
+            dtype=np.float32,
+        ),
+        confidence=np.asarray([0.9, 0.4], dtype=np.float32),
+        class_id=np.ones((2,), dtype=np.int64),
+    )
+
+    merged = _suppress_tile_boundary_duplicates(detections)
+
+    assert len(merged) == 1
+    assert merged.confidence[0] == np.float32(0.9)
+
+
+def test_containment_pass_keeps_genuinely_distinct_people() -> None:
+    from rfdetr_demo.inference.callbacks import _suppress_tile_boundary_duplicates
+
+    detections = sv.Detections(
+        xyxy=np.asarray(
+            [
+                [100.0, 100.0, 140.0, 200.0],
+                [300.0, 100.0, 340.0, 200.0],  # a different person, no overlap
+            ],
+            dtype=np.float32,
+        ),
+        confidence=np.asarray([0.9, 0.85], dtype=np.float32),
+        class_id=np.ones((2,), dtype=np.int64),
+    )
+
+    merged = _suppress_tile_boundary_duplicates(detections)
+
+    assert len(merged) == 2
+
+
 class _FakePoseModel:
     def __init__(self) -> None:
         self.crop_sizes: list[tuple[int, int]] = []
