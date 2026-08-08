@@ -15,7 +15,7 @@ import cv2
 
 from rfdetr_demo.inference.models import build_keypoint_model
 from rfdetr_demo.paths import REPO_ROOT, resolve_default_source
-from rfdetr_demo.tracking.viewpoint import estimate_camera_viewpoint, preset_for_viewpoint
+from rfdetr_demo.tracking.viewpoint import estimate_viewpoint_from_frames, preset_for_viewpoint
 
 
 def add_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -51,26 +51,16 @@ def run(args: argparse.Namespace) -> int:
 
     frame_height = max(1, int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
     model = build_keypoint_model()
-    boxes: list[tuple[float, float, float, float]] = []
-
+    frames = []
     for frame_index in range(args.frames):
         capture.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
         ok, frame = capture.read()
         if not ok:
             break
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        key_points = model.predict(rgb, threshold=args.threshold, include_source_image=False)
-        if isinstance(key_points, list) or not key_points.data:
-            continue
-        xyxy = key_points.data.get("xyxy")
-        if xyxy is None:
-            continue
-        for x1, y1, x2, y2 in xyxy:
-            boxes.append((float(x1), float(y1), float(x2), float(y2)))
-
+        frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
     capture.release()
 
-    estimate = estimate_camera_viewpoint(boxes, frame_height=float(frame_height))
+    estimate = estimate_viewpoint_from_frames(frames, model, threshold=args.threshold)
     preset = preset_for_viewpoint(estimate)
 
     summary = {

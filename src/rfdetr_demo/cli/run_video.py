@@ -12,6 +12,7 @@ import logging
 import sys
 from pathlib import Path
 
+from rfdetr_demo.cli.presets import PRESETS, PresetName
 from rfdetr_demo.inference.runner import run_demo
 from rfdetr_demo.inference.types import KeypointUncertaintyStyle, TaskName
 from rfdetr_demo.paths import SAMPLE_DANCE, default_output_path, resolve_default_source
@@ -77,6 +78,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Tiled inference: detect on overlapping NxN tiles and merge (0=off) to catch small/distant people",
     )
     parser.add_argument("--tile-overlap", type=int, default=128, help="Tile overlap in pixels (with --tile)")
+    parser.add_argument(
+        "--preset",
+        choices=["overhead", "eye-level", "fast", "auto"],
+        default=None,
+        help=(
+            "Apply a named FlowCount preset, overriding --resolution/--threshold/--tile/"
+            "--tile-overlap/--pose-topk. 'auto' samples the clip and picks overhead or eye-level."
+        ),
+    )
     parser.add_argument("--frame-stride", type=int, default=1)
     parser.add_argument("--max-frames", type=int, default=None)
     parser.add_argument("--max-source-seconds", type=float, default=None)
@@ -97,6 +107,42 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _resolve_auto_preset(source_path: Path, *, frames: int = 20) -> PresetName:
+    """Sample a clip and pick 'overhead' or 'eye-level' via camera-viewpoint estimation.
+
+    Falls back to 'overhead' if the source can't be opened for sampling.
+
+    Args:
+        source_path: Video file to sample frames from.
+        frames: Number of frames to sample from the start of the clip.
+
+    Returns:
+        The recommended preset name.
+    """
+    import cv2
+
+    from rfdetr_demo.inference.models import build_keypoint_model
+    from rfdetr_demo.tracking.viewpoint import estimate_viewpoint_from_frames, preset_for_viewpoint
+
+    capture = cv2.VideoCapture(str(source_path))
+    if not capture.isOpened():
+        logger.warning("Could not open %s for auto-preset sampling; defaulting to 'overhead'", source_path)
+        return "overhead"
+
+    sampled_frames = []
+    for frame_index in range(frames):
+        capture.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+        ok, frame = capture.read()
+        if not ok:
+            break
+        sampled_frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    capture.release()
+
+    model = build_keypoint_model()
+    estimate = estimate_viewpoint_from_frames(sampled_frames, model, threshold=0.4)
+    return preset_for_viewpoint(estimate)
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the video demo CLI."""
     args = parse_args(argv)
@@ -106,6 +152,18 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     source_path = args.source if args.source is not None else resolve_default_source()
+
+    if args.preset is not None:
+        preset_name: PresetName = _resolve_auto_preset(source_path) if args.preset == "auto" else args.preset
+        if args.preset == "auto":
+            logger.info("Auto-selected preset: %s", preset_name)
+        flags = PRESETS[preset_name]
+        args.resolution = flags.resolution
+        args.threshold = flags.threshold
+        args.tile_size = flags.tile_size
+        args.tile_overlap = flags.tile_overlap
+        args.pose_topk = flags.pose_topk
+
     task: TaskName = args.task
     keypoint_uncertainty_style: KeypointUncertaintyStyle = (
         args.keypoint_uncertainty_style if args.keypoint_uncertainty else "none"
