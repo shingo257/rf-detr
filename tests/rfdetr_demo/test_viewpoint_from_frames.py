@@ -12,25 +12,27 @@ import supervision as sv
 
 from rfdetr_demo.tracking.viewpoint import estimate_viewpoint_from_frames
 
+_PERSON = 1
+_NOT_PERSON = 2
 
-class _FakeKeypointModel:
-    """Returns a fixed set of person boxes for every frame it's asked to predict."""
 
-    def __init__(self, boxes_per_call: list[list[tuple[float, float, float, float]]]) -> None:
-        self._boxes_per_call = boxes_per_call
+class _FakeDetectionModel:
+    """Returns a fixed set of (box, class_id) detections for every frame it's asked to predict."""
+
+    def __init__(self, detections_per_call: list[list[tuple[tuple[float, float, float, float], int]]]) -> None:
+        self._detections_per_call = detections_per_call
         self.calls = 0
 
-    def predict(self, _frame_rgb: object, **_kwargs: object) -> sv.KeyPoints:
-        boxes = self._boxes_per_call[self.calls]
+    def predict(self, _frame_rgb: object, **_kwargs: object) -> sv.Detections:
+        detections = self._detections_per_call[self.calls]
         self.calls += 1
-        num_persons = len(boxes)
-        xy = np.zeros((num_persons, 17, 2), dtype=np.float32)
-        return sv.KeyPoints(
-            xy=xy,
-            visible=np.zeros((num_persons, 17), dtype=bool),
-            keypoint_confidence=np.zeros((num_persons, 17), dtype=np.float32),
-            detection_confidence=np.full((num_persons,), 0.9, dtype=np.float32),
-            data={"xyxy": np.asarray(boxes, dtype=np.float32).reshape(num_persons, 4)},
+        num_detections = len(detections)
+        xyxy = np.asarray([box for box, _ in detections], dtype=np.float32).reshape(num_detections, 4)
+        class_id = np.asarray([cls for _, cls in detections], dtype=np.int64)
+        return sv.Detections(
+            xyxy=xyxy,
+            confidence=np.full((num_detections,), 0.9, dtype=np.float32),
+            class_id=class_id,
         )
 
 
@@ -39,11 +41,11 @@ def _blank_frame(height: int, width: int) -> np.ndarray:
 
 
 class TestEstimateViewpointFromFrames:
-    def test_aggregates_boxes_across_frames_and_uses_frame_height(self) -> None:
-        model = _FakeKeypointModel(
+    def test_aggregates_person_boxes_across_frames(self) -> None:
+        model = _FakeDetectionModel(
             [
-                [(0.0, 0.0, 40.0, 44.0), (300.0, 200.0, 342.0, 240.0)],
-                [(500.0, 350.0, 538.0, 392.0)],
+                [((0.0, 0.0, 40.0, 44.0), _PERSON), ((300.0, 200.0, 342.0, 240.0), _PERSON)],
+                [((500.0, 350.0, 538.0, 392.0), _PERSON)],
             ],
         )
         frames = [_blank_frame(720, 1280), _blank_frame(720, 1280)]
@@ -53,8 +55,20 @@ class TestEstimateViewpointFromFrames:
         assert model.calls == 2
         assert estimate.sample_count == 3
 
+    def test_non_person_detections_are_filtered_out(self) -> None:
+        model = _FakeDetectionModel(
+            [
+                [((0.0, 0.0, 40.0, 44.0), _PERSON), ((300.0, 200.0, 342.0, 240.0), _NOT_PERSON)],
+            ],
+        )
+        frames = [_blank_frame(720, 1280)]
+
+        estimate = estimate_viewpoint_from_frames(frames, model, threshold=0.4)
+
+        assert estimate.sample_count == 1
+
     def test_empty_frame_list_returns_low_confidence_estimate(self) -> None:
-        model = _FakeKeypointModel([])
+        model = _FakeDetectionModel([])
 
         estimate = estimate_viewpoint_from_frames([], model, threshold=0.4)
 
@@ -63,7 +77,7 @@ class TestEstimateViewpointFromFrames:
         assert model.calls == 0
 
     def test_frames_without_boxes_are_skipped(self) -> None:
-        model = _FakeKeypointModel([[], []])
+        model = _FakeDetectionModel([[], []])
         frames = [_blank_frame(480, 640), _blank_frame(480, 640)]
 
         estimate = estimate_viewpoint_from_frames(frames, model, threshold=0.4)

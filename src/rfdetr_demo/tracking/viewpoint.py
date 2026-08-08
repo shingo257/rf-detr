@@ -15,6 +15,16 @@ outlined in ``FlowCount/README.md``:
   people lower in the frame (closer to the camera) have larger boxes; in
   overhead shots, box size is roughly independent of frame position.
 
+Calibration note (from real footage, RF-DETR large): aspect ratio alone is
+not a reliable discriminator — production detectors keep regressing "tall"
+boxes even for people seen from directly above (median ratios of 1.7-1.9 on
+a genuine bird's-eye scramble-crossing clip, vs. 2.8-2.9 for eye-level/
+moderately-elevated clips — tall in both cases, just less so overhead).
+Correlation tracked the expected pattern far more cleanly (~0.8+ for
+eye-level/moderate vs. ~0.2 for true overhead) and is therefore treated as
+the primary signal: it alone decides the viewpoint, while aspect ratio only
+raises or lowers confidence depending on whether it agrees.
+
 The resulting estimate maps to one of the FlowCount presets so a caller can
 auto-select ``overhead`` or ``eye-level`` instead of guessing.
 """
@@ -25,9 +35,11 @@ import statistics
 from dataclasses import dataclass
 from typing import Any, Literal, Sequence
 
+from rfdetr_demo.inference.types import COCO_PERSON_CLASS_ID
+
 CameraViewpoint = Literal["overhead", "eye_level"]
 
-_DEFAULT_ASPECT_RATIO_THRESHOLD = 1.4
+_DEFAULT_ASPECT_RATIO_THRESHOLD = 2.2
 _DEFAULT_CORRELATION_THRESHOLD = 0.35
 _MIN_SAMPLE_COUNT = 2
 
@@ -68,9 +80,11 @@ def estimate_camera_viewpoint(
         frame_height: Height of the video frame in pixels, used to normalize
             box vertical position.
         aspect_ratio_threshold: Median height/width ratio above which boxes
-            are considered "tall" (an eye-level signal).
+            are considered "tall" (an eye-level signal; secondary — see
+            module docstring).
         correlation_threshold: Size-vs-position correlation above which boxes
-            are considered "perspective-scaled" (an eye-level signal).
+            are considered "perspective-scaled" (an eye-level signal;
+            primary — decides the viewpoint on its own).
 
     Returns:
         A :class:`ViewpointEstimate` with the classified viewpoint and the
@@ -105,15 +119,14 @@ def estimate_camera_viewpoint(
     except statistics.StatisticsError:
         correlation = 0.0
 
-    eye_level_votes = 0
-    if median_aspect_ratio > aspect_ratio_threshold:
-        eye_level_votes += 1
-    if correlation > correlation_threshold:
-        eye_level_votes += 1
-
-    eye_level_score = eye_level_votes / 2
-    viewpoint: CameraViewpoint = "eye_level" if eye_level_score >= 0.5 else "overhead"
-    confidence = eye_level_score if viewpoint == "eye_level" else 1.0 - eye_level_score
+    # Correlation is the primary signal (see module docstring): it alone
+    # decides the viewpoint. Aspect ratio only confirms or disputes it,
+    # raising confidence to 1.0 when both agree and dropping it to 0.5 when
+    # they disagree rather than being allowed to override the decision.
+    eye_level_from_correlation = correlation > correlation_threshold
+    eye_level_from_aspect = median_aspect_ratio > aspect_ratio_threshold
+    viewpoint: CameraViewpoint = "eye_level" if eye_level_from_correlation else "overhead"
+    confidence = 1.0 if eye_level_from_aspect == eye_level_from_correlation else 0.5
 
     return ViewpointEstimate(
         viewpoint=viewpoint,
@@ -130,12 +143,18 @@ def estimate_viewpoint_from_frames(
     *,
     threshold: float = 0.4,
 ) -> ViewpointEstimate:
-    """Run a keypoint model over sampled frames and estimate the camera viewpoint.
+    """Run a person-detection model over sampled frames and estimate the camera viewpoint.
+
+    Uses the same detection model class as the real counting pipeline (e.g.
+    ``build_detection_model``), not the keypoint-preview model: its box
+    regression is what the rest of FlowCount actually sees, and in practice
+    its statistics track the overhead/eye-level split more cleanly (see the
+    calibration note in the module docstring).
 
     Args:
         frames: RGB frames (``H x W x 3`` arrays) sampled from a clip.
-        model: A keypoint model exposing ``predict(frame, threshold=..., include_source_image=...)``
-            and returning an ``sv.KeyPoints``-like object with ``data['xyxy']`` boxes.
+        model: A detection model exposing ``predict(frame, threshold=..., include_source_image=...)``
+            and returning an ``sv.Detections``-like object with ``xyxy``/``class_id``.
         threshold: Detection confidence threshold passed to the model.
 
     Returns:
@@ -146,13 +165,11 @@ def estimate_viewpoint_from_frames(
     frame_height = 0.0
     for frame in frames:
         frame_height = max(frame_height, float(frame.shape[0]))
-        key_points = model.predict(frame, threshold=threshold, include_source_image=False)
-        if isinstance(key_points, list) or not key_points.data:
+        detections = model.predict(frame, threshold=threshold, include_source_image=False)
+        if isinstance(detections, list) or detections.class_id is None:
             continue
-        xyxy = key_points.data.get("xyxy")
-        if xyxy is None:
-            continue
-        for x1, y1, x2, y2 in xyxy:
+        person_mask = detections.class_id == COCO_PERSON_CLASS_ID
+        for x1, y1, x2, y2 in detections.xyxy[person_mask]:
             boxes.append((float(x1), float(y1), float(x2), float(y2)))
     return estimate_camera_viewpoint(boxes, frame_height=frame_height)
 

@@ -14,7 +14,7 @@ from pathlib import Path
 
 from rfdetr_demo.cli.presets import PRESETS, PresetName
 from rfdetr_demo.inference.runner import run_demo
-from rfdetr_demo.inference.types import KeypointUncertaintyStyle, TaskName
+from rfdetr_demo.inference.types import KeypointUncertaintyStyle, ModelSize, TaskName
 from rfdetr_demo.paths import SAMPLE_DANCE, default_output_path, resolve_default_source
 
 logger = logging.getLogger(__name__)
@@ -107,13 +107,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _resolve_auto_preset(source_path: Path, *, frames: int = 20) -> PresetName:
+def _resolve_auto_preset(source_path: Path, *, model_size: ModelSize = "large", frames: int = 20) -> PresetName:
     """Sample a clip and pick 'overhead' or 'eye-level' via camera-viewpoint estimation.
 
     Falls back to 'overhead' if the source can't be opened for sampling.
 
     Args:
         source_path: Video file to sample frames from.
+        model_size: Detection model size to sample with (reuses the same
+            weights the real run will use, avoiding a second model load).
         frames: Number of frames to sample from the start of the clip.
 
     Returns:
@@ -121,7 +123,7 @@ def _resolve_auto_preset(source_path: Path, *, frames: int = 20) -> PresetName:
     """
     import cv2
 
-    from rfdetr_demo.inference.models import build_keypoint_model
+    from rfdetr_demo.inference.models import build_detection_model
     from rfdetr_demo.tracking.viewpoint import estimate_viewpoint_from_frames, preset_for_viewpoint
 
     capture = cv2.VideoCapture(str(source_path))
@@ -138,7 +140,7 @@ def _resolve_auto_preset(source_path: Path, *, frames: int = 20) -> PresetName:
         sampled_frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
     capture.release()
 
-    model = build_keypoint_model()
+    model = build_detection_model(model_size)
     estimate = estimate_viewpoint_from_frames(sampled_frames, model, threshold=0.4)
     return preset_for_viewpoint(estimate)
 
@@ -154,7 +156,9 @@ def main(argv: list[str] | None = None) -> int:
     source_path = args.source if args.source is not None else resolve_default_source()
 
     if args.preset is not None:
-        preset_name: PresetName = _resolve_auto_preset(source_path) if args.preset == "auto" else args.preset
+        preset_name: PresetName = (
+            _resolve_auto_preset(source_path, model_size=args.model) if args.preset == "auto" else args.preset
+        )
         if args.preset == "auto":
             logger.info("Auto-selected preset: %s", preset_name)
         flags = PRESETS[preset_name]
