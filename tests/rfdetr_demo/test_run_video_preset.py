@@ -28,6 +28,7 @@ def test_preset_overhead_sets_documented_flags() -> None:
     assert kwargs["tile_size"] == 640
     assert kwargs["tile_overlap"] == 256
     assert kwargs["pose_topk"] == 8
+    assert kwargs["reid_enabled"] is True
 
 
 def test_preset_eye_level_sets_documented_flags() -> None:
@@ -39,6 +40,28 @@ def test_preset_eye_level_sets_documented_flags() -> None:
     assert kwargs["threshold"] == 0.4
     assert kwargs["tile_size"] == 0
     assert kwargs["pose_topk"] == 3
+    assert kwargs["reid_enabled"] is True
+
+
+def test_preset_respects_an_explicit_reid_model() -> None:
+    with patch("rfdetr_demo.cli.run_video.run_demo", return_value=_summary()) as run_demo:
+        run_video.main(
+            [
+                "--task",
+                "detect",
+                "--person-only",
+                "--track",
+                "--preset",
+                "eye-level",
+                "--reid-model",
+                "reid.onnx",
+                "--source",
+                "x.mp4",
+            ],
+        )
+    kwargs = run_demo.call_args.kwargs
+    assert kwargs["reid_enabled"] is True
+    assert kwargs["reid_model"] == "reid.onnx"
 
 
 def test_preset_fast_sets_documented_flags() -> None:
