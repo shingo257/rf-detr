@@ -13,7 +13,7 @@ from pathlib import Path
 
 import cv2
 
-from rfdetr_demo.inference.models import build_keypoint_model
+from rfdetr_demo.inference.models import build_detection_model
 from rfdetr_demo.paths import REPO_ROOT, resolve_default_source
 from rfdetr_demo.tracking.viewpoint import estimate_viewpoint_from_frames, preset_for_viewpoint
 
@@ -26,6 +26,12 @@ def add_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) 
     )
     parser.add_argument("--frames", type=int, default=20, help="Number of frames to sample")
     parser.add_argument("--threshold", type=float, default=0.4, help="Detection threshold")
+    parser.add_argument(
+        "--model",
+        choices=["nano", "small", "medium", "large"],
+        default="large",
+        help="Detection model size (matches the model FlowCount presets use for the real run)",
+    )
     parser.add_argument("--source", type=Path, default=None, help="Video source path")
     parser.add_argument(
         "--output",
@@ -50,7 +56,7 @@ def run(args: argparse.Namespace) -> int:
         return 1
 
     frame_height = max(1, int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
-    model = build_keypoint_model()
+    model = build_detection_model(args.model)
     frames = []
     for frame_index in range(args.frames):
         capture.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
