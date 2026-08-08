@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import statistics
 from dataclasses import dataclass
-from typing import Literal, Sequence
+from typing import Any, Literal, Sequence
 
 CameraViewpoint = Literal["overhead", "eye_level"]
 
@@ -122,6 +122,39 @@ def estimate_camera_viewpoint(
         size_position_correlation=correlation,
         sample_count=sample_count,
     )
+
+
+def estimate_viewpoint_from_frames(
+    frames: Sequence[Any],
+    model: Any,
+    *,
+    threshold: float = 0.4,
+) -> ViewpointEstimate:
+    """Run a keypoint model over sampled frames and estimate the camera viewpoint.
+
+    Args:
+        frames: RGB frames (``H x W x 3`` arrays) sampled from a clip.
+        model: A keypoint model exposing ``predict(frame, threshold=..., include_source_image=...)``
+            and returning an ``sv.KeyPoints``-like object with ``data['xyxy']`` boxes.
+        threshold: Detection confidence threshold passed to the model.
+
+    Returns:
+        A :class:`ViewpointEstimate` aggregated over every person box found
+        across all frames.
+    """
+    boxes: list[tuple[float, float, float, float]] = []
+    frame_height = 0.0
+    for frame in frames:
+        frame_height = max(frame_height, float(frame.shape[0]))
+        key_points = model.predict(frame, threshold=threshold, include_source_image=False)
+        if isinstance(key_points, list) or not key_points.data:
+            continue
+        xyxy = key_points.data.get("xyxy")
+        if xyxy is None:
+            continue
+        for x1, y1, x2, y2 in xyxy:
+            boxes.append((float(x1), float(y1), float(x2), float(y2)))
+    return estimate_camera_viewpoint(boxes, frame_height=frame_height)
 
 
 def preset_for_viewpoint(estimate: ViewpointEstimate) -> Literal["overhead", "eye-level"]:
