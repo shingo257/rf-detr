@@ -19,6 +19,7 @@ class TestPresets:
         assert preset.tile_size == 640
         assert preset.tile_overlap == 256
         assert preset.pose_topk == 8
+        assert preset.reid_enabled is True
 
     def test_eye_level_matches_documented_flags(self) -> None:
         preset = PRESETS["eye-level"]
@@ -27,6 +28,7 @@ class TestPresets:
         assert preset.threshold == 0.4
         assert preset.tile_size == 0
         assert preset.pose_topk == 3
+        assert preset.reid_enabled is True
 
     def test_fast_matches_documented_flags(self) -> None:
         preset = PRESETS["fast"]
@@ -35,6 +37,7 @@ class TestPresets:
         assert preset.threshold == 0.3
         assert preset.tile_size == 0
         assert preset.pose_topk == 0
+        assert preset.reid_enabled is True
 
     def test_only_documented_presets_exist(self) -> None:
         assert set(PRESETS) == {"overhead", "eye-level", "fast"}

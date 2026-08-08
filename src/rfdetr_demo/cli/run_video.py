@@ -167,6 +167,7 @@ def main(argv: list[str] | None = None) -> int:
         args.tile_size = flags.tile_size
         args.tile_overlap = flags.tile_overlap
         args.pose_topk = flags.pose_topk
+        args.reid = args.reid or flags.reid_enabled
 
     task: TaskName = args.task
     keypoint_uncertainty_style: KeypointUncertaintyStyle = (

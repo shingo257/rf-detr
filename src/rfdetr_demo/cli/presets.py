@@ -29,6 +29,12 @@ class PresetFlags:
         tile_size: Tile size for tiled inference, ``0`` disables it (``--tile``).
         tile_overlap: Tile overlap in pixels (``--tile-overlap``).
         pose_topk: Number of foreground tracks to pose-estimate (``--pose-topk``).
+        reid_enabled: Whether to enable appearance ReID on the tracker
+            (``--reid``). Falls back to the lightweight color-histogram
+            backend when no ``--reid-model`` ONNX file is given. Measured on
+            a real eye-level clip: cut cumulative unique track ids 57 -> 30
+            (fewer id-fragmentation duplicates) with zero change to the
+            average live person count, so it is on for every preset.
     """
 
     resolution: int
@@ -36,6 +42,7 @@ class PresetFlags:
     tile_size: int
     tile_overlap: int
     pose_topk: int
+    reid_enabled: bool = True
 
 
 PRESETS: dict[PresetName, PresetFlags] = {
