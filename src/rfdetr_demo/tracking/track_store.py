@@ -414,9 +414,15 @@ class TrackStore:
         if not self.settings.sticky_center_track:
             return
         cx, _ = _box_center(track.box)
-        if _in_center_lane(cx, self.frame_width, self.settings.center_x_fraction):
-            track.sticky = True
+        if not _in_center_lane(cx, self.frame_width, self.settings.center_x_fraction):
+            return
+        # Latch the sticky role onto one track and keep it there until that track
+        # is gone. Previously any lane track overwrote ``_sticky_track_id`` every
+        # frame, so the extended hold thrashed between crossing people.
+        sticky_alive = any(existing.track_id == self._sticky_track_id for existing in self._tracks)
+        if self._sticky_track_id is None or not sticky_alive:
             self._sticky_track_id = track.track_id
+        track.sticky = track.track_id == self._sticky_track_id
 
     def apply(
         self,
