@@ -83,7 +83,10 @@ def run_center_tracking_audit(
         frame_width=frame_width,
         frame_height=frame_height,
         temporal_filter=temporal_filter,
-        base_settings=PersonTrackSettings(enabled=True),
+        # ReID on by default so the audit mirrors the shipping FlowCount pipeline
+        # (``video --task detect --track`` passes a frame and enables ReID via
+        # ``--preset``). Still overridable with ``RFDETR_TRACK_REID=0``.
+        base_settings=PersonTrackSettings(enabled=True, reid_enabled=True),
     )
     overlay_settings = KeypointOverlaySettings(
         keypoint_threshold=keypoint_threshold,
@@ -102,6 +105,7 @@ def run_center_tracking_audit(
     images_saved = 0
     processed_count = 0
     prev_center_present: bool | None = None
+    prev_center_track_id: int | None = None
     frame_index = 0
     source_rel = repo_relpath(source)
 
@@ -126,11 +130,15 @@ def run_center_tracking_audit(
                 track_pipeline.settings.nms_iou_threshold,
             )
 
-            stabilized = track_pipeline.apply(raw_key_points, frame_index)
+            stabilized = track_pipeline.apply(raw_key_points, frame_index, frame=frame_bgr)
             key_points = stabilized.key_points
 
             center_raw = any(row.in_center_lane for row in raw_rows)
-            center_track = find_center_track(stabilized.diagnostics, frame_width)
+            center_track = find_center_track(
+                stabilized.diagnostics,
+                frame_width,
+                previous_track_id=prev_center_track_id,
+            )
             center_present = center_track is not None
             center_is_ghost = bool(center_track and center_track.is_ghost)
 
@@ -213,6 +221,7 @@ def run_center_tracking_audit(
             )
 
             prev_center_present = center_present
+            prev_center_track_id = center_track.track_id if center_track else None
             frame_index += 1
     finally:
         capture.release()

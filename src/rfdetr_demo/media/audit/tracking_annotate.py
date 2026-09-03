@@ -57,13 +57,60 @@ def raw_diagnostics(key_points: Any, frame_width: int) -> list[RawDetectionDiagn
 def find_center_track(
     diagnostics: list[TrackDiagnostic],
     frame_width: int,
+    *,
+    previous_track_id: int | None = None,
+    switch_margin_fraction: float = 0.5,
 ) -> TrackDiagnostic | None:
-    """Return the track closest to the center lane midpoint, if any."""
+    """Return the track that represents the center-lane person, if any.
+
+    Selection is sticky. Once a track holds the center role it keeps it while it
+    stays in the lane; a different track only takes over when it is closer to the
+    lane midpoint by more than ``switch_margin_fraction`` of the lane half-width,
+    or when the incumbent is a stale ghost and a live track is available. Without
+    this hysteresis the audit's ``center_track_id`` flickers frame-to-frame
+    whenever two tracks briefly share the lane, inflating the ID-switch count.
+
+    Args:
+        diagnostics: Stabilized track diagnostics for the frame.
+        frame_width: Frame width in pixels, used to resolve the center lane.
+        previous_track_id: The track id chosen for the previous frame, if any.
+        switch_margin_fraction: Fraction of the lane half-width a challenger must
+            beat the incumbent by before it takes over the center role.
+    """
     x_min, x_max = center_x_range(frame_width)
+    midpoint = (x_min + x_max) / 2.0
     candidates = [row for row in diagnostics if x_min <= row.cx <= x_max]
     if not candidates:
         return None
-    return min(candidates, key=lambda row: abs(row.cx - (x_min + x_max) / 2.0))
+
+    def closeness(row: TrackDiagnostic) -> float:
+        return abs(row.cx - midpoint)
+
+    incumbent = next(
+        (row for row in candidates if row.track_id == previous_track_id),
+        None,
+    )
+    if incumbent is None:
+        live = [row for row in candidates if not row.is_ghost]
+        return min(live or candidates, key=closeness)
+
+    challenger = min(
+        (row for row in candidates if row.track_id != incumbent.track_id),
+        key=closeness,
+        default=None,
+    )
+    if challenger is None:
+        return incumbent
+
+    margin = switch_margin_fraction * (x_max - x_min) / 2.0
+    incumbent_is_stale_ghost = incumbent.is_ghost and incumbent.missed >= 2
+    if incumbent_is_stale_ghost and not challenger.is_ghost:
+        return challenger
+    if closeness(challenger) + margin < closeness(incumbent):
+        # Never hand the role from a live track to a ghost.
+        if not (challenger.is_ghost and not incumbent.is_ghost):
+            return challenger
+    return incumbent
 
 
 def annotate_track_labels(
