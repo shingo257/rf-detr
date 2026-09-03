@@ -2,178 +2,306 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://rfdetr.roboflow.com/latest/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/changelog/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/cookbooks/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/cookbooks/NOTES/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/cookbooks/custom-augmentations/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/cookbooks/fine-tune_keypoints/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/kirby_keypoint_tracking_animation/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/kirby_keypoint_tracking_animation_v10/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/kirby_keypoint_tracking_animation_v4/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/kirby_keypoint_tracking_animation_v5/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/kirby_keypoint_tracking_animation_v6/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/kirby_keypoint_tracking_animation_v7/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/kirby_keypoint_tracking_animation_v8/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/kirby_keypoint_tracking_animation_v9/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/kirby_keypoint_tracking_compact_colab/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/kirby_keypoint_tracking_self_contained/</loc>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/cookbooks/people_counting_colab/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/cookbooks/pytorch-lightning/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/cookbooks/reid_comparison_colab/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/rfdetr_keypoint_contour_puppet_colab_v1/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/rfdetr_keypoint_video_colab/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/rfdetr_keypoint_video_colab_v2/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/rfdetr_keypoint_video_colab_v3/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/rfdetr_keypoint_video_colab_v4/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/rfdetr_keypoint_video_colab_v5/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/rfdetr_keypoint_video_colab_v6/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/rfdetr_keypoint_video_colab_v7/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/cookbooks/verify_integration_colab/</loc>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/getting-started/install/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/getting-started/migration/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/confidential-media-policy/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/frame-independent-detection/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/fukkachan-keypoint-animation/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/fukkachan-neutral-rig-prompt/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/kirby-mesh-animation/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/models-and-coco-classes/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/refactor-baseline-metrics/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/refactor-boundaries/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/refactor-debt-register/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/refactor-master-plan/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/torso-animation-controls/</loc>
+         <lastmod>2026-09-03</lastmod>
+    </url>
+    <url>
+         <loc>https://rfdetr.roboflow.com/latest/ja/vast-ai-integration-guide/</loc>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/benchmarks/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/deploy/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/export/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/pretrained/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/run/detection/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/run/keypoints/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/run/segmentation/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/train/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/train/advanced/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/train/augmentations/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/train/customization/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/train/dataset-formats/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/train/loggers/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/learn/train/training-parameters/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/2xlarge/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/keypoint_train_config/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/kp_preview/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/large/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/medium/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/nano/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/rfdetr/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/seg_2xlarge/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/seg_large/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/seg_medium/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/seg_nano/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/seg_small/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/seg_xlarge/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/segmentation_train_config/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/small/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/train_config/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/training/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/reference/xlarge/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
     <url>
          <loc>https://rfdetr.roboflow.com/latest/resources/</loc>
-         <lastmod>2026-08-08</lastmod>
+         <lastmod>2026-09-03</lastmod>
     </url>
 </urlset>
