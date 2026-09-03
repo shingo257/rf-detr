@@ -187,6 +187,15 @@ train_test.py
 test_visualizations/
 .pytest-tmp*/
 
+# local character-animation assets (kept out of history; large binaries)
+docs/cookbooks/assets/*.jpeg
+docs/cookbooks/assets/*.png
+docs/cookbooks/assets/nikemon_character_animator_package.zip
+docs/cookbooks/assets/nikemon_character_animator_package/*.png
+docs/cookbooks/assets/nikemon_character_animator_package/*.psd
+/ふっかちゃん浴衣.jpg
+/カービィ.png
+
 # datasets
 data/
 
