@@ -1,4 +1,4 @@
-﻿#target photoshop
+#target photoshop
 app.displayDialogs = DialogModes.NO;
 var folder = new Folder("C:/work/code/ER-FlowScan/rf-detr/docs/cookbooks/assets/nikemon_character_animator_package");
 var parts = [

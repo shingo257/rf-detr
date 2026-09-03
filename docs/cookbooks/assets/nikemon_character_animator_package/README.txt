@@ -1,4 +1,4 @@
-﻿Nikemon automatic rig-prep package
+Nikemon automatic rig-prep package
 
 Generated files:
 - nikemon_character_animator_layers.psd: layered PSD generated automatically with Photoshop.

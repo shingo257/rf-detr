@@ -1,4 +1,4 @@
-﻿"""Create a continuous-mesh rig manifest for a transparent Kirby sprite."""
+"""Create a continuous-mesh rig manifest for a transparent Kirby sprite."""
 
 from __future__ import annotations
 
