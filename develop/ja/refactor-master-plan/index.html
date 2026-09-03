@@ -1,0 +1,3657 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Real-time transformer for object detection and instance segmentation. DINOv2 backbone, SOTA on COCO (60.1 AP50:95). Apache 2.0. Works with Python ≥3.10.">
+      
+      
+        <meta name="author" content="Roboflow">
+      
+      
+        <link rel="canonical" href="https://rfdetr.roboflow.com/develop/ja/refactor-master-plan/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/roboflow-logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+  
+    
+      
+        <title>RF-DETR フォーク — 完全リファクタリング計画（実測ベース改訂版） - RF-DETR</title>
+      
+    
+  
+
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/rf.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+  <link rel="preconnect" href="https://storage.googleapis.com">
+
+  
+  
+  
+  <meta property="og:title" content="RF-DETR フォーク — 完全リファクタリング計画（実測ベース改訂版） - RF-DETR">
+  <meta property="og:description" content="Real-time transformer for object detection and instance segmentation. DINOv2 backbone, SOTA on COCO (60.1 AP50:95). Apache 2.0. Works with Python ≥3.10.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://rfdetr.roboflow.com/develop/ja/refactor-master-plan/">
+  <meta property="og:image" content="https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png">
+  <meta property="og:image:width" content="840">
+  <meta property="og:image:height" content="630">
+
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@roboflow">
+  <meta name="twitter:title" content="RF-DETR フォーク — 完全リファクタリング計画（実測ベース改訂版） - RF-DETR">
+  <meta name="twitter:description" content="Real-time transformer for object detection and instance segmentation. DINOv2 backbone, SOTA on COCO (60.1 AP50:95). Apache 2.0. Works with Python ≥3.10.">
+  <meta name="twitter:image" content="https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png">
+
+  
+  
+  
+  
+  <meta property="article:modified_time" content="2026-08-04T18:26:37">
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "RF-DETR \u30d5\u30a9\u30fc\u30af \u2014 \u5b8c\u5168\u30ea\u30d5\u30a1\u30af\u30bf\u30ea\u30f3\u30b0\u8a08\u753b\uff08\u5b9f\u6e2c\u30d9\u30fc\u30b9\u6539\u8a02\u7248\uff09",
+    "description": "Real-time transformer for object detection and instance segmentation. DINOv2 backbone, SOTA on COCO (60.1 AP50:95). Apache 2.0. Works with Python \u22653.10.",
+    "url": "https://rfdetr.roboflow.com/develop/ja/refactor-master-plan/",
+    "isPartOf": {"@id": "https://rfdetr.roboflow.com/develop#website"},
+    "about": {"@id": "https://rfdetr.roboflow.com/develop#software"},
+    "proficiencyLevel": "Beginner to advanced",
+    "inLanguage": "en",
+    "keywords": "RF-DETR, rfdetr, object detection, instance segmentation, computer vision, Roboflow",
+    "datePublished": "2025-03-01",
+    "dateModified": "2026-08-04T18:26:37",
+    "image": "https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png",
+    "author": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
+    "publisher": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
+    "mainEntityOfPage": {"@type": "WebPage", "@id": "https://rfdetr.roboflow.com/develop/ja/refactor-master-plan/"},
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": [".md-content h1", ".md-typeset > p:first-child"]
+    }
+  }
+  </script>
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "RF-DETR",
+        "item": "https://rfdetr.roboflow.com/develop"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "RF-DETR \u30d5\u30a9\u30fc\u30af \u2014 \u5b8c\u5168\u30ea\u30d5\u30a1\u30af\u30bf\u30ea\u30f3\u30b0\u8a08\u753b\uff08\u5b9f\u6e2c\u30d9\u30fc\u30b9\u6539\u8a02\u7248\uff09",
+        "item": "https://rfdetr.roboflow.com/develop/ja/refactor-master-plan/"
+      }
+      
+    ]
+  }
+  </script>
+  
+  
+
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#rf-detr" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+
+<!-- Header -->
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav
+    class="md-header__inner md-grid"
+    aria-label="Header"
+  >
+
+    <!-- Link to home -->
+    <a
+      href="../.."
+      title="RF-DETR"
+      class="md-header__button md-logo"
+      aria-label="RF-DETR"
+      data-md-component="logo"
+    >
+      
+  <img src="../../assets/roboflow-logo.svg" alt="logo">
+
+    </a>
+
+    <!-- Button to open drawer -->
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+
+    <!-- Header title -->
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            RF-DETR Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis" style="display: flex; align-items: center; gap: 0.5rem;">
+            <a
+            href="../.."
+            title="RF-DETR"
+            class="md-header__button md-logo"
+            aria-label="RF-DETR"
+            data-md-component="logo"
+            id="item-logo"
+            >
+            
+  <img src="../../assets/roboflow-logo.svg" alt="logo">
+
+            </a>
+            
+              RF-DETR フォーク — 完全リファクタリング計画（実測ベース改訂版）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    <!-- Button to open search modal -->
+    
+      
+
+      <!-- Check if search is actually enabled - see https://t.ly/DT_0V -->
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+
+        <!-- Search interface -->
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+
+
+    <ul class="header-list">
+        <li style="align-items: center;" id="resources-list">
+            <label for="dropdown-resources"><span>Resources <img src="https://ka-p.fontawesome.com/releases/v6.6.0/svgs/regular/chevron-down.svg?v=2&token=a463935e93" style="height: 0.5rem;" /></span></label>
+            <input type="radio" name="dropdown" id="dropdown-resources" style="display: none;" />
+            <ul class="resources-sublist sublist">
+                <li><a href="https://blog.roboflow.com">Blog</a></li>
+                <li><a href="https://discuss.roboflow.com">Community Forum</a></li>
+                <li><a href="https://roboflow.com/sales">Contact Sales</a></li>
+                <li><a href="https://universe.roboflow.com">Universe</a></li>
+            </ul>
+        </li>
+        <li style="align-items: center;" id="products-list">
+            <label for="dropdown-products"><span>Docs <img src="https://ka-p.fontawesome.com/releases/v6.6.0/svgs/regular/chevron-down.svg?v=2&token=a463935e93" style="height: 0.5rem;" /></span></label>
+            <input type="radio" name="dropdown" id="dropdown-products" style="display: none;" />
+            <ul class="products-sublist sublist">
+                <li><a href="https://inference.roboflow.com">Inference</a></li>
+                <li><a href="https://supervision.roboflow.com">Supervision</a></li>
+                <li><a href="https://trackers.roboflow.com">Trackers</a></li>
+                <li><a href="https://rfdetr.roboflow.com">RF-DETR</a></li>
+                <li><a href="https://maestro.roboflow.com">Maestro</a></li>
+                <li><a href="https://docs.roboflow.com">Roboflow</a></li>
+            </ul>
+        </li>
+        <script>
+          document.addEventListener('click', function(event) {
+            const resourcesList = document.getElementById('resources-list');
+            const productsList = document.getElementById('products-list');
+            const dropdownResources = document.getElementById('dropdown-resources');
+            const dropdownProducts = document.getElementById('dropdown-products');
+
+            if (!resourcesList.contains(event.target)) {
+              dropdownResources.checked = false;
+            }
+            if (!productsList.contains(event.target)) {
+              dropdownProducts.checked = false;
+            }
+          });
+          // on mouse over
+          document.getElementById('resources-list').addEventListener('mouseover', function() {
+            document.getElementById('dropdown-resources').checked = true;
+          });
+          document.getElementById('products-list').addEventListener('mouseover', function() {
+            document.getElementById('dropdown-products').checked = true;
+          });
+          // on mouse out
+          document.getElementById('resources-list').addEventListener('mouseout', function() {
+            // if not hovering over the sublist or the label, uncheck the dropdown
+            // wait 1 sec
+            setTimeout(function() {
+              if (!document.querySelector('.resources-sublist:hover') && !document.querySelector('#resources-list:hover')) {
+                document.getElementById('dropdown-resources').checked = false;
+              }
+            }, 350);
+          });
+          // if mouseout of sublist, uncheck immediately
+          document.querySelector('.resources-sublist').addEventListener('mouseout', function() {
+            setTimeout(function() {
+              if (!document.querySelector('.resources-sublist:hover') && !document.querySelector('#resources-list:hover')) {
+                document.getElementById('dropdown-resources').checked = false;
+              }
+            }, 450);
+          });
+          document.getElementById('products-list').addEventListener('mouseout', function() {
+            // if not hovering over the sublist, uncheck the dropdown
+            // wait 1 sec
+            setTimeout(function() {
+              if (!document.querySelector('.products-sublist:hover') && !document.querySelector('#products-list:hover')) {
+                document.getElementById('dropdown-products').checked = false;
+              }
+            }, 500);
+          });
+          // if mouseout of sublist, uncheck immediately
+          document.querySelector('.products-sublist').addEventListener('mouseout', function() {
+            setTimeout(function() {
+              if (!document.querySelector('.products-sublist:hover') && !document.querySelector('#products-list:hover')) {
+                document.getElementById('dropdown-products').checked = false;
+              }
+            }, 500);
+          });
+
+        </script>
+        <style>
+          #dropdown-resources:checked ~ .resources-sublist {
+            display: block;
+          }
+          #dropdown-products:checked ~ .products-sublist {
+            display: block;
+          }
+          /* Hide dropdown if clicking outside */
+          body:not(:has(#dropdown-resources:checked)) .resources-sublist,
+          body:not(:has(#dropdown-products:checked)) .products-sublist {
+            display: none;
+          }
+        </style>
+        <a href="https://github.com/roboflow/rf-detr"><li class="header-btn" style="border-radius: 5px; color: white; background: var(--md-typeset-a-color); padding-top: 0.25rem; padding-left: 0.5rem; padding-bottom: 0.25rem; padding-right: 0.5rem; border: 1px solid #8315F9;">Go to GitHub</li></a>
+    </ul>
+  </nav>
+
+  <!-- Navigation tabs (sticky) -->
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/install/" class="md-tabs__link">
+          
+  
+  
+  How to
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/rfdetr/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../cookbooks/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Cookbooks
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../resources/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Resources
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="RF-DETR" class="md-nav__button md-logo" aria-label="RF-DETR" data-md-component="logo">
+      
+  <img src="../../assets/roboflow-logo.svg" alt="logo">
+
+    </a>
+    RF-DETR
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/roboflow/rf-detr" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    roboflow/rf-detr
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How to
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    How to
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migration Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run Model
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Run Model
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/run/detection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/run/segmentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/run/keypoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keypoints
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/pretrained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pretrained Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Train Model
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Train Model
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/dataset-formats/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dataset Formats
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/training-parameters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training Parameters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/advanced/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/customization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Training API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/augmentations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Augmentations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/loggers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training Loggers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/deploy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deploy Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rfdetr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detection Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Detection Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/nano/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Nano
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/small/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Small
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/medium/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Medium
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/large/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Large
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/xlarge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR XLarge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/2xlarge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR 2XLarge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Segmentation Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/seg_nano/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Seg Nano
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/seg_small/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Seg Small
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/seg_medium/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Seg Medium
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/seg_large/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Seg Large
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/seg_xlarge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Seg XLarge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/seg_2xlarge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Seg 2XLarge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keypoint Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Keypoint Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/kp_preview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Keypoint Preview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Training Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/train_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Train Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/segmentation_train_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation Train Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/keypoint_train_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keypoint Train Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lightning Training
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Lightning Training
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training Primitives
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cookbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cookbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. エグゼクティブサマリー
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 原則（変更してよい／してはいけない）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-2026-06-28" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 現状の負債インベントリ（2026-06-28 実測）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 現状の負債インベントリ（2026-06-28 実測）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 規模
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 残存する無駄（カテゴリ別）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-e-300" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 中型ファイル（E — 300 行超）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. フェーズ一覧（ロードマップ）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-phase-7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Phase 7 — リポジトリ衛生・計画再固定
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Phase 7 — リポジトリ衛生・計画再固定">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        目的
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        タスク
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#definition-of-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition of Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-phase-8-scripts-shim-sunset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Phase 8 — scripts/ shim sunset
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Phase 8 — scripts/ shim sunset">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        目的
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        対象（~15 ファイル）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        タスク
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#definition-of-done_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition of Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-phase-9-demo-facade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Phase 9 — demo 内 facade 削除（最重要・クリティカルパス）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Phase 9 — demo 内 facade 削除（最重要・クリティカルパス）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        目的
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#facade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        対象 facade と現況
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#facade-1-pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        タスク（facade ごとに1 PR）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        リスク
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#definition-of-done_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition of Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-phase-10-run_mzoo_benchmarkpy518tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Phase 10 — run_mzoo_benchmark.py（518行）tools 化
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Phase 10 — run_mzoo_benchmark.py（518行）tools 化">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        目的
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        タスク
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#definition-of-done_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition of Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-phase-11-2-common" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Phase 11 — 監査2系統の common 抽出
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Phase 11 — 監査2系統の common 抽出">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        目的
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        タスク
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#definition-of-done_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition of Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-phase-12-300-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Phase 12 — 残り中型ファイル仕上げ（300 行超を 0 に）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Phase 12 — 残り中型ファイル仕上げ（300 行超を 0 に）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        目的
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#definition-of-done_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition of Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-phase-13-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Phase 13 — 公開 API 凍結・ドキュメント統一
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Phase 13 — 公開 API 凍結・ドキュメント統一">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        公開 API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        タスク
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#definition-of-done_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition of Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-upstreamsrcrfdetr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. upstream（src/rfdetr）の扱い — 別トラック
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. PR 運用ルール
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. PR 運用ルール">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ブランチ命名
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        各 PR 必須
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ロールバック
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. 完了後の理想状態
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-2026-07-29" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. 2026-07-29 実行状況と次のアクション
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15. 2026-07-29 実行状況と次のアクション">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#animation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        完了した animation 分割スライス
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        次の実行順
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-1315-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 13–15 tracking 統合計画（完了）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-9-facade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 9 facade 削除（完了）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 12 中型仕上げ（完了）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        次スライス（推奨）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="rf-detr">RF-DETR フォーク — 完全リファクタリング計画（実測ベース改訂版）<a class="headerlink" href="#rf-detr" title="Permanent link">&para;</a></h1>
+<p>ER-FlowScan モノレポ内 <code>rf-detr</code> フォーク向けの、<strong>長年蓄積した無駄（移行残骸・facade・shim・中型ファイル）を段階的に除去する</strong> ための実行計画です。</p>
+<p><strong>重要（2026-06-28 全面改訂）</strong>: 旧計画（Phase 13–20 体系）は <strong>陳腐化したため破棄</strong> しました。理由は2つ:</p>
+<ol>
+<li>旧計画が想定した God ファイル群（<code>detr.py</code> 分割、<code>pipeline.py</code> スリム化、tracking 分割、GUI 分解）は <strong>すべて完了済み</strong>。最大ファイルは現在 <code>media/tracking_audit.py</code> の 475 行。</li>
+<li>upstream v1.8.1 マージ（<code>cad5f295</code>）後、git は <code>Phase 4/5/6</code> 番号で再起動した（<code>7142daf2 restore Phase 4 WIP after upstream merge</code>）。本計画は <strong>git に合わせて Phase 7 から継続</strong> する。</li>
+</ol>
+<p>今の主敵は「巨大ファイル分割」ではなく、<strong>前回の分割が残した移行残骸（facade / shim / 不完全な移行）の刈り取りと、最後の中型ファイル仕上げ</strong> です。</p>
+<p><strong>関連</strong>: <a href="../refactor-boundaries/">refactor-boundaries.md</a>, <a href="../refactor-baseline-metrics/">refactor-baseline-metrics.md</a>, <a href="../refactor-debt-register/">refactor-debt-register.md</a></p>
+<hr />
+<h2 id="1">1. エグゼクティブサマリー<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>目的</td>
+<td>デモ層（<code>rfdetr_demo</code>）から移行残骸を除去し、upstream マージコストを最小化</td>
+</tr>
+<tr>
+<td>方針</td>
+<td><strong>upstream (<code>src/rfdetr</code>) は触らない</strong>。フォーク固有ロジックは <strong><code>rfdetr_demo</code> に集約</strong></td>
+</tr>
+<tr>
+<td>期間目安</td>
+<td>7 フェーズ（Phase 7–13）≒ <strong>3〜4 週間</strong>（一部並行可）</td>
+</tr>
+<tr>
+<td>成功指標</td>
+<td>facade 0、shim 0、<code>scripts/</code> ロジック 0、400 行超 0、監査スキーマ 1 種、<code>tests/rfdetr_demo</code> ≥60</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2">2. 原則（変更してよい／してはいけない）<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>原則</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ゾーン境界</strong></td>
+<td><a href="../refactor-boundaries/">refactor-boundaries.md</a> を厳守</td>
+</tr>
+<tr>
+<td><strong>番号は git に合わせる</strong></td>
+<td>本計画は Phase 7 から。旧 doc の 13–20 体系は無効</td>
+</tr>
+<tr>
+<td><strong>1 PR = 1 サブフェーズ</strong></td>
+<td>revert 可能な単位でマージ</td>
+</tr>
+<tr>
+<td><strong>挙動優先</strong></td>
+<td>リファクタ PR ごとに <code>mn1-2.mov</code> 短尺試走 or 監査スクリプトで回帰確認</td>
+</tr>
+<tr>
+<td><strong>新規ロジック禁止場所</strong></td>
+<td><code>scripts/</code> へのビジネスロジック追加禁止（AGENTS.md）</td>
+</tr>
+<tr>
+<td><strong>facade は「利用ゼロ→即削除」</strong></td>
+<td>1 リリース猶予の口実で残さない。利用があるなら移行を完了させる</td>
+</tr>
+<tr>
+<td><strong>upstream 同期</strong></td>
+<td><code>src/rfdetr/</code> は型・docstring・セキュリティパッチのみ</td>
+</tr>
+<tr>
+<td><strong>機密</strong></td>
+<td>動画・監査は <code>confidential/</code> + <code>media_guard</code> 経由のみ</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-2026-06-28">3. 現状の負債インベントリ（2026-06-28 実測）<a class="headerlink" href="#3-2026-06-28" title="Permanent link">&para;</a></h2>
+<h3 id="31">3.1 規模<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>ゾーン</th>
+<th>ファイル数</th>
+<th>400行超</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/rfdetr_demo/</code></td>
+<td>85</td>
+<td><strong>1</strong>（475）</td>
+<td>300行超は 11 件</td>
+</tr>
+<tr>
+<td><code>scripts/</code></td>
+<td>21</td>
+<td>1（518）</td>
+<td>うち ~15 が 3行 shim</td>
+</tr>
+<tr>
+<td><code>tests/rfdetr_demo/</code></td>
+<td>24</td>
+<td>—</td>
+<td>テスト件数の拡充余地</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32">3.2 残存する無駄（カテゴリ別）<a class="headerlink" href="#32" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>カテゴリ</th>
+<th>実体</th>
+<th>規模</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A</strong></td>
+<td>scripts shim</td>
+<td>（Phase 8 で 19 本削除済; mzoo / animation tooling は別 Phase）</td>
+<td>0（shim）</td>
+</tr>
+<tr>
+<td><strong>B</strong></td>
+<td>demo facade</td>
+<td>（Phase 9 で 6 本すべて削除済）</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>C</strong></td>
+<td>不完全な移行</td>
+<td>（Phase 9 で解消）</td>
+<td>解消済</td>
+</tr>
+<tr>
+<td><strong>D</strong></td>
+<td>scripts ロジック</td>
+<td><code>run_mzoo_benchmark.py</code> → <code>rfdetr_demo.benchmark</code>（thin launcher 残）</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>E</strong></td>
+<td>中型ファイル</td>
+<td>下表 11 件（300–475 行）</td>
+<td>11</td>
+</tr>
+<tr>
+<td><strong>F</strong></td>
+<td>監査2系統</td>
+<td><code>frame_audit.py</code> + <code>tracking_audit.py</code> に JSONL/評価/画像 I/O 重複</td>
+<td>重複</td>
+</tr>
+<tr>
+<td><strong>G</strong></td>
+<td>CRLF チャーン</td>
+<td><code>.gitattributes</code> 変更で 91 ファイル modified 表示・実差分は 8 ファイル</td>
+<td>衛生</td>
+</tr>
+<tr>
+<td><strong>H</strong></td>
+<td>計画文書不整合</td>
+<td>旧 doc=Phase 13–20、git=Phase 4–6（本改訂で解消）</td>
+<td>doc</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33-e-300">3.3 中型ファイル（E — 300 行超）<a class="headerlink" href="#33-e-300" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>パス</th>
+<th>行数</th>
+<th>分割方針</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>media/tracking_audit.py</code></td>
+<td>475</td>
+<td>Phase 11 で <code>audit/common</code> 抽出</td>
+</tr>
+<tr>
+<td><code>vast/safety.py</code></td>
+<td>417</td>
+<td><code>consent</code> / <code>transfer_log</code> / <code>guardrails</code></td>
+</tr>
+<tr>
+<td><code>inference/runner.py</code></td>
+<td>355</td>
+<td>callback 組立を <code>callbacks</code> へ</td>
+</tr>
+<tr>
+<td><code>tracking/track_store.py</code></td>
+<td>354</td>
+<td>hold/ghost 状態機械を分離</td>
+</tr>
+<tr>
+<td><code>gui/panels/io_task.py</code></td>
+<td>348</td>
+<td><code>io_task_sections.py</code> 移譲を進める</td>
+</tr>
+<tr>
+<td><code>gui/panels/compute.py</code></td>
+<td>346</td>
+<td>view と <code>VastController</code> 境界再点検</td>
+</tr>
+<tr>
+<td><code>gui/panels/job_runner.py</code></td>
+<td>327</td>
+<td>進捗/ログを <code>RunController</code> へ</td>
+</tr>
+<tr>
+<td><code>gui/controllers/vast_controller.py</code></td>
+<td>326</td>
+<td>offer 探索 / progress 分離</td>
+</tr>
+<tr>
+<td><code>tuning/analyze_clip.py</code></td>
+<td>319</td>
+<td>コアのみ残す（CLI は委譲済み）</td>
+</tr>
+<tr>
+<td><code>media/frame_audit.py</code></td>
+<td>306</td>
+<td>Phase 11 の <code>common</code> 抽出で縮む</td>
+</tr>
+<tr>
+<td><code>inference/temporal_filter.py</code></td>
+<td>301</td>
+<td>設定 dataclass を <code>types</code> へ</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4">4. フェーズ一覧（ロードマップ）<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart LR
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  P7[Phase 7\n衛生・計画再固定] --&gt; P8[Phase 8\nscripts shim 廃止]
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  P7 --&gt; P9[Phase 9\nfacade 削除]
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  P8 --&gt; P12[Phase 12\n中型仕上げ]
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  P9 --&gt; P12
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  P7 --&gt; P10[Phase 10\nmzoo tools化]
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  P9 --&gt; P11[Phase 11\n監査 common]
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  P11 --&gt; P12
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  P12 --&gt; P13[Phase 13\nAPI 凍結・docs]
+</span></code></pre></div>
+<p>並行可能: <code>7 →(8,9,10)→ (11)→ 12 → 13</code>。クリティカルパスは <strong>9 → 12</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>名称</th>
+<th>工数</th>
+<th>リスク</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>7</strong></td>
+<td>リポジトリ衛生・計画再固定</td>
+<td>0.5 日</td>
+<td>低</td>
+</tr>
+<tr>
+<td><strong>8</strong></td>
+<td><code>scripts/</code> shim sunset</td>
+<td>2 日</td>
+<td>低</td>
+</tr>
+<tr>
+<td><strong>9</strong></td>
+<td>demo 内 facade 削除（最重要）</td>
+<td>3 日</td>
+<td>中</td>
+</tr>
+<tr>
+<td><strong>10</strong></td>
+<td><code>run_mzoo_benchmark</code> tools 化</td>
+<td>2 日</td>
+<td>低</td>
+</tr>
+<tr>
+<td><strong>11</strong></td>
+<td>監査2系統の <code>common</code> 抽出</td>
+<td>3 日</td>
+<td>中</td>
+</tr>
+<tr>
+<td><strong>12</strong></td>
+<td>残り中型ファイル仕上げ</td>
+<td>1 週</td>
+<td>中</td>
+</tr>
+<tr>
+<td><strong>13</strong></td>
+<td>公開 API 凍結・ドキュメント統一</td>
+<td>2 日</td>
+<td>低</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-phase-7">5. Phase 7 — リポジトリ衛生・計画再固定<a class="headerlink" href="#5-phase-7" title="Permanent link">&para;</a></h2>
+<h3 id="_1">目的<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<p>以降の diff を読めるようにし、計画と実態を一致させる。</p>
+<h3 id="_2">タスク<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>CRLF 正規化を1コミットに隔離</strong> — <code>.gitattributes</code> 起因の churn（91→実8）を <code>git add --renormalize .</code> で分離。機能 PR から行末ノイズを排除。</li>
+<li><strong>未追跡生成物の確認</strong> — <code>confidential/</code> <code>artifacts/</code> <code>sample/</code> <code>data/</code> は <code>.gitignore</code> 済み（OK）。<code>tests/rfdetr_demo/test_expected_person_count.py</code>（未追跡）のコミット要否を判断。</li>
+<li><strong>計画文書を本書で置換</strong> — 完了（本ファイル）。</li>
+<li><strong>負債登録簿を実測更新</strong> — <a href="../refactor-debt-register/">refactor-debt-register.md</a> をインベントリ A–H で上書き。</li>
+</ol>
+<h3 id="definition-of-done">Definition of Done<a class="headerlink" href="#definition-of-done" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] 行末 churn が機能 PR に混ざらない</li>
+<li>[x] 計画文書が git 番号と一致</li>
+<li>[x] debt-register が実測 A–H と一致</li>
+</ul>
+<hr />
+<h2 id="6-phase-8-scripts-shim-sunset">6. Phase 8 — <code>scripts/</code> shim sunset<a class="headerlink" href="#6-phase-8-scripts-shim-sunset" title="Permanent link">&para;</a></h2>
+<h3 id="_3">目的<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p>「入口が3つ」問題の残骸（3行 <code>import *</code> shim）を消し、<code>pyproject</code> entry point に一本化。</p>
+<h3 id="15">対象（~15 ファイル）<a class="headerlink" href="#15" title="Permanent link">&para;</a></h3>
+<p><code>scripts/vast_*.py</code>, <code>media_guard.py</code>, <code>keypoint_temporal_filter.py</code>, <code>auto_tune_parameters.py</code>, <code>tune_live_preview.py</code>, <code>keypoint_uncertainty_viz.py</code>, <code>video_*.py</code> 等の3行 shim、および <code>run_video_demo.py</code> / <code>video_demo_gui.py</code> / <code>vast_cleanup_orphans.py</code>（18行 wrapper）。</p>
+<h3 id="_4">タスク<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<ol>
+<li>各 shim の逆参照を grep（リポジトリ内ゼロを確認）。</li>
+<li>外部（ER-FlowScan orchestrator, <code>.cmd</code>）参照を確認 → <code>.cmd</code> を entry point 直叩きに変更。</li>
+<li>参照ゼロの shim を削除。残すべきものは <code>[project.scripts]</code> に正規化。</li>
+</ol>
+<h3 id="definition-of-done_1">Definition of Done<a class="headerlink" href="#definition-of-done_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] Phase 8 対象の shim / thin wrapper（19 本）を削除</li>
+<li>[x] <code>.cmd</code> は thin launcher（<code>vast_cleanup_orphans.cmd</code> → <code>uv run rfdetr-vast-cleanup</code>）</li>
+<li>[x] 全 entry point が <code>uv run rfdetr-demo ...</code> で動作</li>
+<li>[ ] 厳密 DoD「<code>launch_gui.py</code> + <code>check_import_cycles.py</code> のみ」は animation tooling 残存により未達</li>
+</ul>
+<p>残存 <code>scripts/*.py</code>（意図的）: <code>launch_gui.py</code>, <code>check_import_cycles.py</code>, <code>run_mzoo_benchmark.py</code>（thin launcher）, <code>kirby_*</code>, <code>fukkachan_*</code>, <code>build_kirby_*</code>。</p>
+<hr />
+<h2 id="7-phase-9-demo-facade">7. Phase 9 — demo 内 facade 削除（最重要・クリティカルパス）<a class="headerlink" href="#7-phase-9-demo-facade" title="Permanent link">&para;</a></h2>
+<h3 id="_5">目的<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p>"deprecated facade" を名乗りながら実コードが依存している不完全移行（カテゴリ C）を完了させる。</p>
+<h3 id="facade">対象 facade と現況<a class="headerlink" href="#facade" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>facade</th>
+<th>行数</th>
+<th>実利用</th>
+<th>アクション</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tracking/detection_stabilizer.py</code></td>
+<td>97</td>
+<td><strong>6 モジュール</strong></td>
+<td><code>PersonTrackPipeline</code> 移行 → 削除</td>
+</tr>
+<tr>
+<td><code>vast/runner.py</code></td>
+<td>55</td>
+<td>re-export</td>
+<td><code>vast.cli/offers/instance</code> 直 import → 削除</td>
+</tr>
+<tr>
+<td><code>vast/compat.py</code></td>
+<td>58</td>
+<td>private alias</td>
+<td>同上 → 削除</td>
+</tr>
+<tr>
+<td><code>inference/pipeline.py</code></td>
+<td>11</td>
+<td>re-export</td>
+<td><code>cli.run_video</code>/<code>inference.runner</code> → 削除</td>
+</tr>
+<tr>
+<td><code>inference/uncertainty_viz.py</code></td>
+<td>57</td>
+<td>re-export</td>
+<td><code>inference.uncertainty</code> → 削除</td>
+</tr>
+<tr>
+<td><code>gui/controller.py</code></td>
+<td>10</td>
+<td>re-export</td>
+<td><code>gui.state.job_state</code> → 削除</td>
+</tr>
+</tbody>
+</table>
+<h3 id="facade-1-pr">タスク（facade ごとに1 PR）<a class="headerlink" href="#facade-1-pr" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>grep -rl &lt;facade&gt;</code> で実利用を列挙。</li>
+<li>import を正規パスへ機械置換（テスト含む）。</li>
+<li>facade 削除 + <code>CHANGELOG.md</code> に breaking 記載。</li>
+<li><code>scripts/check_import_cycles.py</code> で循環 import 不在を確認。</li>
+</ol>
+<h3 id="_6">リスク<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<p><code>detection_stabilizer</code> は挙動コア。<code>PersonTrackPipeline</code> 移行は <strong>feature flag <code>RFDETR_TRACK_PIPELINE=v1|v2</code></strong> で並走し、<code>mn1-2.mov</code> で ID 切替・ゴースト表示の parity を確認後に v1 削除。</p>
+<h3 id="definition-of-done_2">Definition of Done<a class="headerlink" href="#definition-of-done_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] 上記6 facade すべて削除</li>
+<li>[x] <code>tracking/__init__.py</code> が pipeline のみ公開</li>
+<li>[x] 回帰テスト green</li>
+<li>[x] <code>CHANGELOG.md</code> に breaking 記載</li>
+</ul>
+<hr />
+<h2 id="8-phase-10-run_mzoo_benchmarkpy518tools">8. Phase 10 — <code>run_mzoo_benchmark.py</code>（518行）tools 化<a class="headerlink" href="#8-phase-10-run_mzoo_benchmarkpy518tools" title="Permanent link">&para;</a></h2>
+<h3 id="_7">目的<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<p>AGENTS.md が禁じる「scripts へのビジネスロジック」最大の違反を解消。</p>
+<h3 id="_8">タスク<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
+<ol>
+<li>使用実態を確認（CI / README 参照）。未使用なら削除。</li>
+<li>使用中ならロジックを <code>src/rfdetr_demo/benchmark/</code> 等へ移し、<code>scripts/</code> 側は thin launcher に。</li>
+<li>ベンチ結果スキーマを <code>artifacts/</code> 出力規約に合わせる。</li>
+</ol>
+<h3 id="definition-of-done_3">Definition of Done<a class="headerlink" href="#definition-of-done_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] <code>scripts/</code> に 200 行超の <code>.py</code> がゼロ</li>
+<li>[x] ロジックは <code>rfdetr_demo.benchmark</code>（<code>jobs</code> / <code>environment</code> / <code>runner</code> / <code>report</code> / <code>cli</code>）</li>
+<li>[x] entry point: <code>uv run rfdetr-mzoo-benchmark</code>（<code>scripts/run_mzoo_benchmark.py</code> は DeprecationWarning 付き thin launcher）</li>
+</ul>
+<hr />
+<h2 id="9-phase-11-2-common">9. Phase 11 — 監査2系統の <code>common</code> 抽出<a class="headerlink" href="#9-phase-11-2-common" title="Permanent link">&para;</a></h2>
+<h3 id="_9">目的<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
+<p><code>frame_audit.py</code>(306) と <code>tracking_audit.py</code>(475) の JSONL追記・<code>_relpath</code>・<code>evaluate_*</code>・画像書き込み重複を統一。</p>
+<h3 id="_10">タスク<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>media/audit/</code> サブパッケージ化:</li>
+<li><code>common.py</code> — JSONL 追記、<code>_relpath</code>、画像 I/O、共通スキーマ（<code>classification</code>/<code>run_id</code>/<code>frame_index</code>）</li>
+<li><code>frame.py</code> / <code>tracking.py</code> は薄いオーケストレータ</li>
+<li>監査評価を Phase 9 の pipeline diagnostics に接続（重複評価ロジック除去）</li>
+<li><code>media_guard</code> 経由の機密書き込み証跡を維持</li>
+</ol>
+<h3 id="definition-of-done_4">Definition of Done<a class="headerlink" href="#definition-of-done_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] 監査 JSONL スキーマ 1 種（<code>audit_kind</code> + 共通ベースフィールド）</li>
+<li>[x] <code>tracking_audit.py</code> 300 行以下（26 行 facade）</li>
+<li>[x][confidential-media-policy.md](confidential-media-policy.md) と整合</li>
+</ul>
+<hr />
+<h2 id="10-phase-12-300-0">10. Phase 12 — 残り中型ファイル仕上げ（300 行超を 0 に）<a class="headerlink" href="#10-phase-12-300-0" title="Permanent link">&para;</a></h2>
+<h3 id="_11">目的<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h3>
+<p>インベントリ §3.3 の 11 ファイルを 300 行以下へ。各々は既存の分割パターン踏襲で済む。</p>
+<h3 id="definition-of-done_5">Definition of Done<a class="headerlink" href="#definition-of-done_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] <code>src/rfdetr_demo/</code> に 400 行超 <strong>0</strong></li>
+<li>[x] 300 行超 <strong>≤2</strong>（現行: <code>puppet_continuous</code> のみ。意図的維持）</li>
+<li>[x] 各分割で回帰テスト green</li>
+</ul>
+<hr />
+<h2 id="11-phase-13-api">11. Phase 13 — 公開 API 凍結・ドキュメント統一<a class="headerlink" href="#11-phase-13-api" title="Permanent link">&para;</a></h2>
+<h3 id="api">公開 API<a class="headerlink" href="#api" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># rfdetr_demo / rfdetr_demo.public（PUBLIC_API 許可リスト）</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">run_demo</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>                         <span class="c1"># inference.runner</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">PersonTrackPipeline</span>                   <span class="c1"># tracking.pipeline</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">ConfidentialFrameAuditLogger</span>          <span class="c1"># media.audit.frame</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">run_center_tracking_audit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>        <span class="c1"># media.audit.tracking</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">run_vast_cli</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>                     <span class="c1"># vast.cli</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">DEFAULT_PARAMETERS</span>                    <span class="c1"># tuning.auto_tune</span>
+</span></code></pre></div>
+<h3 id="_12">タスク<a class="headerlink" href="#_12" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>rfdetr_demo/public.py</code> — 許可リスト export</li>
+<li>内部モジュールに <code>_</code> prefix / <code>internal/</code>、<code>gui → vast.safety_*</code> 直 import 禁止 lint</li>
+<li><code>docs/ja/README.md</code> 索引更新、本計画 DONE チェック、<code>CHANGELOG.md</code> に Phase 7–13 breaking 集約</li>
+<li><code>tests/rfdetr_demo</code> を 60+ 件・カバレッジ 80% へ。ID 切替・人数レンジを golden JSON 固定</li>
+</ol>
+<h3 id="definition-of-done_6">Definition of Done<a class="headerlink" href="#definition-of-done_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] <code>rfdetr_demo</code> 0.2.0（<code>__version__</code>）— タグ可能</li>
+<li>[x] Phase 9 facade・scripts shim ゼロ（意図的 thin facade: <code>vast.safety</code> / media audit / <code>puppet_render</code> は互換維持）</li>
+<li>[x] <code>public.py</code> + パッケージ root 遅延 export</li>
+<li>[x] GUI→Vast safety 内部モジュール境界 lint（<code>check_import_cycles.py</code>）</li>
+<li>[x] golden: <code>tests/rfdetr_demo/golden/tracking_audit_baseline.json</code></li>
+<li>[x] 計画文書 / <code>docs/ja/README.md</code> / CHANGELOG 更新</li>
+<li>[x] <code>tests/rfdetr_demo</code> ≥60（現行 185+）</li>
+</ul>
+<hr />
+<h2 id="12-upstreamsrcrfdetr">12. upstream（<code>src/rfdetr</code>）の扱い — 別トラック<a class="headerlink" href="#12-upstreamsrcrfdetr" title="Permanent link">&para;</a></h2>
+<p>フォーク PR では原則触らない。以下は Roboflow upstream または専用ブランチ向け。</p>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>推奨</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>detr.py</code> 分割</td>
+<td>upstream Issue 提案のみ</td>
+</tr>
+<tr>
+<td><code>util/</code> → <code>utilities/</code> 統合</td>
+<td>upstream 待ち</td>
+</tr>
+</tbody>
+</table>
+<p>フォーク側で許容する upstream 変更: import path 修正、型ヒント・docstring、セキュリティパッチ。</p>
+<hr />
+<h2 id="13-pr">13. PR 運用ルール<a class="headerlink" href="#13-pr" title="Permanent link">&para;</a></h2>
+<h3 id="_13">ブランチ命名<a class="headerlink" href="#_13" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>refactor/p{phase}-{short-topic}
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>例: refactor/p9-drop-facades
+</span></code></pre></div>
+<h3 id="pr">各 PR 必須<a class="headerlink" href="#pr" title="Permanent link">&para;</a></h3>
+<ol>
+<li>フェーズ ID を PR タイトルに含める</li>
+<li><code>tests/rfdetr_demo</code> green</li>
+<li>機密触る場合 → <code>media_guard</code> 経由の証跡</li>
+<li>400 行超ファイルを新規に増やさない</li>
+<li>ユーザー向け変更 → <code>docs/ja/</code> 1 行以上更新</li>
+</ol>
+<h3 id="_14">ロールバック<a class="headerlink" href="#_14" title="Permanent link">&para;</a></h3>
+<p>Phase 9・12 は feature flag または 1 PR revert で戻せる粒度を維持。</p>
+<hr />
+<h2 id="14">14. 完了後の理想状態<a class="headerlink" href="#14" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>src/rfdetr/              … upstream 同期、フォーク独自変更最小
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>src/rfdetr_demo/
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  tracking/pipeline.py   … 追跡の単一入口（facade なし）
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  inference/runner.py    … 動画実行コア
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  gui/controllers/       … 薄い GUI
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  media/audit/           … 統一監査（common 抽出済み）
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  cli/                   … 全 CLI
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>  public.py              … 公開 API 許可リスト
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>scripts/                 … *.cmd + launch_gui.py + check_import_cycles.py のみ
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>tests/rfdetr_demo/       … 60+ tests、golden 回帰
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>docs/ja/                 … 索引 + 本計画 DONE
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>指標</th>
+<th>現在</th>
+<th>完了時目標</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rfdetr_demo</code> 400行超</td>
+<td>1</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td><code>rfdetr_demo</code> 300行超</td>
+<td>11</td>
+<td><strong>≤2</strong></td>
+</tr>
+<tr>
+<td>deprecation facade</td>
+<td>6</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td><code>scripts/</code> 3行 shim</td>
+<td>~15</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td><code>scripts/</code> Python ロジック</td>
+<td>2</td>
+<td><strong>≤2（全 &lt;150行）</strong></td>
+</tr>
+<tr>
+<td>監査 JSONL スキーマ</td>
+<td>2</td>
+<td><strong>1</strong></td>
+</tr>
+<tr>
+<td><code>tests/rfdetr_demo</code></td>
+<td>24 ファイル</td>
+<td><strong>≥60 テスト / 80%</strong></td>
+</tr>
+<tr>
+<td>中央トラック ID 切替（713f）</td>
+<td>31</td>
+<td><strong>≤15</strong>（機能改善トラック）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="15-2026-07-29">15. 2026-07-29 実行状況と次のアクション<a class="headerlink" href="#15-2026-07-29" title="Permanent link">&para;</a></h2>
+<h3 id="animation">完了した animation 分割スライス<a class="headerlink" href="#animation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>animation/puppet_render.py</code>（旧 757 行）から責務を分離:</li>
+<li><code>puppet_timeline.py</code> — track 選択、pose 補間、疎 keyframe の resampling</li>
+<li><code>puppet_video.py</code> — JSON 読み込み、retarget、video/pose sidecar 出力</li>
+<li><code>puppet_cli.py</code> — 引数解析と終了コード</li>
+<li><code>puppet_assets.py</code> — manifest/profile 正規化、RGBA layer、grid、pivot 構築</li>
+<li><code>puppet_mesh.py</code> — mesh weight、rotation、rigid prop の状態非依存計算</li>
+<li><code>puppet_layered.py</code> — layered sprite の変形と合成</li>
+<li><code>puppet_continuous.py</code> — continuous mesh と表情の合成</li>
+<li><code>puppet_renderer.py</code> — render mode に応じて compositor を選ぶ互換 router</li>
+<li>Kirby notebook 10 冊の <code>render_puppet_video</code> import を <code>puppet_video.py</code>、利用 docs 3 コマンドを <code>puppet_cli.py</code>、compact Colab builder の必須 runtime を <code>puppet_video.py</code> へ移行。</li>
+<li><code>puppet_render.py</code> は外部利用者と旧 <code>python -m</code> 用の 23 行 compatibility facade として維持。リポジトリ内の実利用参照はゼロ。</li>
+<li>facade と canonical API の同一性、asset/profile/layer/pivot、mesh数値場、composition strategy、空 control sequence、CLI 引数を契約テスト化。</li>
+<li>検証: <code>142 passed</code>、Ruff clean、対象 11 ファイルの strict mypy clean、108 module の import cycle 0 件。分離前後の固定 pose は画素完全一致（最大差 0、変更値 0）で、compact notebook は builder 再生成物と一致。</li>
+</ul>
+<h3 id="_15">次の実行順<a class="headerlink" href="#_15" title="Permanent link">&para;</a></h3>
+<ol>
+<li>[x] asset/manifest 読み込みを <code>puppet_assets.py</code>（191 行）へ抽出し、<code>puppet_renderer.py</code> を 585→510 行へ縮小する。</li>
+<li>[x] mesh weight・rotation・rigid prop を <code>puppet_mesh.py</code>（149 行）へ抽出し、数値場と固定poseのcharacterization gateを追加する。rendererは510→411行。</li>
+<li>[x] continuous mesh composition を <code>puppet_continuous.py</code>（318 行）、layered composition を <code>puppet_layered.py</code>（156 行）へ分離し、<code>puppet_renderer.py</code> を 411→55 行の互換 router へ縮小する。</li>
+<li>[x] notebook/docs/builder を canonical import へ移行し、旧 facade のリポジトリ内実利用をゼロにする。</li>
+<li>[x] Phase 11 — <code>media/audit/</code> 共通抽出（<code>tracking_audit.py</code> 475→26 行 facade、JSONL スキーマ統一）。</li>
+</ol>
+<p>facade の削除は機械的な後続スライスにはしない。外部利用者向けの非互換変更になるため、明示的な deprecation 告知と versioned release 境界が決まるまでは維持し、その境界で legacy import/CLI 契約テストと一緒に sunset する。</p>
+<p>各スライスは挙動を変えず、<code>tests/rfdetr_demo</code>、<code>test_temporal_quality.py</code>、Ruff、strict mypy（新境界）、<code>check_import_cycles.py</code> を gate とする。mesh 描画を動かす変更では短尺動画または固定画像の visual parity も必須とする。</p>
+<h3 id="phase-1315-tracking">Phase 13–15 tracking 統合計画（完了）<a class="headerlink" href="#phase-1315-tracking" title="Permanent link">&para;</a></h3>
+<p>別紙計画（Phase 13 baseline → 15a/b/c → 14 CLI）の DoD:</p>
+<ul>
+<li>[x] Phase 13 — baseline / debt register / <code>check_import_cycles.py</code>（循環 0）</li>
+<li>[x] Phase 15a — <code>types.py</code> + <code>bbox.py</code></li>
+<li>[x] Phase 15b — <code>TrackStore</code>、temporal <code>_associator</code> 除去</li>
+<li>[x] Phase 15c — <code>PersonTrackPipeline</code>、<code>max_missed</code> / sticky 設定昇格</li>
+<li>[x] Phase 14 — <code>probe-count</code> / <code>audit-tracking</code> サブコマンド + scripts wrapper</li>
+<li>[x] <code>detection_stabilizer.py</code> ≤300 行 facade（現行 57 行）→ Phase 9 で削除済</li>
+</ul>
+<p>回帰手順: <a href="../refactor-baseline-metrics/">refactor-baseline-metrics.md</a>。全編 sticky 監査（ID 切替 ≤15）は機密動画のローカル実行が残件。</p>
+<h3 id="phase-9-facade">Phase 9 facade 削除（完了）<a class="headerlink" href="#phase-9-facade" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] <code>tracking/detection_stabilizer.py</code> 削除（<code>pipeline</code> / <code>stabilizer</code> / <code>bbox</code> を直接利用）</li>
+<li>[x] <code>vast/runner.py</code> / <code>vast/compat.py</code> 削除</li>
+<li>[x] <code>inference/pipeline.py</code> / <code>inference/uncertainty_viz.py</code> 削除</li>
+<li>[x] <code>gui/controller.py</code> 削除</li>
+<li>[x] <code>tracking/__init__.py</code> は pipeline API のみ export</li>
+<li>[x] CHANGELOG <code>[Unreleased]</code> に breaking note</li>
+</ul>
+<h3 id="phase-12">Phase 12 中型仕上げ（完了）<a class="headerlink" href="#phase-12" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] <code>tracking/track_store.py</code> → <code>track_models</code> / <code>track_match</code> / <code>track_hold</code></li>
+<li>[x] <code>inference/runner.py</code> → <code>task_callback.py</code></li>
+<li>[x] Phase 12b — GUI panels / vast_controller</li>
+<li>[x] Phase 12c — <code>analyze_clip</code> → types/issues、<code>temporal/keypoints</code> → <code>keypoints_state</code></li>
+<li>[x] DoD: 400 行超 0、300 行超 ≤2（残りは <code>puppet_continuous</code> のみ・意図的）</li>
+</ul>
+<h3 id="_16">次スライス（推奨）<a class="headerlink" href="#_16" title="Permanent link">&para;</a></h3>
+<ol>
+<li>全編 sticky 監査（mn1-2.mov）— 機密動画はローカル実行（ID 切替 31 → ≤15）</li>
+<li>意図的 thin facade（<code>puppet_render</code> / media audit / <code>vast.safety</code>）の versioned sunset（必要時）</li>
+</ol>
+<hr />
+<p><strong>最終更新</strong>: 2026-08-04
+<strong>ステータス</strong>: Phase 7–13（公開 API 凍結含む）+ Phase 10 + 13–15 tracking 完了。残機能ゲートは sticky 全編監査。</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 4, 2026 18:26:37 UTC">2026-08-04 18:26:37</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Roboflow 2025–2026. All rights reserved.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/roboflow" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.youtube.com/roboflow" target="_blank" rel="noopener" title="www.youtube.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M549.7 124.1c-6.2-23.7-24.8-42.3-48.3-48.6C458.9 64 288.1 64 288.1 64S117.3 64 74.7 75.5c-23.5 6.3-42 24.9-48.3 48.6C15 167 15 256.4 15 256.4s0 89.4 11.4 132.3c6.3 23.6 24.8 41.5 48.3 47.8C117.3 448 288.1 448 288.1 448s170.8 0 213.4-11.5c23.5-6.3 42-24.2 48.3-47.8 11.4-42.9 11.4-132.3 11.4-132.3s0-89.4-11.4-132.3zM232.2 337.6V175.2l142.7 81.2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/company/roboflow-ai/mycompany/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zM102.2 96a38.5 38.5 0 1 1 0 77 38.5 38.5 0 1 1 0-77m282.1 320h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://twitter.com/roboflow" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M459.4 151.7c.3 4.5.3 9.1.3 13.6 0 138.7-105.6 298.6-298.6 298.6-59.5 0-114.7-17.2-161.1-47.1 8.4 1 16.6 1.3 25.3 1.3 49.1 0 94.2-16.6 130.3-44.8-46.1-1-84.8-31.2-98.1-72.8 6.5 1 13 1.6 19.8 1.6 9.4 0 18.8-1.3 27.6-3.6-48.1-9.7-84.1-52-84.1-103v-1.3c14 7.8 30.2 12.7 47.4 13.3-28.3-18.8-46.8-51-46.8-87.4 0-19.5 5.2-37.4 14.3-53C87.4 130.8 165 172.4 252.1 176.9c-1.6-7.8-2.6-15.9-2.6-24C249.5 95.1 296.3 48 354.4 48c30.2 0 57.5 12.7 76.7 33.1 23.7-4.5 46.5-13.3 66.6-25.3-7.8 24.4-24.4 44.8-46.1 57.8 21.1-2.3 41.6-8.1 60.4-16.2-14.3 20.8-32.2 39.3-52.6 54.3"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.tabs.link", "content.code.copy", "navigation.expand", "navigation.tabs", "content.code.annotate", "navigation.tracking", "content.tooltips", "navigation.tabs.sticky"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

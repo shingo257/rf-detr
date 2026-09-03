@@ -2687,7 +2687,7 @@ If another dependency pins <code>supervision&lt;0.29.0</code>, resolve the confl
 <div class="admonition warning">
 <p class="admonition-title">Breaking: <code>pyDeprecate</code> constraint narrowed to <code>&gt;=0.9,&lt;0.10</code></p>
 <p>Was <code>&gt;=0.6,&lt;0.8</code>. If another package pins an older version, resolve with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;rfdetr==1.8.0&quot;</span><span class="w"> </span><span class="s2">&quot;pyDeprecate&gt;=0.9,&lt;0.10&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"rfdetr==1.8.0"</span><span class="w"> </span><span class="s2">"pyDeprecate&gt;=0.9,&lt;0.10"</span>
 </span></code></pre></div>
 </div>
 <hr />
@@ -2701,23 +2701,23 @@ training, update your install command.</p>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>pip<span class="w"> </span>install<span class="w"> </span>rfdetr
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># After</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;rfdetr[lora]&#39;</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">'rfdetr[lora]'</span>
 </span></code></pre></div>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Breaking: <code>predict()</code> stores source image in <code>detections.metadata</code></p>
 <p><strong><code>predict()</code> stores the source image in <code>detections.metadata</code>, not <code>detections.data</code>.</strong></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Before (1.6.4 and earlier)</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">source</span> <span class="o">=</span> <span class="n">detections</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;source_image&quot;</span><span class="p">]</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">source</span> <span class="o">=</span> <span class="n">detections</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">"source_image"</span><span class="p">]</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># After</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">source</span> <span class="o">=</span> <span class="n">detections</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;source_image&quot;</span><span class="p">]</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">source</span> <span class="o">=</span> <span class="n">detections</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"source_image"</span><span class="p">]</span>
 </span></code></pre></div>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Breaking: <code>pyDeprecate</code> constraint changed to <code>&gt;=0.6,&lt;0.8</code></p>
 <p>Was <code>&gt;=0.3,&lt;0.6</code>. If another package pins an older version, resolve with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;rfdetr==1.7.0&quot;</span><span class="w"> </span><span class="s2">&quot;pyDeprecate&gt;=0.6,&lt;0.8&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"rfdetr==1.7.0"</span><span class="w"> </span><span class="s2">"pyDeprecate&gt;=0.6,&lt;0.8"</span>
 </span></code></pre></div>
 </div>
 <h3 id="deprecated-in-v17-remove-in-v19">Deprecated in v1.7 → Remove in v1.9<a class="headerlink" href="#deprecated-in-v17-remove-in-v19" title="Permanent link">&para;</a></h3>
@@ -2843,7 +2843,7 @@ classes. Choose the variant that matches your previous model size. If you used
 <p><strong><code>transformers</code> minimum version raised to <code>&gt;=5.1.0,&lt;6.0.0</code>.</strong></p>
 <p>Projects pinned to <code>transformers&lt;5.0.0</code> must upgrade. If upgrading is not possible,
 pin <code>rfdetr&lt;1.6.0</code>.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;transformers&gt;=5.1.0,&lt;6.0.0&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">'transformers&gt;=5.1.0,&lt;6.0.0'</span>
 </span></code></pre></div>
 </div>
 <div class="admonition warning">
@@ -2869,12 +2869,12 @@ pin <code>rfdetr&lt;1.6.0</code>.</p>
 </tbody>
 </table>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Before</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;rfdetr[metrics]&#39;</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;rfdetr[onnxexport]&#39;</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">'rfdetr[metrics]'</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">'rfdetr[onnxexport]'</span>
 </span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
 </span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="c1"># After</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;rfdetr[loggers]&#39;</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;rfdetr[onnx]&#39;</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">'rfdetr[loggers]'</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">'rfdetr[onnx]'</span>
 </span></code></pre></div>
 </div>
 <div class="admonition warning">
@@ -2894,10 +2894,10 @@ pin <code>rfdetr&lt;1.6.0</code>.</p>
 <p><strong><code>RFDETR.export(..., simplify=..., force=...)</code></strong> — both arguments are no-ops.
 Remove them from your calls.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Before (deprecated)</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">model</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">&quot;model.onnx&quot;</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">model</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"model.onnx"</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
 </span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1"># After</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">model</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">&quot;model.onnx&quot;</span><span class="p">)</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">model</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"model.onnx"</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
 <h3 id="deprecated-in-v16-remove-in-v19">Deprecated in v1.6 → Remove in v1.9<a class="headerlink" href="#deprecated-in-v16-remove-in-v19" title="Permanent link">&para;</a></h3>

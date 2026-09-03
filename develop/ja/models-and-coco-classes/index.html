@@ -1,0 +1,3616 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Real-time transformer for object detection and instance segmentation. DINOv2 backbone, SOTA on COCO (60.1 AP50:95). Apache 2.0. Works with Python ≥3.10.">
+      
+      
+        <meta name="author" content="Roboflow">
+      
+      
+        <link rel="canonical" href="https://rfdetr.roboflow.com/develop/ja/models-and-coco-classes/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/roboflow-logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+  
+    
+      
+        <title>RF-DETR モデル構成と対応クラス解説 - RF-DETR</title>
+      
+    
+  
+
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/rf.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+  <link rel="preconnect" href="https://storage.googleapis.com">
+
+  
+  
+  
+  <meta property="og:title" content="RF-DETR モデル構成と対応クラス解説 - RF-DETR">
+  <meta property="og:description" content="Real-time transformer for object detection and instance segmentation. DINOv2 backbone, SOTA on COCO (60.1 AP50:95). Apache 2.0. Works with Python ≥3.10.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://rfdetr.roboflow.com/develop/ja/models-and-coco-classes/">
+  <meta property="og:image" content="https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png">
+  <meta property="og:image:width" content="840">
+  <meta property="og:image:height" content="630">
+
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@roboflow">
+  <meta name="twitter:title" content="RF-DETR モデル構成と対応クラス解説 - RF-DETR">
+  <meta name="twitter:description" content="Real-time transformer for object detection and instance segmentation. DINOv2 backbone, SOTA on COCO (60.1 AP50:95). Apache 2.0. Works with Python ≥3.10.">
+  <meta name="twitter:image" content="https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png">
+
+  
+  
+  
+  
+  <meta property="article:modified_time" content="2026-08-02T02:20:08">
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "RF-DETR \u30e2\u30c7\u30eb\u69cb\u6210\u3068\u5bfe\u5fdc\u30af\u30e9\u30b9\u89e3\u8aac",
+    "description": "Real-time transformer for object detection and instance segmentation. DINOv2 backbone, SOTA on COCO (60.1 AP50:95). Apache 2.0. Works with Python \u22653.10.",
+    "url": "https://rfdetr.roboflow.com/develop/ja/models-and-coco-classes/",
+    "isPartOf": {"@id": "https://rfdetr.roboflow.com/develop#website"},
+    "about": {"@id": "https://rfdetr.roboflow.com/develop#software"},
+    "proficiencyLevel": "Beginner to advanced",
+    "inLanguage": "en",
+    "keywords": "RF-DETR, rfdetr, object detection, instance segmentation, computer vision, Roboflow",
+    "datePublished": "2025-03-01",
+    "dateModified": "2026-08-02T02:20:08",
+    "image": "https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png",
+    "author": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
+    "publisher": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
+    "mainEntityOfPage": {"@type": "WebPage", "@id": "https://rfdetr.roboflow.com/develop/ja/models-and-coco-classes/"},
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": [".md-content h1", ".md-typeset > p:first-child"]
+    }
+  }
+  </script>
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "RF-DETR",
+        "item": "https://rfdetr.roboflow.com/develop"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "RF-DETR \u30e2\u30c7\u30eb\u69cb\u6210\u3068\u5bfe\u5fdc\u30af\u30e9\u30b9\u89e3\u8aac",
+        "item": "https://rfdetr.roboflow.com/develop/ja/models-and-coco-classes/"
+      }
+      
+    ]
+  }
+  </script>
+  
+  
+
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#rf-detr" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+
+<!-- Header -->
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav
+    class="md-header__inner md-grid"
+    aria-label="Header"
+  >
+
+    <!-- Link to home -->
+    <a
+      href="../.."
+      title="RF-DETR"
+      class="md-header__button md-logo"
+      aria-label="RF-DETR"
+      data-md-component="logo"
+    >
+      
+  <img src="../../assets/roboflow-logo.svg" alt="logo">
+
+    </a>
+
+    <!-- Button to open drawer -->
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+
+    <!-- Header title -->
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            RF-DETR Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis" style="display: flex; align-items: center; gap: 0.5rem;">
+            <a
+            href="../.."
+            title="RF-DETR"
+            class="md-header__button md-logo"
+            aria-label="RF-DETR"
+            data-md-component="logo"
+            id="item-logo"
+            >
+            
+  <img src="../../assets/roboflow-logo.svg" alt="logo">
+
+            </a>
+            
+              RF-DETR モデル構成と対応クラス解説
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    <!-- Button to open search modal -->
+    
+      
+
+      <!-- Check if search is actually enabled - see https://t.ly/DT_0V -->
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+
+        <!-- Search interface -->
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+
+
+    <ul class="header-list">
+        <li style="align-items: center;" id="resources-list">
+            <label for="dropdown-resources"><span>Resources <img src="https://ka-p.fontawesome.com/releases/v6.6.0/svgs/regular/chevron-down.svg?v=2&token=a463935e93" style="height: 0.5rem;" /></span></label>
+            <input type="radio" name="dropdown" id="dropdown-resources" style="display: none;" />
+            <ul class="resources-sublist sublist">
+                <li><a href="https://blog.roboflow.com">Blog</a></li>
+                <li><a href="https://discuss.roboflow.com">Community Forum</a></li>
+                <li><a href="https://roboflow.com/sales">Contact Sales</a></li>
+                <li><a href="https://universe.roboflow.com">Universe</a></li>
+            </ul>
+        </li>
+        <li style="align-items: center;" id="products-list">
+            <label for="dropdown-products"><span>Docs <img src="https://ka-p.fontawesome.com/releases/v6.6.0/svgs/regular/chevron-down.svg?v=2&token=a463935e93" style="height: 0.5rem;" /></span></label>
+            <input type="radio" name="dropdown" id="dropdown-products" style="display: none;" />
+            <ul class="products-sublist sublist">
+                <li><a href="https://inference.roboflow.com">Inference</a></li>
+                <li><a href="https://supervision.roboflow.com">Supervision</a></li>
+                <li><a href="https://trackers.roboflow.com">Trackers</a></li>
+                <li><a href="https://rfdetr.roboflow.com">RF-DETR</a></li>
+                <li><a href="https://maestro.roboflow.com">Maestro</a></li>
+                <li><a href="https://docs.roboflow.com">Roboflow</a></li>
+            </ul>
+        </li>
+        <script>
+          document.addEventListener('click', function(event) {
+            const resourcesList = document.getElementById('resources-list');
+            const productsList = document.getElementById('products-list');
+            const dropdownResources = document.getElementById('dropdown-resources');
+            const dropdownProducts = document.getElementById('dropdown-products');
+
+            if (!resourcesList.contains(event.target)) {
+              dropdownResources.checked = false;
+            }
+            if (!productsList.contains(event.target)) {
+              dropdownProducts.checked = false;
+            }
+          });
+          // on mouse over
+          document.getElementById('resources-list').addEventListener('mouseover', function() {
+            document.getElementById('dropdown-resources').checked = true;
+          });
+          document.getElementById('products-list').addEventListener('mouseover', function() {
+            document.getElementById('dropdown-products').checked = true;
+          });
+          // on mouse out
+          document.getElementById('resources-list').addEventListener('mouseout', function() {
+            // if not hovering over the sublist or the label, uncheck the dropdown
+            // wait 1 sec
+            setTimeout(function() {
+              if (!document.querySelector('.resources-sublist:hover') && !document.querySelector('#resources-list:hover')) {
+                document.getElementById('dropdown-resources').checked = false;
+              }
+            }, 350);
+          });
+          // if mouseout of sublist, uncheck immediately
+          document.querySelector('.resources-sublist').addEventListener('mouseout', function() {
+            setTimeout(function() {
+              if (!document.querySelector('.resources-sublist:hover') && !document.querySelector('#resources-list:hover')) {
+                document.getElementById('dropdown-resources').checked = false;
+              }
+            }, 450);
+          });
+          document.getElementById('products-list').addEventListener('mouseout', function() {
+            // if not hovering over the sublist, uncheck the dropdown
+            // wait 1 sec
+            setTimeout(function() {
+              if (!document.querySelector('.products-sublist:hover') && !document.querySelector('#products-list:hover')) {
+                document.getElementById('dropdown-products').checked = false;
+              }
+            }, 500);
+          });
+          // if mouseout of sublist, uncheck immediately
+          document.querySelector('.products-sublist').addEventListener('mouseout', function() {
+            setTimeout(function() {
+              if (!document.querySelector('.products-sublist:hover') && !document.querySelector('#products-list:hover')) {
+                document.getElementById('dropdown-products').checked = false;
+              }
+            }, 500);
+          });
+
+        </script>
+        <style>
+          #dropdown-resources:checked ~ .resources-sublist {
+            display: block;
+          }
+          #dropdown-products:checked ~ .products-sublist {
+            display: block;
+          }
+          /* Hide dropdown if clicking outside */
+          body:not(:has(#dropdown-resources:checked)) .resources-sublist,
+          body:not(:has(#dropdown-products:checked)) .products-sublist {
+            display: none;
+          }
+        </style>
+        <a href="https://github.com/roboflow/rf-detr"><li class="header-btn" style="border-radius: 5px; color: white; background: var(--md-typeset-a-color); padding-top: 0.25rem; padding-left: 0.5rem; padding-bottom: 0.25rem; padding-right: 0.5rem; border: 1px solid #8315F9;">Go to GitHub</li></a>
+    </ul>
+  </nav>
+
+  <!-- Navigation tabs (sticky) -->
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/install/" class="md-tabs__link">
+          
+  
+  
+  How to
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/rfdetr/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../cookbooks/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Cookbooks
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../resources/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Resources
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="RF-DETR" class="md-nav__button md-logo" aria-label="RF-DETR" data-md-component="logo">
+      
+  <img src="../../assets/roboflow-logo.svg" alt="logo">
+
+    </a>
+    RF-DETR
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/roboflow/rf-detr" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    roboflow/rf-detr
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How to
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    How to
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migration Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run Model
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Run Model
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/run/detection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/run/segmentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/run/keypoints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keypoints
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/pretrained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pretrained Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Train Model
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Train Model
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/dataset-formats/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dataset Formats
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/training-parameters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training Parameters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/advanced/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/customization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Training API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/augmentations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Augmentations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/train/loggers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training Loggers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/deploy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deploy Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rfdetr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detection Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Detection Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/nano/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Nano
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/small/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Small
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/medium/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Medium
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/large/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Large
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/xlarge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR XLarge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/2xlarge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR 2XLarge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Segmentation Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/seg_nano/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Seg Nano
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/seg_small/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Seg Small
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/seg_medium/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Seg Medium
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/seg_large/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Seg Large
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/seg_xlarge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Seg XLarge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/seg_2xlarge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Seg 2XLarge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keypoint Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Keypoint Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/kp_preview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RF-DETR Keypoint Preview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training Configs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Training Configs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/train_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Train Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/segmentation_train_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation Train Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/keypoint_train_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keypoint Train Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lightning Training
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Lightning Training
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training Primitives
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cookbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cookbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 重要な前提
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. 重要な前提">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 推論モデルはタスクごとに別物
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 事前学習データセット
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-num_classes-90" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 num_classes = 90 について
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. モデルバリアント一覧
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. モデルバリアント一覧">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-object-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 物体検出（Object Detection）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 インスタンスセグメンテーション
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 キーポイント検出（Preview）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-coco-80" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. COCO 80 クラス一覧（検出・セグメンテーション）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. COCO 80 クラス一覧（検出・セグメンテーション）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 人・動物
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 乗り物
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 屋外・道路
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 バッグ・スポーツ用品
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 食器・食べ物
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 家具・家電
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 その他
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#38" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.8 プログラムからクラス名を取得
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-coco-17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. COCO 17 キーポイント（キーポイント版のみ）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-supervision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 出力形式（Supervision）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. カスタムクラス（ファインチューニング）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-er-flowscan-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. ER-FlowScan Suite との使い分け
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 参考リンク
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="rf-detr">RF-DETR モデル構成と対応クラス解説<a class="headerlink" href="#rf-detr" title="Permanent link">&para;</a></h1>
+<p>本ドキュメントは、RF-DETR フォーク（ER-FlowScan）向けの技術リファレンスです。<br />
+<strong>どの推論モデルが何を検出できるか</strong>、<strong>事前学習チェックポイントの違い</strong>、<strong>COCO 80 クラスの一覧</strong>をまとめています。</p>
+<ul>
+<li>公式 API リファレンス: <a href="https://rfdetr.roboflow.com">rfdetr.roboflow.com</a></li>
+<li>日本語ドキュメント索引: <a href="../">docs/ja/README.md</a></li>
+<li>Vast.ai 外部 GPU 組み込み: <a href="../vast-ai-integration-guide/">docs/ja/vast-ai-integration-guide.md</a></li>
+<li>コード上のクラス定義: <a href="../src/rfdetr/assets/coco_classes.py"><code>src/rfdetr/assets/coco_classes.py</code></a></li>
+<li>モデルバリアント: <a href="../src/rfdetr/variants.py"><code>src/rfdetr/variants.py</code></a></li>
+</ul>
+<hr />
+<h2 id="1">1. 重要な前提<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<h3 id="11">1.1 推論モデルはタスクごとに別物<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
+<p>RF-DETR は <strong>1 つの万能モデルをモード切替する方式ではありません</strong>。<br />
+検出・セグメンテーション・キーポイントは <strong>別 Python クラス・別チェックポイント（<code>.pth</code> / <code>.pt</code>）・別出力形式</strong> です。</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>共通基盤（DINOv2 系バックボーン + DETR 系）
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>        │
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        ├── 検出モデル      RFDETRNano … RFDETRLarge     → Detections（矩形 + クラス）
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        ├── セグモデル      RFDETRSegNano … RFDETRSeg2XL → Detections + マスク
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        └── キーポイント    RFDETRKeypointPreview        → KeyPoints（17 関節）
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>誤解</th>
+<th>正しい理解</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>人検知専用モデル</td>
+<td><strong>検出版</strong>は COCO 80 クラス全体向け。<code>person</code> はその 1 つ</td>
+</tr>
+<tr>
+<td>セグ版は検出版の「機能追加」</td>
+<td><strong>別重み</strong>で学習された <strong>別モデル</strong>（マスク用ヘッド付き）</td>
+</tr>
+<tr>
+<td>キーポイント版も COCO 80 物体を検出</td>
+<td><strong>人の 17 関節</strong>が主目的（Preview）。汎用物体検出向けではない</td>
+</tr>
+<tr>
+<td>何でもそのまま検出できる</td>
+<td><strong>事前学習済みクラス以外</strong>（例: ジャガイモ）は <strong>ファインチューニング必須</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 事前学習データセット<a class="headerlink" href="#12" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>タスク</th>
+<th>事前学習データ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>物体検出</td>
+<td><a href="https://cocodataset.org/">Microsoft COCO 2017 Detection</a>（80 クラス）</td>
+</tr>
+<tr>
+<td>インスタンスセグメンテーション</td>
+<td>COCO 2017 Instance Segmentation（検出と同じ 80 クラス + マスク）</td>
+</tr>
+<tr>
+<td>キーポイント（Preview）</td>
+<td>COCO 2017 Person Keypoints（<strong>person</strong> の 17 点）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13-num_classes-90">1.3 <code>num_classes = 90</code> について<a class="headerlink" href="#13-num_classes-90" title="Permanent link">&para;</a></h3>
+<p>設定ファイル（<code>ModelConfig</code>）では <code>num_classes: int = 90</code> です。<br />
+これは <strong>COCO の category ID が 1〜90 の範囲で欠番がある</strong>（12, 26, 29, 30 … など未使用 ID あり）ため、モデル内部の分類次元が 90 スロットになる technical な事情です。</p>
+<p><strong>ユーザーが参照すべきラベル一覧は 80 クラス</strong>（下表）であり、推論結果の <code>class_id</code> は <a href="../src/rfdetr/assets/coco_classes.py"><code>COCO_CLASSES</code></a> のキー（COCO category ID）に対応します。</p>
+<hr />
+<h2 id="2">2. モデルバリアント一覧<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<h3 id="21-object-detection">2.1 物体検出（Object Detection）<a class="headerlink" href="#21-object-detection" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Size</th>
+<th>Python クラス</th>
+<th>既定重みファイル</th>
+<th>解像度</th>
+<th>出力</th>
+<th>ライセンス</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">N</td>
+<td><code>RFDETRNano</code></td>
+<td><code>rf-detr-nano.pth</code></td>
+<td>384×384</td>
+<td>矩形 + クラス</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td style="text-align: center;">S</td>
+<td><code>RFDETRSmall</code></td>
+<td><code>rf-detr-small.pth</code></td>
+<td>512×512</td>
+<td>同上</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td style="text-align: center;">M</td>
+<td><code>RFDETRMedium</code></td>
+<td><code>rf-detr-medium.pth</code></td>
+<td>576×576</td>
+<td>同上</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td style="text-align: center;">L</td>
+<td><code>RFDETRLarge</code></td>
+<td><code>rf-detr-large.pth</code></td>
+<td>704×704</td>
+<td>同上</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td style="text-align: center;">XL</td>
+<td><code>RFDETRXLarge</code> △</td>
+<td><code>rfdetr_plus</code> 経由</td>
+<td>700×700</td>
+<td>同上</td>
+<td>PML 1.0</td>
+</tr>
+<tr>
+<td style="text-align: center;">2XL</td>
+<td><code>RFDETR2XLarge</code> △</td>
+<td><code>rfdetr_plus</code> 経由</td>
+<td>880×880</td>
+<td>同上</td>
+<td>PML 1.0</td>
+</tr>
+</tbody>
+</table>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">rfdetr</span><span class="w"> </span><span class="kn">import</span> <span class="n">RFDETRMedium</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">rfdetr.assets.coco_classes</span><span class="w"> </span><span class="kn">import</span> <span class="n">COCO_CLASSES</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">model</span> <span class="o">=</span> <span class="n">RFDETRMedium</span><span class="p">()</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">detections</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s2">"image.jpg"</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># detections.class_id → COCO category ID</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># COCO_CLASSES[detections.class_id[i]] → クラス名（英語）</span>
+</span></code></pre></div>
+<h3 id="22">2.2 インスタンスセグメンテーション<a class="headerlink" href="#22" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Size</th>
+<th>Python クラス</th>
+<th>既定重みファイル</th>
+<th>解像度</th>
+<th>出力</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">N</td>
+<td><code>RFDETRSegNano</code></td>
+<td><code>rf-detr-seg-n.pt</code></td>
+<td>312×312</td>
+<td>矩形 + クラス + <strong>マスク</strong></td>
+</tr>
+<tr>
+<td style="text-align: center;">S</td>
+<td><code>RFDETRSegSmall</code></td>
+<td><code>rf-detr-seg-s.pt</code></td>
+<td>384×384</td>
+<td>同上</td>
+</tr>
+<tr>
+<td style="text-align: center;">M</td>
+<td><code>RFDETRSegMedium</code></td>
+<td><code>rf-detr-seg-m.pt</code></td>
+<td>432×432</td>
+<td>同上</td>
+</tr>
+<tr>
+<td style="text-align: center;">L</td>
+<td><code>RFDETRSegLarge</code></td>
+<td><code>rf-detr-seg-l.pt</code></td>
+<td>504×504</td>
+<td>同上</td>
+</tr>
+<tr>
+<td style="text-align: center;">XL</td>
+<td><code>RFDETRSegXLarge</code></td>
+<td><code>rf-detr-seg-xl.pt</code></td>
+<td>624×624</td>
+<td>同上</td>
+</tr>
+<tr>
+<td style="text-align: center;">2XL</td>
+<td><code>RFDETRSeg2XLarge</code></td>
+<td><code>rf-detr-seg-xxlarge.pt</code></td>
+<td>768×768</td>
+<td>同上</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>検出対象クラスは <strong>COCO 80 クラスと同じ</strong>（ラベル空間は検出版と共通）。</li>
+<li><code>predict()</code> の戻り値は <code>supervision.Detections</code> で、マスク情報を含む。</li>
+</ul>
+<h3 id="23-preview">2.3 キーポイント検出（Preview）<a class="headerlink" href="#23-preview" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>モデル</th>
+<th>Python クラス</th>
+<th>既定重み</th>
+<th>解像度</th>
+<th>出力</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Keypoint Preview</td>
+<td><code>RFDETRKeypointPreview</code></td>
+<td><code>rf-detr-keypoint-preview-xlarge.pth</code></td>
+<td>576×576</td>
+<td><code>supervision.KeyPoints</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>スキーマ: <code>num_keypoints_per_class = [0, 17]</code> → <strong>person（COCO ID=1）に 17 関節</strong></li>
+<li>姿勢推定・人数カウントの補助など <strong>人体向け</strong></li>
+<li>API は Preview のため将来変更の可能性あり</li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">rfdetr</span><span class="w"> </span><span class="kn">import</span> <span class="n">RFDETRKeypointPreview</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">model</span> <span class="o">=</span> <span class="n">RFDETRKeypointPreview</span><span class="p">()</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">key_points</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s2">"image.jpg"</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># key_points.xy → (N, 17, 2)  ピクセル座標</span>
+</span></code></pre></div>
+<hr />
+<h2 id="3-coco-80">3. COCO 80 クラス一覧（検出・セグメンテーション）<a class="headerlink" href="#3-coco-80" title="Permanent link">&para;</a></h2>
+<p>以下が <strong>そのまま（ファインチューニングなし）</strong> で名前付き検出できるクラスです。<br />
+<code>class_id</code> は COCO category ID（<code>COCO_CLASSES</code> のキー）です。</p>
+<h3 id="31">3.1 人・動物<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">ID</th>
+<th>英語名</th>
+<th>日本語の目安</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">1</td>
+<td>person</td>
+<td>人</td>
+</tr>
+<tr>
+<td style="text-align: center;">16</td>
+<td>bird</td>
+<td>鳥</td>
+</tr>
+<tr>
+<td style="text-align: center;">17</td>
+<td>cat</td>
+<td>猫</td>
+</tr>
+<tr>
+<td style="text-align: center;">18</td>
+<td>dog</td>
+<td>犬</td>
+</tr>
+<tr>
+<td style="text-align: center;">19</td>
+<td>horse</td>
+<td>馬</td>
+</tr>
+<tr>
+<td style="text-align: center;">20</td>
+<td>sheep</td>
+<td>羊</td>
+</tr>
+<tr>
+<td style="text-align: center;">21</td>
+<td>cow</td>
+<td>牛</td>
+</tr>
+<tr>
+<td style="text-align: center;">22</td>
+<td>elephant</td>
+<td>象</td>
+</tr>
+<tr>
+<td style="text-align: center;">23</td>
+<td>bear</td>
+<td>熊</td>
+</tr>
+<tr>
+<td style="text-align: center;">24</td>
+<td>zebra</td>
+<td>シマウマ</td>
+</tr>
+<tr>
+<td style="text-align: center;">25</td>
+<td>giraffe</td>
+<td>キリン</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32">3.2 乗り物<a class="headerlink" href="#32" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">ID</th>
+<th>英語名</th>
+<th>日本語の目安</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">2</td>
+<td>bicycle</td>
+<td>自転車</td>
+</tr>
+<tr>
+<td style="text-align: center;">3</td>
+<td>car</td>
+<td>自動車</td>
+</tr>
+<tr>
+<td style="text-align: center;">4</td>
+<td>motorcycle</td>
+<td>オートバイ</td>
+</tr>
+<tr>
+<td style="text-align: center;">5</td>
+<td>airplane</td>
+<td>飛行機</td>
+</tr>
+<tr>
+<td style="text-align: center;">6</td>
+<td>bus</td>
+<td>バス</td>
+</tr>
+<tr>
+<td style="text-align: center;">7</td>
+<td>train</td>
+<td>電車</td>
+</tr>
+<tr>
+<td style="text-align: center;">8</td>
+<td>truck</td>
+<td>トラック</td>
+</tr>
+<tr>
+<td style="text-align: center;">9</td>
+<td>boat</td>
+<td>ボート</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33">3.3 屋外・道路<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">ID</th>
+<th>英語名</th>
+<th>日本語の目安</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">10</td>
+<td>traffic light</td>
+<td>信号機</td>
+</tr>
+<tr>
+<td style="text-align: center;">11</td>
+<td>fire hydrant</td>
+<td>消火栓</td>
+</tr>
+<tr>
+<td style="text-align: center;">13</td>
+<td>stop sign</td>
+<td>一時停止標識</td>
+</tr>
+<tr>
+<td style="text-align: center;">14</td>
+<td>parking meter</td>
+<td>パーキングメーター</td>
+</tr>
+<tr>
+<td style="text-align: center;">15</td>
+<td>bench</td>
+<td>ベンチ</td>
+</tr>
+</tbody>
+</table>
+<h3 id="34">3.4 バッグ・スポーツ用品<a class="headerlink" href="#34" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">ID</th>
+<th>英語名</th>
+<th>日本語の目安</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">27</td>
+<td>backpack</td>
+<td>リュック</td>
+</tr>
+<tr>
+<td style="text-align: center;">28</td>
+<td>umbrella</td>
+<td>傘</td>
+</tr>
+<tr>
+<td style="text-align: center;">31</td>
+<td>handbag</td>
+<td>ハンドバッグ</td>
+</tr>
+<tr>
+<td style="text-align: center;">32</td>
+<td>tie</td>
+<td>ネクタイ</td>
+</tr>
+<tr>
+<td style="text-align: center;">33</td>
+<td>suitcase</td>
+<td>スーツケース</td>
+</tr>
+<tr>
+<td style="text-align: center;">34</td>
+<td>frisbee</td>
+<td>フリスビー</td>
+</tr>
+<tr>
+<td style="text-align: center;">35</td>
+<td>skis</td>
+<td>スキー</td>
+</tr>
+<tr>
+<td style="text-align: center;">36</td>
+<td>snowboard</td>
+<td>スノーボード</td>
+</tr>
+<tr>
+<td style="text-align: center;">37</td>
+<td>sports ball</td>
+<td>スポーツボール</td>
+</tr>
+<tr>
+<td style="text-align: center;">38</td>
+<td>kite</td>
+<td>凧</td>
+</tr>
+<tr>
+<td style="text-align: center;">39</td>
+<td>baseball bat</td>
+<td>野球バット</td>
+</tr>
+<tr>
+<td style="text-align: center;">40</td>
+<td>baseball glove</td>
+<td>野球グローブ</td>
+</tr>
+<tr>
+<td style="text-align: center;">41</td>
+<td>skateboard</td>
+<td>スケートボード</td>
+</tr>
+<tr>
+<td style="text-align: center;">42</td>
+<td>surfboard</td>
+<td>サーフボード</td>
+</tr>
+<tr>
+<td style="text-align: center;">43</td>
+<td>tennis racket</td>
+<td>テニスラケット</td>
+</tr>
+</tbody>
+</table>
+<h3 id="35">3.5 食器・食べ物<a class="headerlink" href="#35" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">ID</th>
+<th>英語名</th>
+<th>日本語の目安</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">44</td>
+<td>bottle</td>
+<td>瓶</td>
+</tr>
+<tr>
+<td style="text-align: center;">46</td>
+<td>wine glass</td>
+<td>ワイングラス</td>
+</tr>
+<tr>
+<td style="text-align: center;">47</td>
+<td>cup</td>
+<td>カップ</td>
+</tr>
+<tr>
+<td style="text-align: center;">48</td>
+<td>fork</td>
+<td>フォーク</td>
+</tr>
+<tr>
+<td style="text-align: center;">49</td>
+<td>knife</td>
+<td>ナイフ</td>
+</tr>
+<tr>
+<td style="text-align: center;">50</td>
+<td>spoon</td>
+<td>スプーン</td>
+</tr>
+<tr>
+<td style="text-align: center;">51</td>
+<td>bowl</td>
+<td>ボウル</td>
+</tr>
+<tr>
+<td style="text-align: center;">52</td>
+<td>banana</td>
+<td>バナナ</td>
+</tr>
+<tr>
+<td style="text-align: center;">53</td>
+<td>apple</td>
+<td>りんご</td>
+</tr>
+<tr>
+<td style="text-align: center;">54</td>
+<td>sandwich</td>
+<td>サンドイッチ</td>
+</tr>
+<tr>
+<td style="text-align: center;">55</td>
+<td>orange</td>
+<td>オレンジ</td>
+</tr>
+<tr>
+<td style="text-align: center;">56</td>
+<td>broccoli</td>
+<td>ブロッコリー</td>
+</tr>
+<tr>
+<td style="text-align: center;">57</td>
+<td>carrot</td>
+<td>にんじん</td>
+</tr>
+<tr>
+<td style="text-align: center;">58</td>
+<td>hot dog</td>
+<td>ホットドッグ</td>
+</tr>
+<tr>
+<td style="text-align: center;">59</td>
+<td>pizza</td>
+<td>ピザ</td>
+</tr>
+<tr>
+<td style="text-align: center;">60</td>
+<td>donut</td>
+<td>ドーナツ</td>
+</tr>
+<tr>
+<td style="text-align: center;">61</td>
+<td>cake</td>
+<td>ケーキ</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>注意:</strong> <strong>potato（ジャガイモ）は COCO に含まれません。</strong> コンベア上のジャガイモを COCO 事前学習モデルにかけると、検出漏れや <code>apple</code> / <code>sports ball</code> / <code>bowl</code> などへの <strong>誤ラベル</strong> が起き得ます。これはモデル故障ではなく <strong>クラス定義の不一致</strong> です。</p>
+</blockquote>
+<h3 id="36">3.6 家具・家電<a class="headerlink" href="#36" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">ID</th>
+<th>英語名</th>
+<th>日本語の目安</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">62</td>
+<td>chair</td>
+<td>椅子</td>
+</tr>
+<tr>
+<td style="text-align: center;">63</td>
+<td>couch</td>
+<td>ソファ</td>
+</tr>
+<tr>
+<td style="text-align: center;">64</td>
+<td>potted plant</td>
+<td>鉢植え</td>
+</tr>
+<tr>
+<td style="text-align: center;">65</td>
+<td>bed</td>
+<td>ベッド</td>
+</tr>
+<tr>
+<td style="text-align: center;">67</td>
+<td>dining table</td>
+<td>ダイニングテーブル</td>
+</tr>
+<tr>
+<td style="text-align: center;">70</td>
+<td>toilet</td>
+<td>トイレ</td>
+</tr>
+<tr>
+<td style="text-align: center;">72</td>
+<td>tv</td>
+<td>テレビ</td>
+</tr>
+<tr>
+<td style="text-align: center;">73</td>
+<td>laptop</td>
+<td>ノート PC</td>
+</tr>
+<tr>
+<td style="text-align: center;">74</td>
+<td>mouse</td>
+<td>マウス</td>
+</tr>
+<tr>
+<td style="text-align: center;">75</td>
+<td>remote</td>
+<td>リモコン</td>
+</tr>
+<tr>
+<td style="text-align: center;">76</td>
+<td>keyboard</td>
+<td>キーボード</td>
+</tr>
+<tr>
+<td style="text-align: center;">77</td>
+<td>cell phone</td>
+<td>携帯電話</td>
+</tr>
+<tr>
+<td style="text-align: center;">78</td>
+<td>microwave</td>
+<td>電子レンジ</td>
+</tr>
+<tr>
+<td style="text-align: center;">79</td>
+<td>oven</td>
+<td>オーブン</td>
+</tr>
+<tr>
+<td style="text-align: center;">80</td>
+<td>toaster</td>
+<td>トースター</td>
+</tr>
+<tr>
+<td style="text-align: center;">81</td>
+<td>sink</td>
+<td>シンク</td>
+</tr>
+<tr>
+<td style="text-align: center;">82</td>
+<td>refrigerator</td>
+<td>冷蔵庫</td>
+</tr>
+</tbody>
+</table>
+<h3 id="37">3.7 その他<a class="headerlink" href="#37" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">ID</th>
+<th>英語名</th>
+<th>日本語の目安</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">84</td>
+<td>book</td>
+<td>本</td>
+</tr>
+<tr>
+<td style="text-align: center;">85</td>
+<td>clock</td>
+<td>時計</td>
+</tr>
+<tr>
+<td style="text-align: center;">86</td>
+<td>vase</td>
+<td>花瓶</td>
+</tr>
+<tr>
+<td style="text-align: center;">87</td>
+<td>scissors</td>
+<td>はさみ</td>
+</tr>
+<tr>
+<td style="text-align: center;">88</td>
+<td>teddy bear</td>
+<td>ぬいぐるみ</td>
+</tr>
+<tr>
+<td style="text-align: center;">89</td>
+<td>hair drier</td>
+<td>ヘアドライヤー</td>
+</tr>
+<tr>
+<td style="text-align: center;">90</td>
+<td>toothbrush</td>
+<td>歯ブラシ</td>
+</tr>
+</tbody>
+</table>
+<h3 id="38">3.8 プログラムからクラス名を取得<a class="headerlink" href="#38" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">rfdetr.assets.coco_classes</span><span class="w"> </span><span class="kn">import</span> <span class="n">COCO_CLASSES</span><span class="p">,</span> <span class="n">COCO_CLASS_NAMES</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># ID → 名前</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">label</span> <span class="o">=</span> <span class="n">COCO_CLASSES</span><span class="p">[</span><span class="mi">18</span><span class="p">]</span>  <span class="c1"># "dog"</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># ソート済み 80 クラス名リスト（ID 順）</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">all_names</span> <span class="o">=</span> <span class="n">COCO_CLASS_NAMES</span>
+</span></code></pre></div>
+<hr />
+<h2 id="4-coco-17">4. COCO 17 キーポイント（キーポイント版のみ）<a class="headerlink" href="#4-coco-17" title="Permanent link">&para;</a></h2>
+<p><code>RFDETRKeypointPreview</code> が推定する人体関節（COCO Person Keypoints 標準）。<br />
+インデックス <code>0..16</code> は以下の順序です（<a href="https://cocodataset.org/#format-data">COCO keypoints 仕様</a> に準拠）。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Index</th>
+<th>英語名</th>
+<th>日本語</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">0</td>
+<td>nose</td>
+<td>鼻</td>
+</tr>
+<tr>
+<td style="text-align: center;">1</td>
+<td>left_eye</td>
+<td>左目</td>
+</tr>
+<tr>
+<td style="text-align: center;">2</td>
+<td>right_eye</td>
+<td>右目</td>
+</tr>
+<tr>
+<td style="text-align: center;">3</td>
+<td>left_ear</td>
+<td>左耳</td>
+</tr>
+<tr>
+<td style="text-align: center;">4</td>
+<td>right_ear</td>
+<td>右耳</td>
+</tr>
+<tr>
+<td style="text-align: center;">5</td>
+<td>left_shoulder</td>
+<td>左肩</td>
+</tr>
+<tr>
+<td style="text-align: center;">6</td>
+<td>right_shoulder</td>
+<td>右肩</td>
+</tr>
+<tr>
+<td style="text-align: center;">7</td>
+<td>left_elbow</td>
+<td>左肘</td>
+</tr>
+<tr>
+<td style="text-align: center;">8</td>
+<td>right_elbow</td>
+<td>右肘</td>
+</tr>
+<tr>
+<td style="text-align: center;">9</td>
+<td>left_wrist</td>
+<td>左手首</td>
+</tr>
+<tr>
+<td style="text-align: center;">10</td>
+<td>right_wrist</td>
+<td>右手首</td>
+</tr>
+<tr>
+<td style="text-align: center;">11</td>
+<td>left_hip</td>
+<td>左腰</td>
+</tr>
+<tr>
+<td style="text-align: center;">12</td>
+<td>right_hip</td>
+<td>右腰</td>
+</tr>
+<tr>
+<td style="text-align: center;">13</td>
+<td>left_knee</td>
+<td>左膝</td>
+</tr>
+<tr>
+<td style="text-align: center;">14</td>
+<td>right_knee</td>
+<td>右膝</td>
+</tr>
+<tr>
+<td style="text-align: center;">15</td>
+<td>left_ankle</td>
+<td>左足首</td>
+</tr>
+<tr>
+<td style="text-align: center;">16</td>
+<td>right_ankle</td>
+<td>右足首</td>
+</tr>
+</tbody>
+</table>
+<p>評価指標は <strong>OKS ベースの AP<sub>50:95</sub></strong>（COCO キーポイント標準）。</p>
+<hr />
+<h2 id="5-supervision">5. 出力形式（Supervision）<a class="headerlink" href="#5-supervision" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>タスク</th>
+<th>戻り値型</th>
+<th>主なフィールド</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>検出</td>
+<td><code>sv.Detections</code></td>
+<td><code>xyxy</code>, <code>class_id</code>, <code>confidence</code>, <code>metadata["source_image"]</code></td>
+</tr>
+<tr>
+<td>セグメンテーション</td>
+<td><code>sv.Detections</code></td>
+<td>上記 + マスク（<code>mask</code>）</td>
+</tr>
+<tr>
+<td>キーポイント</td>
+<td><code>sv.KeyPoints</code></td>
+<td><code>xy</code> (N,K,2), <code>keypoint_confidence</code>, <code>detection_confidence</code>, <code>data["xyxy"]</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>threshold</code> は <strong>インスタンス（検出）信頼度</strong> のしきい値です。キーポイント版では各関節の <code>keypoint_confidence</code> を別途フィルタできます。</p>
+<hr />
+<h2 id="6">6. カスタムクラス（ファインチューニング）<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<p>COCO 80 クラス <strong>以外</strong>（ジャガイモ、異物、自社部品など）を検出する手順:</p>
+<ol>
+<li><strong>COCO 形式</strong> または <strong>YOLO 形式</strong> でデータセットを用意（<a href="https://rfdetr.roboflow.com/learn/train/dataset-formats/">dataset-formats</a>）</li>
+<li><code>num_classes</code> をデータセットのクラス数に合わせて学習</li>
+<li>学習後のチェックポイントを <code>RFDETRMedium(pretrain_weights="path/to/checkpoint.pth")</code> のように指定</li>
+</ol>
+<p>Roboflow プラットフォーム、<a href="https://colab.research.google.com/github/roboflow-ai/notebooks/blob/main/notebooks/how-to-finetune-rf-detr-on-detection-dataset.ipynb">Google Colab チュートリアル</a>、または <code>rfdetr</code> CLI で学習可能。</p>
+<hr />
+<h2 id="7-er-flowscan-suite">7. ER-FlowScan Suite との使い分け<a class="headerlink" href="#7-er-flowscan-suite" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>用途</th>
+<th>推奨モジュール</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>コンベア上のジャガイモ計数</td>
+<td><strong>Detect</strong>（YOLO 系）</td>
+<td>自社クラス向けに学習済み想定</td>
+</tr>
+<tr>
+<td>「〇〇を探して」（自由文）</td>
+<td><strong>Search</strong>（FlashFind / VLM）</td>
+<td>ゼロショット探索</td>
+</tr>
+<tr>
+<td>COCO 物体（人・車など）の高速検出</td>
+<td><strong>rf-detr 検出版</strong></td>
+<td>COCO 事前学習そのまま</td>
+</tr>
+<tr>
+<td>輪郭マスクが必要</td>
+<td><strong>rf-detr セグ版</strong></td>
+<td>ピクセル単位領域</td>
+</tr>
+<tr>
+<td>人体姿勢・関節</td>
+<td><strong>rf-detr キーポイント版</strong></td>
+<td>17 点スケルトン</td>
+</tr>
+<tr>
+<td>自社固定クラスの高速 DETR</td>
+<td><strong>rf-detr + FT</strong></td>
+<td>精度・速度のバランス</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8">8. 参考リンク<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>資料</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>検出の実行</td>
+<td><a href="../docs/learn/run/detection.md">docs/learn/run/detection.md</a></td>
+</tr>
+<tr>
+<td>セグメンテーション</td>
+<td><a href="../docs/learn/run/segmentation.md">docs/learn/run/segmentation.md</a></td>
+</tr>
+<tr>
+<td>キーポイント</td>
+<td><a href="../docs/learn/run/keypoints.md">docs/learn/run/keypoints.md</a></td>
+</tr>
+<tr>
+<td>学習・データセット形式</td>
+<td><a href="../docs/learn/train/index.md">docs/learn/train/index.md</a></td>
+</tr>
+<tr>
+<td>ローカル動画デモ</td>
+<td><a href="../../README.md#local-video-demo--ローカル動画デモ">README.md — Local Video Demo</a></td>
+</tr>
+<tr>
+<td>動画デモ GUI / Vast.ai</td>
+<td><a href="../../README.md#video-demo-gui--動画デモ-gui">README.md — Video Demo GUI</a></td>
+</tr>
+<tr>
+<td>Vast.ai 組み込みガイド</td>
+<td><a href="../vast-ai-integration-guide/">vast-ai-integration-guide.md</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>最終更新: ER-FlowScan フォーク向けローカルドキュメント（upstream: <a href="https://github.com/roboflow/rf-detr">roboflow/rf-detr</a>）</em></p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 2, 2026 02:20:08 UTC">2026-08-02 02:20:08</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Roboflow 2025–2026. All rights reserved.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/roboflow" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.youtube.com/roboflow" target="_blank" rel="noopener" title="www.youtube.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M549.7 124.1c-6.2-23.7-24.8-42.3-48.3-48.6C458.9 64 288.1 64 288.1 64S117.3 64 74.7 75.5c-23.5 6.3-42 24.9-48.3 48.6C15 167 15 256.4 15 256.4s0 89.4 11.4 132.3c6.3 23.6 24.8 41.5 48.3 47.8C117.3 448 288.1 448 288.1 448s170.8 0 213.4-11.5c23.5-6.3 42-24.2 48.3-47.8 11.4-42.9 11.4-132.3 11.4-132.3s0-89.4-11.4-132.3zM232.2 337.6V175.2l142.7 81.2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/company/roboflow-ai/mycompany/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zM102.2 96a38.5 38.5 0 1 1 0 77 38.5 38.5 0 1 1 0-77m282.1 320h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://twitter.com/roboflow" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M459.4 151.7c.3 4.5.3 9.1.3 13.6 0 138.7-105.6 298.6-298.6 298.6-59.5 0-114.7-17.2-161.1-47.1 8.4 1 16.6 1.3 25.3 1.3 49.1 0 94.2-16.6 130.3-44.8-46.1-1-84.8-31.2-98.1-72.8 6.5 1 13 1.6 19.8 1.6 9.4 0 18.8-1.3 27.6-3.6-48.1-9.7-84.1-52-84.1-103v-1.3c14 7.8 30.2 12.7 47.4 13.3-28.3-18.8-46.8-51-46.8-87.4 0-19.5 5.2-37.4 14.3-53C87.4 130.8 165 172.4 252.1 176.9c-1.6-7.8-2.6-15.9-2.6-24C249.5 95.1 296.3 48 354.4 48c30.2 0 57.5 12.7 76.7 33.1 23.7-4.5 46.5-13.3 66.6-25.3-7.8 24.4-24.4 44.8-46.1 57.8 21.1-2.3 41.6-8.1 60.4-16.2-14.3 20.8-32.2 39.3-52.6 54.3"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.tabs.link", "content.code.copy", "navigation.expand", "navigation.tabs", "content.code.annotate", "navigation.tracking", "content.tooltips", "navigation.tabs.sticky"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
