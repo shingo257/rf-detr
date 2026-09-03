@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 from pathlib import Path
 
 from rfdetr_demo.media.tracking_audit import run_center_tracking_audit
@@ -28,12 +29,27 @@ def add_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) 
     parser.add_argument("--interval", type=int, default=20, help="Save JPG every N source frames")
     parser.add_argument("--threshold", type=float, default=0.6, help="Detection threshold")
     parser.add_argument("--max-frames", type=int, default=None, help="Limit processed frames")
+    parser.add_argument(
+        "--sticky-center-track",
+        action="store_true",
+        help="Enable sticky center track (sets RFDETR_STICKY_CENTER_TRACK=1)",
+    )
+    parser.add_argument(
+        "--max-missed",
+        type=int,
+        default=None,
+        help="Override RFDETR_MAX_MISSED for this audit run",
+    )
     parser.set_defaults(_handler=run)
 
 
 def run(args: argparse.Namespace) -> int:
     """Execute audit-tracking and print evaluation summary."""
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    if args.sticky_center_track:
+        os.environ["RFDETR_STICKY_CENTER_TRACK"] = "1"
+    if args.max_missed is not None:
+        os.environ["RFDETR_MAX_MISSED"] = str(max(0, int(args.max_missed)))
     source = args.source or resolve_default_source()
     summary = run_center_tracking_audit(
         source_path=source,

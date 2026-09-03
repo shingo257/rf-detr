@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`rfdetr_demo` Phase 13 (0.2.0):** Froze the demo-layer public API in `rfdetr_demo.public` (`PUBLIC_API` allowlist) and re-exported the same symbols from the package root with lazy loading. Bumped `__version__` to `0.2.0`. Extended `scripts/check_import_cycles.py` to reject GUI imports of Vast safety internals (`safety_guardrails` / `safety_lease` / `safety_settings`; use `vast.safety` facade). Added tracking-audit golden fixture and refreshed `docs/ja/` index / boundary docs.
+- **`rfdetr_demo` Phase 10:** Moved MZoo video benchmark logic from `scripts/run_mzoo_benchmark.py` into `rfdetr_demo.benchmark` (`jobs` / `environment` / `runner` / `report` / `cli`). Prefer `uv run rfdetr-mzoo-benchmark` (or `python -m rfdetr_demo.benchmark`). The scripts path remains as a DeprecationWarning thin launcher. `scripts/` no longer has any `.py` over 200 lines.
+- **`rfdetr_demo` Phase 12c:** Split `tuning/analyze_clip.py` into `analyze_clip_types` / `analyze_clip_issues`, and `inference/temporal/keypoints.py` into `keypoints_state`. Phase 12 mid-size DoD met (only intentional `puppet_continuous` remains over 300 lines).
+- **`rfdetr_demo` Phase 12b:** Split GUI mid-size panels/controllers under 300 lines:
+  - `gui/panels/io_task` → continued `io_task_sections` (IO/task builders)
+  - `gui/panels/compute` → `compute_vast` handlers mixin
+  - `gui/panels/job_runner` → `job_runner_lifecycle` + `RunController` startup/complete log plans
+  - `gui/controllers/vast_controller` → `vast_offers` / `vast_progress_ui` (facade retained)
+- **`rfdetr_demo` Phase 12a:** Split `tracking/track_store.py` into `track_models` / `track_match` / `track_hold` (orchestration stays in `track_store`). Moved inference task callback assembly from `inference/runner.py` into `inference/task_callback.py`.
+
+### Added
+
+- **`[project.scripts]`:** `rfdetr-mzoo-benchmark` entry point for the MZoo RF-DETR video-demo benchmark. Host RAM/CPU physical-core reporting uses optional `psutil` when installed; otherwise those fields fall back.
+- **Public API (`rfdetr_demo` 0.2.0):** `run_demo`, `PersonTrackPipeline`, `ConfidentialFrameAuditLogger`, `run_center_tracking_audit`, `run_vast_cli`, `DEFAULT_PARAMETERS`.
+- **Golden fixture:** `tests/rfdetr_demo/golden/tracking_audit_baseline.json` (mn1-2 baseline ID switches / missing counts + sticky target ≤15).
+
+### Removed
+
+- **Breaking (`rfdetr_demo` / scripts):** Removed deprecated `scripts/` shim and thin CLI wrappers (19 files). Use package entry points instead:
+  - `uv run rfdetr-demo` / `rfdetr-demo probe-count` / `audit-tracking` / `analyze-clip`
+  - `uv run rfdetr-demo-gui`
+  - `uv run rfdetr-vast-cleanup` (Windows: `scripts/vast_cleanup_orphans.cmd`)
+  - Import libraries from `rfdetr_demo.*` (e.g. `rfdetr_demo.vast.api_config`, `rfdetr_demo.media.guard`) — not `scripts/*.py`
+- **Breaking (`rfdetr_demo`):** Removed deprecated facade modules. Import from the canonical modules instead:
+  - `rfdetr_demo.tracking.detection_stabilizer` → `rfdetr_demo.tracking.pipeline` / `stabilizer` / `bbox`
+  - `rfdetr_demo.vast.runner` / `rfdetr_demo.vast.compat` → `rfdetr_demo.vast.cli` / `offers` / `video_job` / `types`
+  - `rfdetr_demo.inference.pipeline` → `rfdetr_demo.inference.runner` / `rfdetr_demo.cli.run_video`
+  - `rfdetr_demo.inference.uncertainty_viz` → `rfdetr_demo.inference.uncertainty`
+  - `rfdetr_demo.gui.controller` → `rfdetr_demo.gui.state.job_state.TuneJobState`
+  - `rfdetr_demo.tracking` package `__init__` now exports only the `PersonTrackPipeline` public API (no `DetectionStabilizer` / `PersonAssociator` re-exports)
+
+### Phase 7–13 breaking summary
+
+| Phase | Breaking change |
+|-------|-----------------|
+| 8 | scripts shim / thin CLI wrappers removed → entry points |
+| 9 | deprecated facade modules removed → canonical imports |
+| 10 | mzoo benchmark lives in `rfdetr_demo.benchmark`; scripts path deprecated |
+| 13 | demo public API frozen at 0.2.0 via `rfdetr_demo.public` |
+
 ---
 
 ## [1.8.1] — 2026-06-19

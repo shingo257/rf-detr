@@ -345,3 +345,20 @@ def track_ids_from_key_points(key_points: sv.KeyPoints) -> list[int | None]:
         return [None] * len(key_points)
     ids = np.asarray(raw, dtype=np.int64)
     return [None if int(value) < 0 else int(value) for value in ids]
+
+
+def compute_joint_rms_jitter(sequence_xy: np.ndarray) -> float:
+    """Calculate second-difference RMS jitter across a sequence of keypoint frames.
+
+    Args:
+        sequence_xy: Array of shape (N_frames, N_joints, 2) or (N_frames, 2).
+
+    Returns:
+        RMS value of the acceleration/second difference across frames.
+    """
+    if len(sequence_xy) < 3:
+        return 0.0
+    arr = np.asarray(sequence_xy, dtype=np.float64)
+    d1 = np.diff(arr, axis=0)
+    d2 = np.diff(d1, axis=0)
+    return float(np.sqrt(np.mean(d2 ** 2)))

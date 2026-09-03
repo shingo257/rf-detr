@@ -5,13 +5,13 @@
 # ------------------------------------------------------------------------
 """Vast.ai remote GPU integration."""
 
-from rfdetr_demo.vast.runner import (
+from rfdetr_demo.vast.offers import search_gpu_offers
+from rfdetr_demo.vast.types import (
     VastRunnerCancelledError,
     VastRunnerError,
     VastVideoJobConfig,
-    run_video_demo_on_vast,
-    search_gpu_offers,
 )
+from rfdetr_demo.vast.video_job import run_video_demo_on_vast
 
 __all__ = [
     "VastRunnerCancelledError",

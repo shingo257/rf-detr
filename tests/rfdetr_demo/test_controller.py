@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from rfdetr_demo.gui.controller import TuneJobState
+from rfdetr_demo.gui.state.job_state import TuneJobState
 
 
 def test_tune_state_transitions() -> None:

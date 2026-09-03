@@ -1,0 +1,183 @@
+{
+  "source": "C:\\work\\code\\Dancing-character\\色付きにけえもん.png",
+  "canvas": {
+    "width": 1024,
+    "height": 1024
+  },
+  "full_body": {
+    "file": "full_body.png",
+    "bbox": [
+      115,
+      9,
+      914,
+      1010
+    ]
+  },
+  "parts": [
+    {
+      "name": "Body",
+      "file": "body.png",
+      "z": 10,
+      "bbox": [
+        231,
+        403,
+        754,
+        1012
+      ],
+      "center": [
+        492.5,
+        707.5
+      ]
+    },
+    {
+      "name": "Head",
+      "file": "head.png",
+      "z": 40,
+      "bbox": [
+        119,
+        8,
+        903,
+        648
+      ],
+      "center": [
+        511.0,
+        328.0
+      ]
+    },
+    {
+      "name": "Left Arm",
+      "file": "left_arm.png",
+      "z": 20,
+      "bbox": [
+        229,
+        508,
+        408,
+        903
+      ],
+      "center": [
+        318.5,
+        705.5
+      ]
+    },
+    {
+      "name": "Right Arm",
+      "file": "right_arm.png",
+      "z": 20,
+      "bbox": [
+        617,
+        508,
+        768,
+        902
+      ],
+      "center": [
+        692.5,
+        705.0
+      ]
+    },
+    {
+      "name": "Left Hand",
+      "file": "left_hand.png",
+      "z": 35,
+      "bbox": [
+        233,
+        607,
+        410,
+        806
+      ],
+      "center": [
+        321.5,
+        706.5
+      ]
+    },
+    {
+      "name": "Right Hand",
+      "file": "right_hand.png",
+      "z": 35,
+      "bbox": [
+        591,
+        607,
+        754,
+        806
+      ],
+      "center": [
+        672.5,
+        706.5
+      ]
+    },
+    {
+      "name": "Left Leg",
+      "file": "left_leg.png",
+      "z": 15,
+      "bbox": [
+        237,
+        675,
+        494,
+        1008
+      ],
+      "center": [
+        365.5,
+        841.5
+      ]
+    },
+    {
+      "name": "Right Leg",
+      "file": "right_leg.png",
+      "z": 15,
+      "bbox": [
+        514,
+        676,
+        755,
+        1009
+      ],
+      "center": [
+        634.5,
+        842.5
+      ]
+    },
+    {
+      "name": "Left Foot",
+      "file": "left_foot.png",
+      "z": 30,
+      "bbox": [
+        216,
+        830,
+        468,
+        1012
+      ],
+      "center": [
+        342.0,
+        921.0
+      ]
+    },
+    {
+      "name": "Right Foot",
+      "file": "right_foot.png",
+      "z": 30,
+      "bbox": [
+        528,
+        830,
+        755,
+        1012
+      ],
+      "center": [
+        641.5,
+        921.0
+      ]
+    },
+    {
+      "name": "Bell",
+      "file": "bell.png",
+      "z": 45,
+      "bbox": [
+        426,
+        526,
+        600,
+        705
+      ],
+      "center": [
+        513.0,
+        615.5
+      ]
+    }
+  ]
+}

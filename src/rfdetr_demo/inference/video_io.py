@@ -56,17 +56,60 @@ def effective_source_frame_limit(
     total_frames: int,
     fps: float,
     max_source_seconds: float | None,
+    *,
+    start_source_seconds: float | None = None,
 ) -> int:
-    """Return how many source frames to encode before stopping."""
-    if max_source_seconds is None:
-        return total_frames if total_frames > 0 else 0
-    if max_source_seconds <= 0:
+    """Return absolute end frame index (exclusive) for the clip window.
+
+    When ``start_source_seconds`` is set, the window starts there and
+    ``max_source_seconds`` is treated as clip duration (not absolute end time).
+    Without a duration limit, returns ``total_frames`` (or 0 if unknown).
+    """
+    start_frame, end_frame = resolve_clip_window(
+        total_frames,
+        fps,
+        start_source_seconds=start_source_seconds,
+        max_source_seconds=max_source_seconds,
+    )
+    return end_frame
+
+
+def resolve_clip_window(
+    total_frames: int,
+    fps: float,
+    *,
+    start_source_seconds: float | None = None,
+    max_source_seconds: float | None = None,
+) -> tuple[int, int]:
+    """Return ``(start_frame, end_frame_exclusive)`` for the analysis window."""
+    if start_source_seconds is not None and start_source_seconds < 0:
+        msg = f"start_source_seconds must be >= 0, got {start_source_seconds}"
+        raise ValueError(msg)
+    if max_source_seconds is not None and max_source_seconds <= 0:
         msg = f"max_source_seconds must be > 0, got {max_source_seconds}"
         raise ValueError(msg)
-    by_seconds = max(1, int(max_source_seconds * fps))
-    if total_frames <= 0:
-        return by_seconds
-    return min(total_frames, by_seconds)
+
+    start_frame = 0
+    if start_source_seconds is not None and start_source_seconds > 0:
+        start_frame = max(0, int(start_source_seconds * fps))
+
+    if total_frames > 0 and start_frame >= total_frames:
+        start_frame = max(0, total_frames - 1)
+
+    if max_source_seconds is not None:
+        duration_frames = max(1, int(max_source_seconds * fps))
+        end_frame = start_frame + duration_frames
+    elif total_frames > 0:
+        end_frame = total_frames
+    else:
+        # Unknown length and no duration cap: no hard end (caller breaks on EOF).
+        end_frame = 0
+
+    if total_frames > 0:
+        end_frame = min(end_frame, total_frames)
+        start_frame = min(start_frame, total_frames)
+
+    return start_frame, end_frame
 
 
 def count_inference_targets(
@@ -75,15 +118,55 @@ def count_inference_targets(
     max_frames: int | None,
     max_source_seconds: float | None = None,
     fps: float = 30.0,
+    *,
+    start_source_seconds: float | None = None,
 ) -> int:
     """Estimate how many frames will run through the inference callback."""
-    effective_frames = effective_source_frame_limit(total_frames, fps, max_source_seconds)
-    if effective_frames <= 0:
+    start_frame, end_frame = resolve_clip_window(
+        total_frames,
+        fps,
+        start_source_seconds=start_source_seconds,
+        max_source_seconds=max_source_seconds,
+    )
+    if end_frame > start_frame:
+        window_frames = end_frame - start_frame
+    elif max_source_seconds is not None and total_frames <= 0:
+        window_frames = max(1, int(max_source_seconds * fps))
+        start_frame = (
+            max(0, int(start_source_seconds * fps))
+            if start_source_seconds and start_source_seconds > 0
+            else 0
+        )
+    else:
         return 0
-    inferred = (effective_frames + frame_stride - 1) // frame_stride
+
+    if window_frames <= 0 or frame_stride < 1:
+        return 0
+    # Absolute indices in [start_frame, start_frame + window_frames)
+    rem = start_frame % frame_stride
+    first = start_frame if rem == 0 else start_frame + (frame_stride - rem)
+    last_exclusive = start_frame + window_frames
+    if first >= last_exclusive:
+        inferred = 0
+    else:
+        inferred = ((last_exclusive - 1 - first) // frame_stride) + 1
     if max_frames is not None:
         return min(max_frames, inferred)
     return inferred
+
+
+def _seek_to_frame(capture: cv2.VideoCapture, start_frame: int) -> int:
+    """Seek so the next ``read()`` returns ``start_frame``. Returns that index."""
+    if start_frame <= 0:
+        return 0
+    if capture.set(cv2.CAP_PROP_POS_FRAMES, float(start_frame)):
+        return start_frame
+    capture.set(cv2.CAP_PROP_POS_FRAMES, 0.0)
+    for skipped in range(start_frame):
+        success, _ = capture.read()
+        if not success:
+            return skipped
+    return start_frame
 
 
 def process_video(
@@ -97,6 +180,7 @@ def process_video(
     preview_throttle: PreviewThrottle | None = None,
     cancel_event: Event | None = None,
     max_source_seconds: float | None = None,
+    start_source_seconds: float | None = None,
 ) -> None:
     """Decode video, run ``callback`` on selected frames, and write annotated MP4."""
     capture = cv2.VideoCapture(str(source_path))
@@ -111,13 +195,19 @@ def process_video(
         raise RuntimeError(f"Invalid video dimensions for {source_path}: {width}x{height}")
 
     total_frames = int(capture.get(cv2.CAP_PROP_FRAME_COUNT)) or 0
-    source_frame_limit = effective_source_frame_limit(total_frames, fps, max_source_seconds)
+    start_frame, end_frame = resolve_clip_window(
+        total_frames,
+        fps,
+        start_source_seconds=start_source_seconds,
+        max_source_seconds=max_source_seconds,
+    )
     inference_targets = count_inference_targets(
         total_frames,
         frame_stride,
         max_frames,
         max_source_seconds=max_source_seconds,
         fps=fps,
+        start_source_seconds=start_source_seconds,
     )
 
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
@@ -126,15 +216,19 @@ def process_video(
         capture.release()
         raise RuntimeError(f"Failed to open video writer: {target_path}")
 
-    frame_index = 0
+    frame_index = _seek_to_frame(capture, start_frame)
     processed = 0
     last_annotated: np.ndarray | None = None
     progress_stats = stats if stats is not None else {}
+    has_end_limit = end_frame > start_frame or max_source_seconds is not None
 
     try:
         while True:
             if cancel_event is not None and cancel_event.is_set():
                 raise VideoProcessingCancelledError("Video export cancelled by user.")
+
+            if has_end_limit and end_frame > 0 and frame_index >= end_frame:
+                break
 
             success, frame_bgr = capture.read()
             if not success:
@@ -153,10 +247,7 @@ def process_video(
             writer.write(output_frame)
             frame_index += 1
 
-            if max_source_seconds is not None:
-                if source_frame_limit > 0 and frame_index >= source_frame_limit:
-                    break
-            elif max_frames is not None and processed >= max_frames:
+            if max_frames is not None and processed >= max_frames:
                 break
     finally:
         capture.release()

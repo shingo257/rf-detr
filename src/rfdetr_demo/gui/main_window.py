@@ -22,11 +22,11 @@ from rfdetr_demo.gui.panels.preview import PreviewPanelMixin
 from rfdetr_demo.gui.state.job_state import TuneJobState
 from rfdetr_demo.gui.theme import PAD_SECTION, apply_theme, status_style_for_phase
 from rfdetr_demo.inference.tune_cache import TunePreviewCache
-from rfdetr_demo.inference.uncertainty_viz import DEFAULT_UNCERTAINTY_MAX_AXIS_PX
+from rfdetr_demo.inference.uncertainty import DEFAULT_UNCERTAINTY_MAX_AXIS_PX
 from rfdetr_demo.paths import resolve_default_source
 from rfdetr_demo.tuning.auto_tune import DEFAULT_PARAMETERS
-from rfdetr_demo.vast.runner import VastGpuOffer
 from rfdetr_demo.vast.safety import install_emergency_handlers
+from rfdetr_demo.vast.types import VastGpuOffer
 
 logger = logging.getLogger(__name__)
 
