@@ -37,3 +37,21 @@ def preflight_blocks_start(checks: list[PreflightCheck]) -> bool:
 def preflight_overall_status(checks: list[PreflightCheck]) -> PreflightStatus:
     """Return overall preflight status: pass, warn, or fail."""
     return overall_preflight_status(checks)
+
+
+def preflight_style_for_status(status: str) -> str:
+    """Return ttk label style name for a preflight status."""
+    if status == "pass":
+        return "PreflightPass.TLabel"
+    if status == "warn":
+        return "PreflightWarn.TLabel"
+    return "PreflightFail.TLabel"
+
+
+def preflight_icon_for_status(status: str) -> str:
+    """Return a short icon prefix for preflight rows."""
+    if status == "pass":
+        return "✓"
+    if status == "warn":
+        return "!"
+    return "✕"

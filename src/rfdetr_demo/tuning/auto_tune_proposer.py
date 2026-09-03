@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 
 from rfdetr.visualize.keypoints import key_points_for_display
-from rfdetr_demo.inference.temporal_filter import KeypointTemporalFilter, MotionPlausibilitySettings
+from rfdetr_demo.inference.temporal import KeypointTemporalFilter, MotionPlausibilitySettings
 from rfdetr_demo.inference.tune_cache import TunePreviewCache, deserialize_key_points
 from rfdetr_demo.tracking.keypoints_ops import attach_track_ids
 from rfdetr_demo.tracking.person_associator import PersonAssociator

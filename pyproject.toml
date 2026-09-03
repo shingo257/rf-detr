@@ -169,6 +169,7 @@ Homepage = "https://github.com/roboflow/rf-detr"
 rfdetr = "rfdetr.cli:main"
 rfdetr-demo = "rfdetr_demo.cli:main"
 rfdetr-demo-gui = "rfdetr_demo.gui.app:main"
+rfdetr-mzoo-benchmark = "rfdetr_demo.benchmark.cli:main"
 rfdetr-vast-cleanup = "rfdetr_demo.vast.cleanup_cli:main"
 
 [tool.uv]

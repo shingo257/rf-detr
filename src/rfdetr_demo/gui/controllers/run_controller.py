@@ -18,10 +18,11 @@ from rfdetr_demo.gui.state.ui_bindings import (
     resolve_tune_preview_path,
 )
 from rfdetr_demo.inference.runner import run_demo
-from rfdetr_demo.inference.temporal_filter import MotionPlausibilitySettings
+from rfdetr_demo.inference.temporal import MotionPlausibilitySettings
 from rfdetr_demo.inference.types import PreviewCallback, ProgressCallback
-from rfdetr_demo.vast.runner import VastVideoJobConfig, run_video_demo_on_vast
 from rfdetr_demo.vast.start_phases import VastProgressUpdate
+from rfdetr_demo.vast.types import VastVideoJobConfig
+from rfdetr_demo.vast.video_job import run_video_demo_on_vast
 
 
 @dataclass(frozen=True)
@@ -185,6 +186,56 @@ class RunController:
             log_callback=callbacks.log_callback,
             phase_callback=callbacks.phase_callback,
         )
+
+    @staticmethod
+    def startup_log_lines(plan: StartJobPlan) -> list[tuple[str, str]]:
+        """Return ``(level, message)`` log lines when a GUI job starts."""
+        config = plan.config
+        lines: list[tuple[str, str]] = [
+            ("info", f"開始 ({config.compute_backend}): {config.source_path.name} → {plan.output_path.name}"),
+        ]
+        if config.compute_backend == "local":
+            from rfdetr_demo.media.frame_audit import DEFAULT_FRAME_AUDIT_COUNT
+
+            lines.append(
+                (
+                    "info",
+                    f"機密監査: 先頭 {DEFAULT_FRAME_AUDIT_COUNT} フレームの解析画像を "
+                    "confidential/audit/ に記録します",
+                ),
+            )
+        if plan.is_tune_preview_run and plan.max_source_seconds is not None:
+            lines.append(("info", f"試走モード: 先頭 {plan.max_source_seconds:g} 秒を処理します"))
+        elif plan.is_full_run_after_tune:
+            lines.append(("info", "本番実行: 調整後パラメータで全編を処理します"))
+        return lines
+
+    @staticmethod
+    def complete_ui_plan(summary: dict[str, Any]) -> tuple[str, str, bool, list[str]]:
+        """Return ``(progress_text, status_metrics, is_vast, log_lines)`` for a finished job."""
+        compute = summary.get("compute", "local")
+        is_vast = compute == "vast.ai"
+        processed = summary.get("processed_frames", "?")
+        if is_vast:
+            progress_text = "100%  ·  外部 GPU ジョブ完了"
+        else:
+            progress_text = f"100%  ·  {processed} フレーム完了"
+        status_metrics = f"{summary.get('elapsed_sec', '?')} 秒 ({compute})"
+        return progress_text, status_metrics, is_vast, RunController.complete_log_lines(summary)
+
+    @staticmethod
+    def complete_log_lines(summary: dict[str, Any]) -> list[str]:
+        """Return completion log lines for a finished full-run job."""
+        compute = summary.get("compute", "local")
+        return [
+            (
+                "完了: "
+                f"{summary.get('processed_frames', '?')} フレーム, "
+                f"{summary.get('total_detections', '?')} インスタンス, "
+                f"{summary.get('elapsed_sec', '?')} 秒 ({compute})"
+            ),
+            f"出力: {summary['target']}",
+        ]
 
 
 def frame_audit_gui_lines(summary: dict[str, Any]) -> list[str]:

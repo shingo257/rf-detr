@@ -20,15 +20,20 @@ def test_preflight_fail_without_cli_or_key() -> None:
     assert any(check.id == "vast_cli" and check.status == "fail" for check in checks)
 
 
-def test_preflight_pass_with_cli_and_key(monkeypatch: object) -> None:
-    from rfdetr_demo.vast import api_config
+def test_preflight_pass_with_cli_and_key(monkeypatch: object, tmp_path: object) -> None:
+    from pathlib import Path
+
+    from rfdetr_demo.vast import api_config, preflight
 
     class _Info:
         key = "test-key"
         masked = "****"
         source = "test"
 
+    flashfind_env = Path(tmp_path) / ".env"
+    flashfind_env.write_text("FLASHFIND_VAST_API_KEY=test\n", encoding="utf-8")
     monkeypatch.setattr(api_config, "resolve_vast_api_key_info", lambda _explicit: _Info())
+    monkeypatch.setattr(preflight, "_FLASHFIND_ENV", flashfind_env)
     checks = run_vast_preflight(
         explicit_api_key="test-key",
         vast_cli_available=True,

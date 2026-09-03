@@ -5,6 +5,13 @@
 # ------------------------------------------------------------------------
 """Keypoint uncertainty visualization subpackage."""
 
+from rfdetr_demo.inference.uncertainty.constants import (
+    COCO17_KEYPOINT_NAMES,
+    DEFAULT_HEATMAP_DECAY,
+    DEFAULT_HEATMAP_OPACITY,
+    DEFAULT_UNCERTAINTY_MAX_AXIS_PX,
+    DEFAULT_UNCERTAINTY_SIGMA,
+)
 from rfdetr_demo.inference.uncertainty.geometry import (
     clamp_ellipse_axes,
     covariance_trace,
@@ -25,6 +32,11 @@ from rfdetr_demo.inference.uncertainty.styles import (
 )
 
 __all__ = [
+    "COCO17_KEYPOINT_NAMES",
+    "DEFAULT_HEATMAP_DECAY",
+    "DEFAULT_HEATMAP_OPACITY",
+    "DEFAULT_UNCERTAINTY_MAX_AXIS_PX",
+    "DEFAULT_UNCERTAINTY_SIGMA",
     "KeypointCrossAnnotator",
     "KeypointFilledEllipseAnnotator",
     "KeypointJointHeatmapAnnotator",

@@ -10,38 +10,42 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from rfdetr_demo.gui.theme import preflight_icon_for_status, preflight_style_for_status
+from rfdetr_demo.gui.controllers.vast_offers import (
+    OfferSearchUiOutcome,
+)
+from rfdetr_demo.gui.controllers.vast_offers import (
+    build_offer_search_ui as format_offer_search_ui,
+)
+from rfdetr_demo.gui.controllers.vast_offers import (
+    find_offer as lookup_offer,
+)
+from rfdetr_demo.gui.controllers.vast_offers import (
+    search_offers as query_gpu_offers,
+)
+from rfdetr_demo.gui.controllers.vast_progress_ui import (
+    VastProgressUiState,
+)
+from rfdetr_demo.gui.controllers.vast_progress_ui import (
+    progress_ui_state as map_progress_ui_state,
+)
 from rfdetr_demo.gui.vast_preflight import (
     preflight_blocks_start,
+    preflight_icon_for_status,
     preflight_overall_status,
+    preflight_style_for_status,
     run_gui_vast_preflight,
 )
 from rfdetr_demo.media.guard import is_vast_transfer_allowed
 from rfdetr_demo.paths import VAST_CONSENT_FILE
 from rfdetr_demo.vast.api_config import resolve_vast_api_key, resolve_vast_api_key_info, save_local_vast_api_key
-from rfdetr_demo.vast.cli import is_vast_cli_available
+from rfdetr_demo.vast.cli import ensure_vast_cli_or_raise, is_vast_cli_available
 from rfdetr_demo.vast.preflight import PreflightCheck
-from rfdetr_demo.vast.runner import (
+from rfdetr_demo.vast.safety import VastSafetySettings, cleanup_orphan_instances
+from rfdetr_demo.vast.start_phases import VastProgressUpdate
+from rfdetr_demo.vast.types import (
     VAST_DOCS_URL,
     VastGpuOffer,
     VastRunnerError,
-    ensure_vast_cli_or_raise,
-    search_gpu_offers,
-)
-from rfdetr_demo.vast.safety import VastSafetySettings, cleanup_orphan_instances
-from rfdetr_demo.vast.start_phases import VastJobPhase, VastProgressUpdate
-
-_LOG_PHASES = frozenset(
-    {
-        VastJobPhase.REQUESTING,
-        VastJobPhase.BOOTING,
-        VastJobPhase.SSH_READY,
-        VastJobPhase.UPLOADING,
-        VastJobPhase.DOWNLOADING,
-        VastJobPhase.CLEANUP,
-        VastJobPhase.DONE,
-        VastJobPhase.FAILED,
-    },
 )
 
 
@@ -72,28 +76,6 @@ class PreflightRowView:
     line: str
     style: str
     fix_hint: str | None = None
-
-
-@dataclass(frozen=True)
-class OfferSearchUiOutcome:
-    """GPU offer search result formatted for GUI application."""
-
-    labels: list[str]
-    default_label: str
-    log_lines: list[tuple[str, str]]
-    show_empty_info_dialog: bool
-
-
-@dataclass(frozen=True)
-class VastProgressUiState:
-    """Progress bar and status text derived from a Vast phase update."""
-
-    percent: float
-    progress_text: str
-    status_message: str
-    status_metrics: str
-    show_progress_panel: bool
-    phase_log_line: str | None = None
 
 
 @dataclass(frozen=True)
@@ -201,13 +183,7 @@ class VastController:
 
     @staticmethod
     def find_offer(offers: list[VastGpuOffer], label: str) -> VastGpuOffer | None:
-        stripped = label.strip()
-        if not stripped:
-            return None
-        for offer in offers:
-            if offer.label == stripped:
-                return offer
-        return None
+        return lookup_offer(offers, label)
 
     @staticmethod
     def search_offers(
@@ -216,28 +192,11 @@ class VastController:
         max_dph: float,
         gpu_name: str,
     ) -> list[VastGpuOffer]:
-        return search_gpu_offers(
-            api_key=api_key,
-            max_dph=max_dph,
-            gpu_name=gpu_name,
-        )
+        return query_gpu_offers(api_key=api_key, max_dph=max_dph, gpu_name=gpu_name)
 
     @staticmethod
     def build_offer_search_ui(offers: list[VastGpuOffer]) -> OfferSearchUiOutcome:
-        labels = [offer.label for offer in offers]
-        if labels:
-            return OfferSearchUiOutcome(
-                labels=labels,
-                default_label=labels[0],
-                log_lines=[("info", f"Vast.ai: {len(labels)} 件の GPU オファーを取得")],
-                show_empty_info_dialog=False,
-            )
-        return OfferSearchUiOutcome(
-            labels=[],
-            default_label="",
-            log_lines=[("info", "Vast.ai: 条件に合う GPU が見つかりませんでした")],
-            show_empty_info_dialog=True,
-        )
+        return format_offer_search_ui(offers)
 
     @staticmethod
     def startup_log_lines() -> list[str]:
@@ -281,24 +240,7 @@ class VastController:
 
     @staticmethod
     def progress_ui_state(update: VastProgressUpdate) -> VastProgressUiState:
-        percent = min(100.0, max(0.0, update.percent))
-        phase_log_line: str | None = None
-        if update.phase in _LOG_PHASES:
-            status_suffix = f" [{update.vast_status}]" if update.vast_status else ""
-            extra = ""
-            if update.ssh_port is not None and update.ssh_host:
-                extra = f" | ssh -p {update.ssh_port} root@{update.ssh_host}"
-                if update.dph_total is not None:
-                    extra += f" (~${update.dph_total:.2f}/h)"
-            phase_log_line = f"[Vast:{update.phase.value}] {update.message}{status_suffix}{extra}"
-        return VastProgressUiState(
-            percent=percent,
-            progress_text=f"{percent:.0f}%  ·  {update.message}",
-            status_message="外部 GPU 実行中",
-            status_metrics=update.message,
-            show_progress_panel=update.phase != VastJobPhase.IDLE,
-            phase_log_line=phase_log_line,
-        )
+        return map_progress_ui_state(update)
 
     @staticmethod
     def validate_job_start(
@@ -324,3 +266,14 @@ class VastController:
                 ),
             )
         return None
+
+
+__all__ = [
+    "OfferSearchUiOutcome",
+    "PreflightHeaderView",
+    "PreflightRowView",
+    "VastApiKeyLoadOutcome",
+    "VastController",
+    "VastJobStartError",
+    "VastProgressUiState",
+]

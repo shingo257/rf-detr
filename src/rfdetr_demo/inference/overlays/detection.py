@@ -126,7 +126,7 @@ def render_tune_cache_sequence(
         and keypoint_settings.motion is not None
         and keypoint_settings.motion.enabled
     ):
-        from rfdetr_demo.inference.temporal_filter import KeypointTemporalFilter
+        from rfdetr_demo.inference.temporal import KeypointTemporalFilter
 
         temporal_filter = KeypointTemporalFilter(
             keypoint_settings.motion,

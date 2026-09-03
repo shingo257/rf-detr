@@ -15,9 +15,10 @@ import numpy as np
 import supervision as sv
 
 from rfdetr.visualize.keypoints import key_points_for_display
-from rfdetr_demo.inference.temporal_filter import MotionPlausibilitySettings
+from rfdetr_demo.inference.temporal import MotionPlausibilitySettings
 from rfdetr_demo.inference.types import KeypointUncertaintyStyle
-from rfdetr_demo.tracking.detection_stabilizer import detection_bbox, partition_live_and_ghost
+from rfdetr_demo.tracking.bbox import detection_bbox
+from rfdetr_demo.tracking.keypoints_ops import partition_live_and_ghost
 
 
 @dataclass(frozen=True)
@@ -50,10 +51,10 @@ def resolve_uncertainty_max_axis(
     if user_value is not None and user_value > 0:
         return float(user_value)
     if style in {"heatmap", "magnitude", "outline", "cross", "filled"}:
-        from rfdetr_demo.inference.uncertainty_viz import resolve_max_ellipse_axis
+        from rfdetr_demo.inference.uncertainty import resolve_max_ellipse_axis
 
         return resolve_max_ellipse_axis(None, frame_width=frame_width, frame_height=frame_height)
-    from rfdetr_demo.inference.uncertainty_viz import DEFAULT_UNCERTAINTY_MAX_AXIS_PX, resolve_max_ellipse_axis
+    from rfdetr_demo.inference.uncertainty import DEFAULT_UNCERTAINTY_MAX_AXIS_PX, resolve_max_ellipse_axis
 
     return resolve_max_ellipse_axis(
         DEFAULT_UNCERTAINTY_MAX_AXIS_PX,
@@ -74,7 +75,7 @@ def build_keypoint_uncertainty_annotator(
     if style == "none":
         return None
     if style == "heatmap":
-        from rfdetr_demo.inference.uncertainty_viz import KeypointJointHeatmapAnnotator
+        from rfdetr_demo.inference.uncertainty import KeypointJointHeatmapAnnotator
 
         heatmap_max_axis = max_ellipse_axis if max_ellipse_axis is not None else 36.0
         return KeypointJointHeatmapAnnotator(
@@ -84,7 +85,7 @@ def build_keypoint_uncertainty_annotator(
             decay=heatmap_decay,
         )
     if style == "magnitude":
-        from rfdetr_demo.inference.uncertainty_viz import KeypointMagnitudeHeatmapAnnotator
+        from rfdetr_demo.inference.uncertainty import KeypointMagnitudeHeatmapAnnotator
 
         heatmap_max_axis = max_ellipse_axis if max_ellipse_axis is not None else 36.0
         return KeypointMagnitudeHeatmapAnnotator(
@@ -94,7 +95,7 @@ def build_keypoint_uncertainty_annotator(
             decay=heatmap_decay,
         )
     if style == "outline":
-        from rfdetr_demo.inference.uncertainty_viz import KeypointOutlineAnnotator
+        from rfdetr_demo.inference.uncertainty import KeypointOutlineAnnotator
 
         outline_max_axis = max_ellipse_axis if max_ellipse_axis is not None else 36.0
         return KeypointOutlineAnnotator(
@@ -102,7 +103,7 @@ def build_keypoint_uncertainty_annotator(
             max_axis=outline_max_axis,
         )
     if style == "cross":
-        from rfdetr_demo.inference.uncertainty_viz import KeypointCrossAnnotator
+        from rfdetr_demo.inference.uncertainty import KeypointCrossAnnotator
 
         cross_max_axis = max_ellipse_axis if max_ellipse_axis is not None else 36.0
         return KeypointCrossAnnotator(
@@ -110,7 +111,7 @@ def build_keypoint_uncertainty_annotator(
             max_axis=cross_max_axis,
         )
     if style == "filled":
-        from rfdetr_demo.inference.uncertainty_viz import KeypointFilledEllipseAnnotator
+        from rfdetr_demo.inference.uncertainty import KeypointFilledEllipseAnnotator
 
         filled_max_axis = max_ellipse_axis if max_ellipse_axis is not None else 36.0
         return KeypointFilledEllipseAnnotator(
@@ -198,7 +199,7 @@ def _render_live_keypoint_overlay(
         annotated = uncertainty_annotator.annotate(annotated, key_points)
     annotated = edge_annotator.annotate(annotated, key_points)
     if style in {"heatmap", "magnitude"}:
-        from rfdetr_demo.inference.uncertainty_viz import annotate_joint_colored_vertices
+        from rfdetr_demo.inference.uncertainty import annotate_joint_colored_vertices
 
         return annotate_joint_colored_vertices(
             annotated,

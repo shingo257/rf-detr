@@ -75,3 +75,30 @@ def test_run_local_delegates_to_runner(mock_run_demo: MagicMock) -> None:
     summary = RunController.run_local(source_path=Path("a.mp4"), target_path=Path("b.mp4"))
     assert summary["processed_frames"] == 1
     mock_run_demo.assert_called_once()
+
+
+def test_startup_log_lines_for_local_tune(tmp_path: Path) -> None:
+    source = tmp_path / "clip.mp4"
+    source.write_bytes(b"x")
+    config = _sample_config(source=source, tune_mode=True)
+    plan = RunController.prepare_start(config, tune_state=TuneJobState.IDLE)
+    assert not isinstance(plan, StartJobError)
+    lines = RunController.startup_log_lines(plan)
+    assert any("開始" in message for _, message in lines)
+    assert any("試走モード" in message for _, message in lines)
+
+
+def test_complete_ui_plan_for_local_summary() -> None:
+    progress_text, metrics, is_vast, logs = RunController.complete_ui_plan(
+        {
+            "compute": "local",
+            "processed_frames": 10,
+            "total_detections": 20,
+            "elapsed_sec": 1.5,
+            "target": "/tmp/out.mp4",
+        },
+    )
+    assert is_vast is False
+    assert "10 フレーム完了" in progress_text
+    assert "1.5 秒" in metrics
+    assert len(logs) == 2
