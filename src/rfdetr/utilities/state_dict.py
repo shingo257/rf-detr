@@ -5,6 +5,8 @@
 # ------------------------------------------------------------------------
 """Checkpoint and state-dict helpers."""
 
+from __future__ import annotations
+
 import os
 import tempfile
 from collections import OrderedDict
@@ -21,6 +23,13 @@ _PTL_COMPAT_KEYS = (
     "global_step",
     "pytorch-lightning_version",
     "loops",
+    # Per-callback state (BestModelCallback's own best-tracking high-water marks,
+    # RFDETREMACallback's average model state, RFDETREarlyStopping's wait_count, etc.),
+    # keyed by Callback.state_key — see BestModelCallback._build_checkpoint_payload.
+    # Without this, trainer.fit(ckpt_path="checkpoint_best_total.pth") silently resets
+    # every callback's state even though the regular/EMA source checkpoint it was copied
+    # from does carry it.
+    "callbacks",
     "optimizer_states",
     "lr_schedulers",
 )
@@ -64,7 +73,7 @@ def _ckpt_args_get(args: Any, field: str, default: Any = None) -> Any:
     return getattr(args, field, default)
 
 
-def _make_fit_loop_state(epoch: int) -> dict:
+def _make_fit_loop_state(epoch: int) -> dict[str, Any]:
     """Build a minimal ``fit_loop`` state dict that restores the epoch counter.
 
     ``BestModelCallback`` stores ``trainer.current_epoch`` as ``"epoch"`` in the checkpoint.  That value is captured
@@ -130,11 +139,15 @@ def _make_fit_loop_state(epoch: int) -> dict:
     }
 
 
-def strip_checkpoint(checkpoint: str | os.PathLike[str]) -> None:
+def strip_checkpoint(
+    checkpoint: str | os.PathLike[str],
+    extra_metadata: dict[str, Any] | None = None,
+) -> None:
     """Strip a checkpoint file down to ``model``, ``args``, and PTL-compatible keys.
 
-    Preserves ``model_name`` (when present) so that ``RFDETR.from_checkpoint()`` can still resolve the model class from
-    the stripped file.  Also preserves ``rfdetr_version`` (when present) for provenance tracking.
+    Preserves ``model_name`` and ``model_config`` (when present) so that ``RFDETR.from_checkpoint()`` can still resolve
+    the model class and rebuild the trained architecture (e.g. ``resolution``, ``num_queries``, ``dec_layers``) from the
+    stripped file.  Also preserves ``rfdetr_version`` (when present) for provenance tracking.
 
     Also preserves ``state_dict``, ``global_step``, ``pytorch-lightning_version``, ``loops``, ``optimizer_states``, and
     ``lr_schedulers`` when present so the stripped checkpoint can still be used directly with
@@ -144,14 +157,31 @@ def strip_checkpoint(checkpoint: str | os.PathLike[str]) -> None:
 
     Args:
         checkpoint: Path to the ``.pth`` checkpoint file to strip in place.
+        extra_metadata: Optional key/value pairs merged into the stripped checkpoint. Used to record provenance that is
+            not derivable from the surviving keys (e.g. ``{"best_total_source": "ema"}`` for
+            ``checkpoint_best_total.pth``). Keys overwrite same-named preserved keys.
+
+    Examples:
+        >>> import tempfile
+        >>> import torch
+        >>> path = tempfile.NamedTemporaryFile(suffix=".pth", delete=False).name
+        >>> torch.save({"model": {}, "args": {}, "optimizer_states": [1]}, path)
+        >>> strip_checkpoint(path, extra_metadata={"best_total_source": "ema"})
+        >>> torch.load(path, weights_only=False)["best_total_source"]
+        'ema'
     """
+    from pathlib import Path
+
     import torch
+
+    from rfdetr.utilities.io import _safe_torch_load
 
     # `checkpoint_best_total.pth` is produced by local RF-DETR training and can
     # contain non-tensor metadata under "args" (e.g. `types.SimpleNamespace`).
     # PyTorch 2.6 changed `torch.load` default `weights_only=True`, which rejects
-    # these objects. This utility intentionally operates on trusted checkpoints.
-    state_dict = torch.load(checkpoint, map_location="cpu", weights_only=False)
+    # these objects. This utility intentionally operates on trusted, locally
+    # produced checkpoints, so trust=True permits the full-pickle fallback.
+    state_dict = _safe_torch_load(Path(checkpoint), trust=True)
     new_state_dict = {
         "model": state_dict["model"],
         "args": state_dict["args"],
@@ -159,6 +189,10 @@ def strip_checkpoint(checkpoint: str | os.PathLike[str]) -> None:
     # Preserve model_name when present (#887).
     if "model_name" in state_dict:
         new_state_dict["model_name"] = state_dict["model_name"]
+    # Preserve model_config when present: without it from_checkpoint rebuilds the class-default
+    # architecture (e.g. resolution) around weights trained with a different one.
+    if "model_config" in state_dict:
+        new_state_dict["model_config"] = state_dict["model_config"]
     # Preserve rfdetr_version when present for provenance tracking.
     if "rfdetr_version" in state_dict:
         new_state_dict["rfdetr_version"] = state_dict["rfdetr_version"]
@@ -174,6 +208,9 @@ def strip_checkpoint(checkpoint: str | os.PathLike[str]) -> None:
         for loop_key in ("validate_loop", "test_loop"):
             if loop_key not in loops:
                 loops[loop_key] = {"state_dict": {}}
+    # Merge caller-supplied provenance last so it wins over any preserved key of the same name.
+    if extra_metadata:
+        new_state_dict.update(extra_metadata)
     # Create the temp file in the destination directory so os.replace stays on the same filesystem (atomic).
     checkpoint_dir = os.path.dirname(os.path.abspath(os.fspath(checkpoint)))
     with tempfile.NamedTemporaryFile(dir=checkpoint_dir, delete=False) as tmp_file:

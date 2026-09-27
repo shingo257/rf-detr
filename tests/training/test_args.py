@@ -8,6 +8,7 @@
 import pytest
 
 from rfdetr._namespace import _namespace_from_configs
+from rfdetr.config import MultiScale
 
 
 class TestNamespaceFromConfigs:
@@ -70,6 +71,17 @@ class TestNamespaceFromConfigs:
         assert args.sync_bn is True
         assert args.fp16_eval is True
 
+    def test_optimizer_fields_not_forwarded_to_namespace(self, base_model_config, base_train_config):
+        """Optimizer config is PTL-only and must not leak into the legacy namespace."""
+        tc = base_train_config(
+            optimizer="sgd",
+            optimizer_kwargs={"momentum": 0.9},
+        )
+        args = _namespace_from_configs(base_model_config(), tc)
+
+        assert not hasattr(args, "optimizer")
+        assert not hasattr(args, "optimizer_kwargs")
+
     def test_seed_falls_back_to_legacy_default_when_unset(self, base_model_config, base_train_config):
         """Seed defaults to 42 in the namespace when TrainConfig.seed is None."""
         tc = base_train_config(seed=None)
@@ -81,7 +93,7 @@ class TestNamespaceFromConfigs:
         tc = base_train_config(multi_scale=True, expanded_scales=True, dataset_file="coco")
         args = _namespace_from_configs(base_model_config(), tc)
 
-        assert args.multi_scale is True
+        assert args.multi_scale == MultiScale.PER_BATCH  # model_dump serializes the mode to its string value
         assert args.expanded_scales is True
         assert args.dataset_file == "coco"
 
@@ -106,6 +118,22 @@ class TestNamespaceFromConfigs:
 
         assert args.mask_ce_loss_coef == pytest.approx(5.0)
         assert args.mask_dice_loss_coef == pytest.approx(5.0)
+
+    def test_segmentation_cls_loss_default_matches_pre_1_7_effective_weight(self, base_model_config, seg_train_config):
+        """Default segmentation classification loss weight must stay at the pre-1.7 effective value."""
+        mc = base_model_config(segmentation_head=True)
+        tc = seg_train_config()
+        args = _namespace_from_configs(mc, tc)
+
+        assert args.cls_loss_coef == pytest.approx(1.0)
+
+    def test_segmentation_cls_loss_explicit_override_is_forwarded(self, base_model_config, seg_train_config):
+        """Explicit segmentation classification loss weight overrides are preserved."""
+        mc = base_model_config(segmentation_head=True)
+        tc = seg_train_config(cls_loss_coef=5.0)
+        args = _namespace_from_configs(mc, tc)
+
+        assert args.cls_loss_coef == pytest.approx(5.0)
 
     def test_segmentation_extras_default_for_plain_config(self, base_model_config, base_train_config):
         """mask_* attributes default to 5.0 for a plain TrainConfig (not segmentation)."""

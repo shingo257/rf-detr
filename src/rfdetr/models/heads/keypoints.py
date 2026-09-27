@@ -26,7 +26,7 @@ from typing import cast
 
 import torch
 import torch.nn.functional as F  # noqa: N812 — conventional PyTorch alias
-from torch import nn
+from torch import Tensor, nn
 
 from rfdetr.utilities.logger import get_logger
 
@@ -36,7 +36,7 @@ logger = get_logger()
 KEYPOINT_PRED_DIM: int = 8
 
 
-def modulate(features: torch.Tensor, scale: torch.Tensor, shift: torch.Tensor) -> torch.Tensor:
+def modulate(features: Tensor, scale: Tensor, shift: Tensor) -> Tensor:
     """Apply AdaLN modulation to a feature tensor.
 
     Args:
@@ -85,13 +85,13 @@ class ConditionalQueryInitializer(nn.Module):
             nn.GELU(),
             nn.Linear(dim, out_dim * 3),
         )
-        ada_ln_projection = cast(nn.Linear, self.adaLN_modulation[-1])
+        ada_ln_projection = cast("nn.Linear", self.adaLN_modulation[-1])
         nn.init.constant_(ada_ln_projection.weight, 0)
         nn.init.constant_(ada_ln_projection.bias, 0)
 
         self.out_proj = nn.Linear(out_dim, out_dim)
 
-    def forward(self, query_features: torch.Tensor) -> torch.Tensor:
+    def forward(self, query_features: Tensor) -> Tensor:
         """Return modulated query embeddings.
 
         Args:
@@ -116,19 +116,19 @@ class ConditionalQueryInitializer(nn.Module):
         """
 
         normed_query_features = self.query_norm(self.queries)
-        modulation: torch.Tensor = self.adaLN_modulation(query_features.unsqueeze(-2))
+        modulation: Tensor = self.adaLN_modulation(query_features.unsqueeze(-2))
         scale, shift, gate = modulation.chunk(3, dim=-1)
         modulated_query_features = self.out_proj(modulate(normed_query_features, scale, shift)) * gate + self.queries
-        return cast(torch.Tensor, modulated_query_features)
+        return cast("Tensor", modulated_query_features)
 
 
 def compute_l1_keypoint_loss(
-    all_pred_keypoints: torch.Tensor,
-    target_keypoints: torch.Tensor,
-    target_classes: torch.Tensor,
-    target_areas: torch.Tensor,
+    all_pred_keypoints: Tensor,
+    target_keypoints: Tensor,
+    target_classes: Tensor,
+    target_areas: Tensor,
     num_keypoints_per_class: Sequence[int],
-) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[Tensor, Tensor, Tensor, Tensor]:
     """Compute the keypoint loss vector per matched target.
 
     The tensor layout follows GroupPose-style keypoints where each target class
@@ -137,6 +137,17 @@ def compute_l1_keypoint_loss(
     ``0.5 * maha2 / area - (log_l11 + log_l22)``. It intentionally omits the
     normal Gaussian constant and does not clamp the precision Cholesky
     parameters, so valid losses may be negative.
+
+    A non-finite value in any single prediction channel for a given keypoint (e.g. from an AMP
+    overflow upstream) is excluded from both the forward value and the backward gradient of every
+    loss term it would otherwise contribute to, without poisoning the other, still-finite keypoints
+    in the same target. This guarantee holds only *inside* this function: model boundaries that
+    combine the prediction with shared tensors sanitize the full prediction before those outer ops,
+    while a non-finite value that later re-enters an unguarded outer op can still poison that op's
+    local gradient, since this function cannot see or guard operations outside its call frame.
+    ``compute_keypoint_matching_cost``'s ``_cdist_bce_with_logits`` (the sibling used by the matcher)
+    does not yet have equivalent protection — a non-finite prediction there still poisons the whole
+    matching-cost row for that query, tracked separately since it needs a different fix shape.
 
     Args:
         all_pred_keypoints: Predicted keypoints with shape ``(N, K_total, >=7)``.
@@ -194,9 +205,28 @@ def compute_l1_keypoint_loss(
             int(target_classes.max()),
             num_classes,
         )
-        zeros = all_pred_keypoints.new_zeros(n_targets)
+        # Keep the returned zeros connected to the autograd graph via ``all_pred_keypoints``.
+        # A detached zero (e.g. ``new_zeros``) would leave the keypoint-head parameters
+        # without a gradient path on this batch. Under DistributedDataParallel that desyncs
+        # the gradient reducer across ranks whenever this guard fires on some ranks but not
+        # others (e.g. one rank has an out-of-schema class label), producing a hang or a
+        # "parameter did not receive grad" error. Adding a graph-connected scalar zero keeps
+        # the gradient numerically zero while ensuring the head is seen as "used".
+        #
+        # Use an empty reduction rather than ``all_pred_keypoints.sum() * 0.0``: the latter
+        # yields NaN when predictions contain NaN/Inf (``nan * 0 == nan``) or when a finite
+        # fp16 tensor overflows in ``.sum()`` (``inf * 0 == nan``), poisoning the loss. An
+        # empty differentiable reduction is exactly zero regardless of prediction values while
+        # staying connected to every producer parameter.
+        graph_zero = all_pred_keypoints.reshape(-1)[:0].sum()
+        zeros = all_pred_keypoints.new_zeros(n_targets) + graph_zero
         return zeros, zeros, zeros, zeros
 
+    if total_padded_num_keypoints % num_classes != 0:
+        raise ValueError(
+            f"total_padded_num_keypoints ({total_padded_num_keypoints}) must be divisible by"
+            f" num_classes ({num_classes})"
+        )
     kpad = total_padded_num_keypoints // num_classes
     split_pred_keypoints = all_pred_keypoints.view(n_targets, num_classes, kpad, pred_dim)
     selected_pred_keypoints = split_pred_keypoints[
@@ -208,7 +238,6 @@ def compute_l1_keypoint_loss(
         active_keypoints_mask[class_idx, :num_keypoints] = True
 
     keypoints_loss_mask = active_keypoints_mask[target_classes]
-    keypoints_per_target = keypoints_loss_mask.sum(-1).to(dtype=selected_pred_keypoints.dtype)
     area = target_areas.to(torch.float32)
     area_eps = torch.finfo(area.dtype).eps
     valid_area = torch.isfinite(area) & (area > area_eps)
@@ -219,37 +248,55 @@ def compute_l1_keypoint_loss(
     location_loss_mask = keypoints_loss_mask & valid_visibility & valid_xy & valid_area.unsqueeze(1)
     location_count = location_loss_mask.sum(-1).to(dtype=selected_pred_keypoints.dtype)
     valid_count = location_count.clamp(min=1)
-    denom_keypoints = keypoints_per_target.clamp(min=1).to(dtype=selected_pred_keypoints.dtype)
-    safe_area_sqrt = area.clamp_min(area_eps).sqrt()
+    valid_findable = torch.isfinite(selected_pred_keypoints[:, :, 2])
+    findable_loss_mask = keypoints_loss_mask & valid_findable
+    findable_count = findable_loss_mask.sum(-1).clamp(min=1).to(dtype=selected_pred_keypoints.dtype)
+    valid_visible_pred = torch.isfinite(selected_pred_keypoints[:, :, 3])
+    visible_loss_mask = keypoints_loss_mask & valid_visible_pred
+    visible_count = visible_loss_mask.sum(-1).clamp(min=1).to(dtype=selected_pred_keypoints.dtype)
+    # A non-finite ``area`` (e.g. a degenerate target box) is excluded from ``location_loss_mask`` via
+    # ``valid_area`` above, but ``location_loss``/``nll_raw`` both still divide by this value directly --
+    # ``masked_fill``ing the numerator doesn't stop that division from itself producing ``nan`` from a
+    # ``nan`` denominator. Swap in a safe placeholder (any positive finite value; the numerator at that
+    # position is already zero from the mask, so the exact value is irrelevant) before either use.
+    safe_area = torch.where(valid_area, area, torch.ones_like(area))
+    safe_area_sqrt = safe_area.clamp_min(area_eps).sqrt()
 
-    scaled_masked_l1 = (
-        F.l1_loss(selected_pred_keypoints[:, :, :2], target_keypoints[:, :, :2], reduction="none").sum(-1)
-        * location_loss_mask.to(selected_pred_keypoints.dtype)
-        / safe_area_sqrt.unsqueeze(1)
-    )
+    # Excluded positions get a safe placeholder swapped in for the prediction (and, for location, the
+    # target) *before* the loss op, in addition to ``masked_fill`` on the resulting per-keypoint loss
+    # afterward. Both are needed: masked_fill on the output alone zeroes the *value* at that position,
+    # but a loss op's own backward formula still evaluates its original input locally (e.g.
+    # ``binary_cross_entropy_with_logits``'s gradient is ``sigmoid(x) - y``), so a non-finite ``x``
+    # still yields a non-finite local gradient there -- and the zeroed upstream gradient multiplied by
+    # that non-finite local gradient is ``0.0 * nan == nan`` (IEEE 754) again, one level down.
+    # ``torch.where`` keeps the op from ever seeing the non-finite value in the first place, so its
+    # local gradient is finite and the chain rule product is a clean zero.
+    zeros_xy = torch.zeros_like(selected_pred_keypoints[:, :, :2])
+    safe_pred_xy = torch.where(location_loss_mask.unsqueeze(-1), selected_pred_keypoints[:, :, :2], zeros_xy)
+    safe_target_xy = torch.where(location_loss_mask.unsqueeze(-1), target_keypoints[:, :, :2], zeros_xy)
+    l1_per_keypoint = F.l1_loss(safe_pred_xy, safe_target_xy, reduction="none").sum(-1)
+    scaled_masked_l1 = l1_per_keypoint.masked_fill(~location_loss_mask, 0.0) / safe_area_sqrt.unsqueeze(1)
     location_loss = scaled_masked_l1.sum(-1) / valid_count
 
-    findable_loss = (
-        F.binary_cross_entropy_with_logits(
-            selected_pred_keypoints[:, :, 2],
-            (target_keypoints[:, :, 2] > 0).to(selected_pred_keypoints.dtype),
-            reduction="none",
-        )
-        * keypoints_loss_mask.to(selected_pred_keypoints.dtype)
-    ).sum(-1) / denom_keypoints
+    safe_pred_findable = torch.where(
+        findable_loss_mask, selected_pred_keypoints[:, :, 2], torch.zeros_like(selected_pred_keypoints[:, :, 2])
+    )
+    findable_bce = F.binary_cross_entropy_with_logits(
+        safe_pred_findable,
+        (target_keypoints[:, :, 2] > 0).to(selected_pred_keypoints.dtype),
+        reduction="none",
+    )
+    findable_loss = findable_bce.masked_fill(~findable_loss_mask, 0.0).sum(-1) / findable_count
 
-    visible_loss = (
-        F.binary_cross_entropy_with_logits(
-            selected_pred_keypoints[:, :, 3],
-            (target_keypoints[:, :, 2] > 1).to(selected_pred_keypoints.dtype),
-            reduction="none",
-        )
-        * keypoints_loss_mask.to(selected_pred_keypoints.dtype)
-    ).sum(-1) / denom_keypoints
-
-    dxdy = (selected_pred_keypoints[:, :, :2] - target_keypoints[:, :, :2]).to(torch.float32)
-    dx = dxdy[:, :, 0]
-    dy = dxdy[:, :, 1]
+    safe_pred_visible = torch.where(
+        visible_loss_mask, selected_pred_keypoints[:, :, 3], torch.zeros_like(selected_pred_keypoints[:, :, 3])
+    )
+    visible_bce = F.binary_cross_entropy_with_logits(
+        safe_pred_visible,
+        (target_keypoints[:, :, 2] > 1).to(selected_pred_keypoints.dtype),
+        reduction="none",
+    )
+    visible_loss = visible_bce.masked_fill(~visible_loss_mask, 0.0).sum(-1) / visible_count
 
     raw_log_l11 = selected_pred_keypoints[:, :, 4].to(torch.float32)
     raw_l21 = selected_pred_keypoints[:, :, 5].to(torch.float32)
@@ -262,22 +309,59 @@ def compute_l1_keypoint_loss(
         )
     gaussian_loss_mask = location_loss_mask & finite_uncertainty
 
+    # Same non-finite-input hazard as location/findable/visible above, one term later:
+    # ``nan_to_num``/``masked_fill`` further down only clean the exact node they're applied to, not the
+    # ``dx``/``dy``/``u0``/``u1``/``maha2`` chain leading up to it -- each intermediate op's backward
+    # still evaluates its own (still non-finite) forward input locally. Reuse ``gaussian_loss_mask`` --
+    # already true only where every input this chain reads (``x``, ``y``, and the three Cholesky
+    # params) is finite -- to swap in safe placeholders before any of them are combined.
+    safe_pred_xy_nll = torch.where(gaussian_loss_mask.unsqueeze(-1), selected_pred_keypoints[:, :, :2], zeros_xy)
+    safe_target_xy_nll = torch.where(gaussian_loss_mask.unsqueeze(-1), target_keypoints[:, :, :2], zeros_xy)
+    dxdy = (safe_pred_xy_nll - safe_target_xy_nll).to(torch.float32)
+    dx = dxdy[:, :, 0]
+    dy = dxdy[:, :, 1]
+
     # Intentionally unclamped: the model is expected to learn bounded log-scale values;
     # clamping would mask divergence instead of exposing it during development.
-    log_l11 = raw_log_l11
-    l21 = raw_l21
-    log_l22 = raw_log_l22
+    log_l11 = torch.where(gaussian_loss_mask, raw_log_l11, torch.zeros_like(raw_log_l11))
+    l21 = torch.where(gaussian_loss_mask, raw_l21, torch.zeros_like(raw_l21))
+    log_l22 = torch.where(gaussian_loss_mask, raw_log_l22, torch.zeros_like(raw_log_l22))
 
     l11 = log_l11.exp()
     l22 = log_l22.exp()
     u0 = l11 * dx + l21 * dy
     u1 = l22 * dy
     maha2 = u0 * u0 + u1 * u1
-    gaussian_loss_mask = gaussian_loss_mask & torch.isfinite(u0) & torch.isfinite(u1) & torch.isfinite(maha2)
+
+    # A raw log-precision input can be finite on its own (e.g. 100.0) and still overflow
+    # once exponentiated (``exp(100) == inf``), which ``finite_uncertainty`` above cannot
+    # see since it only checks the pre-exp inputs. That overflow isn't caught until here,
+    # one pass too late for ``torch.where`` above to have kept it out of ``u0``/``u1``/
+    # ``maha2`` -- those were already computed from the overflowed ``l11``/``l22``, so
+    # their own backward formulas (e.g. ``d(u0**2)/d(u0) == 2*u0 == inf``) still poison the
+    # gradient the same ``0.0 * inf == nan`` way once combined with the (correctly zero)
+    # upstream gradient from the exclusion below. Refine the mask with this later-stage
+    # overflow, then redo the chain with ``torch.where`` sanitizing its inputs *before*
+    # ``exp``/multiply/square see them, exactly like the other three loss terms above.
+    overflow_safe_mask = gaussian_loss_mask & torch.isfinite(u0) & torch.isfinite(u1) & torch.isfinite(maha2)
+    zeros_log = torch.zeros_like(raw_log_l11)
+    log_l11 = torch.where(overflow_safe_mask, log_l11, zeros_log)
+    l21 = torch.where(overflow_safe_mask, l21, zeros_log)
+    log_l22 = torch.where(overflow_safe_mask, log_l22, zeros_log)
+    dx = torch.where(overflow_safe_mask, dx, torch.zeros_like(dx))
+    dy = torch.where(overflow_safe_mask, dy, torch.zeros_like(dy))
+    l11 = log_l11.exp()
+    l22 = log_l22.exp()
+    u0 = l11 * dx + l21 * dy
+    u1 = l22 * dy
+    maha2 = u0 * u0 + u1 * u1
+    gaussian_loss_mask = overflow_safe_mask
     gaussian_count = gaussian_loss_mask.sum(-1).to(dtype=selected_pred_keypoints.dtype)
     gaussian_valid_count = gaussian_count.clamp(min=1)
-    nll_raw = 0.5 * (maha2 / area.clamp_min(area_eps).unsqueeze(1)) - (log_l11 + log_l22)
-    nll_raw = torch.nan_to_num(nll_raw, nan=0.0, posinf=0.0, neginf=torch.finfo(nll_raw.dtype).min)
+    nll_raw = 0.5 * (maha2 / safe_area.clamp_min(area_eps).unsqueeze(1)) - (log_l11 + log_l22)
+    nll_raw = torch.nan_to_num(
+        nll_raw, nan=0.0, posinf=torch.finfo(nll_raw.dtype).max / 2, neginf=torch.finfo(nll_raw.dtype).min
+    )
     nll_keypoints = nll_raw.masked_fill(~gaussian_loss_mask, 0.0)
     nll_loss = nll_keypoints.sum(-1) / gaussian_valid_count
     no_valid = gaussian_count <= 0
@@ -288,7 +372,7 @@ def compute_l1_keypoint_loss(
     return location_loss, findable_loss, visible_loss, nll_loss
 
 
-def _cdist_bce_with_logits(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+def _cdist_bce_with_logits(x: Tensor, y: Tensor) -> Tensor:
     """Compute pairwise BCE-with-logits summed along the last dim."""
     y_float = y.to(dtype=x.dtype)
     softplus = F.softplus(x).sum(dim=1, keepdim=True)
@@ -297,13 +381,19 @@ def _cdist_bce_with_logits(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
 
 
 def compute_keypoint_matching_cost(
-    all_pred_keypoints: torch.Tensor,
-    target_keypoints: torch.Tensor,
-    target_classes: torch.Tensor,
-    target_areas: torch.Tensor,
+    all_pred_keypoints: Tensor,
+    target_keypoints: Tensor,
+    target_classes: Tensor,
+    target_areas: Tensor,
     num_keypoints_per_class: Sequence[int],
-) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[Tensor, Tensor, Tensor, Tensor]:
     """Compute many-to-many keypoint matching costs.
+
+    Unlike ``compute_l1_keypoint_loss``, this function does not guard ``cost_findable``/
+    ``cost_visible`` against a non-finite prediction: ``_cdist_bce_with_logits`` has no
+    finiteness mask, so a single non-finite logit poisons the whole cost row for that query
+    against every target, which then feeds the Hungarian assignment. Tracked separately since
+    it needs a different fix shape (the helper's signature would need to accept a mask).
 
     Args:
         all_pred_keypoints: Predicted keypoints of shape ``(B, Q, K_total, >=7)``.
@@ -464,7 +554,9 @@ def compute_keypoint_matching_cost(
         nll_k = 0.5 * (maha2 / areas.clamp_min(area_eps).view(1, n_targets_by_class, 1)) - (
             log_l11 + log_l22
         ).unsqueeze(1)
-        nll_k = torch.nan_to_num(nll_k, nan=0.0, posinf=0.0, neginf=torch.finfo(nll_k.dtype).min)
+        nll_k = torch.nan_to_num(
+            nll_k, nan=0.0, posinf=torch.finfo(nll_k.dtype).max / 2, neginf=torch.finfo(nll_k.dtype).min
+        )
         nll_k = nll_k.masked_fill(~keypoint_mask, 0.0)
         nll_sum = nll_k.sum(-1)  # (flat_bq, n_targets)
 

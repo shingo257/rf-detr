@@ -24,6 +24,11 @@ def _get_patch_embed_projection(model) -> torch.nn.Conv2d:
 
     Raises:
         AssertionError: If the patch-embedding projection cannot be located.
+
+    Examples:
+        >>> model = RFDETRLarge(pretrain_weights=None, num_classes=1, device="cpu")
+        >>> isinstance(_get_patch_embed_projection(model), torch.nn.Conv2d)
+        True
     """
     # model.model → model context; model.model.model → nn.Module
     nn_model = model.model.model
@@ -40,7 +45,7 @@ def _get_patch_embed_projection(model) -> torch.nn.Conv2d:
     raise AssertionError(msg)
 
 
-@pytest.mark.parametrize("model_class", [RFDETRNano, RFDETRLarge])
+@pytest.mark.parametrize("model_class", [RFDETRLarge, RFDETRNano])
 @pytest.mark.parametrize("channels", [1, 4])
 def test_multispectral_support(model_class, channels: int) -> None:
     model = model_class(

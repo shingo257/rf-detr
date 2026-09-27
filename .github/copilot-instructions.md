@@ -1,15 +1,16 @@
 # RF-DETR Copilot Instructions
 
 > [!NOTE]
+>
 > This document is GitHub Copilot-specific guidance. For canonical contribution guidelines (test-driven development, code quality, docstrings, etc.), see [CONTRIBUTING.md](CONTRIBUTING.md). For detailed agent-specific context, see [AGENTS.md](../AGENTS.md).
 
 ## Repository Overview
 
 RF-DETR is a real-time transformer architecture for object detection and instance segmentation. Built on DINOv2 vision transformer backbone with PyTorch.
 
-**Project Type:** Python ML library (computer vision)
-**Python:** >=3.10 (3.10, 3.11, 3.12, 3.13)
-**License:** Apache 2.0 (Plus models under PML 1.0)
+- **Project Type:** Python ML library (computer vision)
+- **Python:** >=3.10 (3.10, 3.11, 3.12, 3.13, 3.14)
+- **License:** Apache 2.0 (Plus models under PML 1.0)
 
 > [!TIP]
 >
@@ -25,14 +26,19 @@ RF-DETR is a real-time transformer architecture for object detection and instanc
 uv sync --all-groups
 
 # Run tests (always before committing)
-uv run --no-sync pytest src/ tests/ -n 2 -m "not gpu" --cov=rfdetr --cov-report=xml
+uv run --no-sync pytest src/ tests/ scripts/ -n 2 -m "not gpu" --cov=rfdetr --cov-report=xml
 
 # Build package
 uv build
 ```
 
 > [!IMPORTANT]
+>
 > Run `uv sync` after pulling changes to update dependencies.
+
+**Dependency extras:** `rfdetr[train]` is intentionally minimal and uses torchvision-native default augmentations. Custom Albumentations CPU configs and Kornia GPU augmentation both require `rfdetr[augment]`.
+
+**CUDA graph precision:** `cuda_graphs=True` routes BF16 capture through PyTorch and fixed-shape FP8 capture through Transformer Engine when `compile=False`. Keep the registered model unchanged. FP8 graphs require the active Lightning recipe, one GPU, detection, and no accumulation; see `AGENTS.md` for guards. Never wrap a compiled model with the eager capture runner.
 
 ## Code Quality
 
@@ -47,6 +53,7 @@ pre-commit run --all-files
 ## Key Conventions
 
 > [!NOTE]
+>
 > Internal package organization (`src/rfdetr/`) is subject to change as this is an active research project. Explore the codebase to understand current module organization.
 
 **Imports:**
@@ -73,7 +80,7 @@ pre-commit run --all-files
 - ✅ Before PR: Final commit MUST have all tests passing
 - ✅ Before commit: Run `pre-commit run --all-files`
 
-**CI/CD:** See `.github/workflows/` for source of truth. Tests run on Python 3.10-3.13 across Ubuntu, Windows, macOS.
+**CI/CD:** See `.github/workflows/` for source of truth. Tests run on Python 3.10-3.14 on Ubuntu, and on Python 3.10 and 3.13 on Windows and macOS.
 
 ## Coding Standards
 
@@ -92,6 +99,7 @@ from tqdm.auto import tqdm  # NOT from tqdm import tqdm
 
 **Project-Specific Patterns:**
 
+- **Model selection:** Default to `RFDETRSmall` / `"rfdetr-small"` in docs and examples; default to `RFDETRNano` / `"rfdetr-nano"` in CI and tests. **Never use base models** (`RFDETRBase` / `"rfdetr-base"`) — treat as deprecated; substitute `small` in docs/examples and `nano` in CI/tests. Pick a released detection size (`nano`/`small`/`medium`/`large`) for detection and a released segmentation size (`seg-nano`/`seg-small`/`seg-medium`/`seg-large`) for segmentation; `-preview` variants are only for capabilities with no released sized version — now just `keypoint-preview`. `seg-preview` is superseded; use a sized seg model instead.
 - **Logging:** Use `logger.debug()` for detailed tensor/shape info (not `logger.info()`)
 - **Segmentation models:** Return `pred_masks` as `torch.Tensor` or dict with keys `['spatial_features', 'query_features', 'bias']`
 - **Checkpoint handling:** Always check file existence before operations
@@ -108,7 +116,7 @@ from tqdm.auto import tqdm  # NOT from tqdm import tqdm
 
 Before submitting changes:
 
-1. ✅ Run tests: `uv run --no-sync pytest src/ tests/ -n 2 -m "not gpu"`
+1. ✅ Run tests: `uv run --no-sync pytest src/ tests/ scripts/ -n 2 -m "not gpu"`
 2. ✅ Run pre-commit: `pre-commit run --all-files`
 3. ✅ Verify new functions have type hints + docstrings
 4. ✅ Review changes for minimal scope

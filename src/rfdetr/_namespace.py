@@ -16,9 +16,8 @@ from rfdetr.config import ModelConfig, TrainConfig
 from rfdetr.models._defaults import MODEL_DEFAULTS, ModelDefaults
 
 # Fields forwarded from ModelConfig into the namespace.
-# Excludes cls_loss_coef (handled by transitional override logic below).
+# Excludes cls_loss_coef (set explicitly below from TrainConfig, its sole owner).
 _MC_NAMESPACE_FIELDS = {
-    "amp",
     "backbone_lora",
     "bbox_reparam",
     "ca_nheads",
@@ -64,7 +63,6 @@ _MC_NAMESPACE_FIELDS = {
 #
 # Excluded categories:
 #   - Explicit transformations: handled with custom logic in _namespace_from_configs.
-#   - Deprecated TC architecture copies: ModelConfig wins (see _MC_NAMESPACE_FIELDS).
 #   - PTL Trainer / DDP, logger flags, auto-batch probe, DataModule knobs:
 #     not consumed by legacy builders.
 _TC_NON_NAMESPACE_FIELDS = {
@@ -96,7 +94,12 @@ _TC_NON_NAMESPACE_FIELDS = {
     "pin_memory",
     "persistent_workers",
     "lr_scheduler",
-    "lr_min_factor",
+    "lr_scheduler_kwargs",
+    "lr_scheduler_interval",
+    "lr_scheduler_monitor",
+    "optimizer",
+    "optimizer_kwargs",
+    "optimizer_param_group_overrides",
     # Dataset class labels.
     "class_names",
 }
@@ -112,13 +115,9 @@ def _namespace_from_configs(
 ) -> types.SimpleNamespace:
     """Build a ``types.SimpleNamespace`` from configs and architectural defaults.
 
-    This is the internal implementation behind :func:`build_namespace`. Extracting it allows config-native builder
-    functions to construct a namespace without going through the public ``build_namespace()`` API while still accepting
-    overridable defaults.
-
     This function is used by multiple modules as the transitional namespace
     bridge: :func:`rfdetr.models.build_model_from_config`, :func:`rfdetr.models.build_criterion_from_config`, and
-    :func:`rfdetr.detr._build_model_context` all call it directly to avoid the public ``build_namespace()`` shim.
+    :func:`rfdetr.detr._build_model_context` all call it directly to build a legacy namespace from configs.
 
     Args:
         model_config: Architecture configuration.
@@ -139,10 +138,9 @@ def _namespace_from_configs(
             # Architectural defaults — 35 constants not exposed in ModelConfig/TrainConfig.
             **dataclasses.asdict(d),
             # TrainConfig: fields consumed by legacy builders (PTL, logger, auto-batch
-            # fields excluded; see _TC_NAMESPACE_FIELDS).  Architecture copies
-            # (group_detr, num_select, …) are intentionally absent — mc wins below.
+            # fields excluded; see _TC_NAMESPACE_FIELDS).
             **tc.model_dump(include=set(_TC_NAMESPACE_FIELDS)),
-            # ModelConfig: wins over tc for overlapping architecture params
+            # ModelConfig: sole source of architecture params
             # (group_detr, ia_bce_loss, segmentation_head, num_select).
             **mc.model_dump(include=set(_MC_NAMESPACE_FIELDS)),
             # Segmentation extras (SegmentationTrainConfig only — absent from base TrainConfig).

@@ -17,13 +17,17 @@ from __future__ import annotations
 
 import math
 import os
-from typing import Any, List
+from typing import Any, cast
 
 import torch
 import torch.nn.functional as F  # noqa: N812
+from torch import Tensor
 
 from rfdetr.assets.model_weights import download_pretrain_weights, validate_pretrain_weights
 from rfdetr.config import ModelConfig
+from rfdetr.models.backbone.backbone import Backbone
+from rfdetr.models.backbone.dinov2 import DinoV2
+from rfdetr.models.lwdetr import LWDETR
 from rfdetr.utilities.logger import get_logger
 from rfdetr.utilities.state_dict import _ckpt_args_get, remap_projector_to_cross_attn, validate_checkpoint_compatibility
 
@@ -38,13 +42,34 @@ _PE_KEY_SUFFIX = "embeddings.position_embeddings"
 _QUERY_PARAM_SUFFIXES: tuple[str, ...] = ("refpoint_embed.weight", "query_feat.weight")
 
 
+def _is_query_param(name: str) -> bool:
+    """Return whether *name* is a state-dict key for a packed query parameter.
+
+    Single source of truth for the ``_QUERY_PARAM_SUFFIXES`` suffix match, so every call site agrees on which keys are
+    reshaped per group.
+
+    Args:
+        name: A checkpoint / model ``state_dict`` key.
+
+    Returns:
+        ``True`` when the key ends with one of ``_QUERY_PARAM_SUFFIXES``.
+
+    Examples:
+        >>> _is_query_param("transformer.refpoint_embed.weight")
+        True
+        >>> _is_query_param("class_embed.weight")
+        False
+    """
+    return name.endswith(_QUERY_PARAM_SUFFIXES)
+
+
 def _slice_query_param_per_group(
-    tensor: torch.Tensor,
+    tensor: Tensor,
     ckpt_num_queries: int,
     ckpt_group_detr: int,
     target_num_queries: int,
     target_group_detr: int,
-) -> torch.Tensor:
+) -> Tensor:
     """Slice a ``refpoint_embed`` / ``query_feat`` weight preserving per-group structure.
 
     ``LWDETR`` packs query embeddings as ``nn.Embedding(num_queries * group_detr, ...)`` where group ``g`` occupies the
@@ -135,6 +160,10 @@ def _filter_intentional_keys(keys: list[str]) -> list[str]:
         *_QUERY_PARAM_SUFFIXES,
         "enc_out_class_embed.",
         "enc_out_bbox_embed.",
+        # The preview keypoint checkpoint still stores the old standalone
+        # MLP projection head, but the current GroupPose inference path no
+        # longer consumes it.
+        "keypoint_head.keypoint_proj.",
     )
 
     def _is_intentional(key: str) -> bool:
@@ -154,6 +183,15 @@ def _warn_on_partial_load(incompatible: Any, pretrain_weights_path: str) -> None
     not reach this function — they raise :class:`RuntimeError` directly from ``load_state_dict`` and are therefore
     impossible to miss.
 
+    Two separate exclusions are applied before deciding whether to warn, for two different reasons:
+
+    * :func:`_filter_intentional_keys` drops head / query-embedding keys in *both* directions, because the loader
+      itself reinitialises or trims them.  Matching there is module-prefix based.
+    * ``_kp_active_mask`` is dropped from ``missing_keys`` only, because it is a deterministic schema buffer rather
+      than a learned parameter — the model always rebuilds it from the configured keypoint schema, so a checkpoint
+      predating keypoint support is not actually missing anything.  Matching is on the exact terminal key so a
+      similarly-named real parameter still warns, and the ``unexpected_keys`` direction is deliberately left alone.
+
     Args:
         incompatible: The ``_IncompatibleKeys`` namedtuple returned by
             :meth:`torch.nn.Module.load_state_dict`.
@@ -168,7 +206,22 @@ def _warn_on_partial_load(incompatible: Any, pretrain_weights_path: str) -> None
     except TypeError:
         # Result wasn't iterable (e.g. a MagicMock in unit tests) — quietly skip.
         return
-    missing = _filter_intentional_keys(missing_keys)
+    # `_kp_active_mask` is a deterministic schema buffer, not a learned
+    # parameter. Detection checkpoints published before keypoint support do not
+    # contain it; the current model correctly reconstructs it from the configured
+    # keypoint schema (an empty mask for detection-only variants).
+    missing: list[str] = []
+    for key in _filter_intentional_keys(missing_keys):
+        if key == "_kp_active_mask" or key.endswith("._kp_active_mask"):
+            # Keep the breadcrumb at debug level: harmless for detection-only variants, but a keypoint model
+            # loading a mask-less checkpoint keeps its config-derived schema, and this is the only remaining trace.
+            logger.debug(
+                "Checkpoint %r has no %r — rebuilding it from the configured keypoint schema.",
+                pretrain_weights_path,
+                key,
+            )
+            continue
+        missing.append(key)
     unexpected = _filter_intentional_keys(unexpected_keys)
     if not missing and not unexpected:
         return
@@ -196,7 +249,7 @@ def _warn_on_partial_load(incompatible: Any, pretrain_weights_path: str) -> None
 
 
 def interpolate_position_embeddings(
-    checkpoint_state: dict,
+    checkpoint_state: dict[str, Any],
     pe_size: int,
 ) -> None:
     """Interpolate DINOv2 positional embeddings in *checkpoint_state* to match *pe_size*.
@@ -255,9 +308,11 @@ def interpolate_position_embeddings(
 
 
 def load_pretrain_weights(
-    nn_model: torch.nn.Module,
+    nn_model: LWDETR,
     model_config: ModelConfig,
-) -> List[str]:
+    *,
+    trust: bool = False,
+) -> list[str]:
     """Load pretrained checkpoint weights into *nn_model* in-place.
 
     Canonical implementation shared by the L1 facade (``_build_model_context`` in ``rfdetr.detr``) and the L2
@@ -280,6 +335,10 @@ def load_pretrain_weights(
         nn_model: The model whose weights will be updated in-place.
         model_config: Pydantic ``ModelConfig`` instance. Must have
             ``pretrain_weights``, ``num_classes``, ``num_queries``, and ``group_detr`` attributes.
+        trust: Forwarded to :func:`rfdetr.utilities.io._safe_torch_load` as its ``trust``
+            argument. Set ``True`` only when ``model_config.pretrain_weights`` points to a
+            checkpoint the caller explicitly trusts (mirrors ``RFDETR.from_checkpoint(...,
+            trust_checkpoint=True)``); the safe-load default otherwise applies here too.
 
     Returns:
         List of class name strings from the checkpoint, or an empty list if none are present or if
@@ -289,27 +348,31 @@ def load_pretrain_weights(
         Exception: If the checkpoint file cannot be loaded even after a re-download.
     """
     mc = model_config
-    pretrain_weights = mc.pretrain_weights
-    if pretrain_weights is None:
+    if mc.pretrain_weights is None:
         return []
-    class_names: List[str] = []
+    # `expand_path`/`_coerce_resume_path` pydantic validators on ModelConfig already normalize
+    # this field to a `str` at runtime; the `str()` here just satisfies the static `PathLikeStr` type.
+    pretrain_weights = str(mc.pretrain_weights)
+    class_names: list[str] = []
+
+    from rfdetr.utilities.io import _safe_torch_load
 
     # Download first (no-op if already present and hash is valid).
     download_pretrain_weights(pretrain_weights)
     # If the first download attempt didn't produce the file (e.g. stale MD5
-    # caused an earlier ValueError that was silently swallowed), retry with
-    # MD5 validation disabled so a stale registry hash can't block training.
+    # caused an earlier ValueError that was silently swallowed), retry once.
+    # MD5 validation is kept on the retry — if it fails again the error is real.
     if not os.path.isfile(pretrain_weights):
-        logger.warning("Pretrain weights not found after initial download; retrying without MD5 validation.")
-        download_pretrain_weights(pretrain_weights, redownload=True, validate_md5=False)
+        logger.warning("Pretrain weights not found after initial download; retrying.")
+        download_pretrain_weights(pretrain_weights, redownload=True)
     validate_pretrain_weights(pretrain_weights, strict=False)
 
     try:
-        checkpoint = torch.load(pretrain_weights, map_location="cpu", weights_only=False)
+        checkpoint = _safe_torch_load(pretrain_weights, trust=trust)
     except Exception:
         logger.info("Failed to load pretrain weights, re-downloading")
-        download_pretrain_weights(pretrain_weights, redownload=True, validate_md5=False)
-        checkpoint = torch.load(pretrain_weights, map_location="cpu", weights_only=False)
+        download_pretrain_weights(pretrain_weights, redownload=True)
+        checkpoint = _safe_torch_load(pretrain_weights, trust=trust)
 
     # Normalize PyTorch Lightning native .ckpt format to the expected {"model": {...}}
     # structure.  PTL stores model weights in "state_dict" with keys prefixed by
@@ -410,7 +473,7 @@ def load_pretrain_weights(
     # but TrainConfig does not include num_queries (it lives on ModelConfig).
     if (ckpt_num_queries is None) != (ckpt_group_detr is None):
         _first_query_key = next(
-            (k for k in checkpoint["model"] if any(k.endswith(s) for s in _QUERY_PARAM_SUFFIXES)),
+            (k for k in checkpoint["model"] if _is_query_param(k)),
             None,
         )
         if _first_query_key is not None:
@@ -432,8 +495,23 @@ def load_pretrain_weights(
                     _known,
                     _known_val,
                 )
-    # Warn once (not once per suffix key) when falling back to the legacy flat slice.
-    if mc.group_detr > 1 and (ckpt_num_queries is None or ckpt_group_detr is None):
+    target_query_rows = mc.num_queries * mc.group_detr
+    # Warn once (not once per suffix key) only when the fallback truncates a
+    # query tensor. Checkpoints without args.num_queries/args.group_detr
+    # (published legacy files and BestModelCallback output, whose args value is a
+    # TrainConfig dump lacking both fields) already have exactly the configured
+    # number of rows, so their flat slice is a data identity: it cannot reorder
+    # or drop rows, but it does not guarantee that the checkpoint's (num_queries,
+    # group_detr) factorization matches the target.
+    # The truncation scan is the last conjunct so the cheap scalar guards short-circuit
+    # it away on every load that cannot warn.
+    if (
+        mc.group_detr > 1
+        and (ckpt_num_queries is None or ckpt_group_detr is None)
+        and any(
+            tensor.shape[0] > target_query_rows for name, tensor in checkpoint["model"].items() if _is_query_param(name)
+        )
+    ):
         logger.warning(
             "load_pretrain_weights: checkpoint lacks args.num_queries / "
             "args.group_detr; falling back to flat slice. With "
@@ -442,7 +520,7 @@ def load_pretrain_weights(
             mc.group_detr,
         )
     for name in list(checkpoint["model"].keys()):
-        if any(name.endswith(x) for x in _QUERY_PARAM_SUFFIXES):
+        if _is_query_param(name):
             tensor = checkpoint["model"][name]
             if ckpt_num_queries is not None and ckpt_group_detr is not None:
                 checkpoint["model"][name] = _slice_query_param_per_group(
@@ -453,14 +531,54 @@ def load_pretrain_weights(
                     target_group_detr=mc.group_detr,
                 )
             else:
-                # Legacy checkpoint with no num_queries/group_detr in args:
+                # Checkpoint without args.num_queries/args.group_detr (published legacy files
+                # and BestModelCallback output, whose args value is a TrainConfig dump lacking
+                # both fields):
                 # preserve the original flat slice for backward compatibility.
-                # NOTE: the flat slice is incorrect for group_detr > 1 — it scrambles
-                # groups 1+ when num_queries decreases. Legacy checkpoints predate
-                # multi-group training, so in practice they are all group_detr == 1.
-                checkpoint["model"][name] = tensor[: mc.num_queries * mc.group_detr]
+                # This is only a data identity when the row total already matches;
+                # without metadata, a different (num_queries, group_detr) split
+                # is still reinterpreted under the target partition undetectably.
+                checkpoint["model"][name] = tensor[:target_query_rows]
 
     checkpoint["model"] = remap_projector_to_cross_attn(checkpoint["model"], nn_model)
+
+    # Auto-align num_keypoints_per_class from checkpoint when the user did not explicitly set it.
+    # Without this, loading a bg-first checkpoint ([0, 17]) into a model configured with the
+    # active-first default ([17]) causes a semantic mismatch: the detection head is trimmed to 2
+    # rows but keeps background weights at row 0 — the slot active-first inference expects to be
+    # person — producing AP ≈ 0.0 on pretrained keypoint models.
+    # Mirrors the existing num_classes auto-align pattern (lines ~385-392).
+    _user_overrode_kp_schema = "num_keypoints_per_class" in getattr(mc, "model_fields_set", set())
+    if (
+        not _user_overrode_kp_schema
+        and getattr(mc, "use_grouppose_keypoints", False)
+        and hasattr(mc, "num_keypoints_per_class")
+    ):
+        _early_kp_mask = checkpoint["model"].get("_kp_active_mask")
+        if isinstance(_early_kp_mask, Tensor) and _early_kp_mask.ndim == 2:
+            _ckpt_kp_schema = [int(n) for n in _early_kp_mask.sum(dim=1).tolist()]
+            _cfg_kp_schema = list(getattr(mc, "num_keypoints_per_class", []) or [])
+            if not any(n > 0 for n in _ckpt_kp_schema):
+                logger.warning(
+                    "load_pretrain_weights: _kp_active_mask in checkpoint has no active slots "
+                    "(schema=%s) — skipping auto-align to avoid overwriting config with empty schema.",
+                    _ckpt_kp_schema,
+                )
+            elif _ckpt_kp_schema != _cfg_kp_schema:
+                logger.debug(
+                    "load_pretrain_weights: auto-aligning num_keypoints_per_class %s → %s "
+                    "(inferred from checkpoint _kp_active_mask; user did not set explicitly).",
+                    _cfg_kp_schema,
+                    _ckpt_kp_schema,
+                )
+                mc.num_keypoints_per_class = _ckpt_kp_schema
+        elif isinstance(_early_kp_mask, Tensor):
+            logger.warning(
+                "load_pretrain_weights: _kp_active_mask has unexpected shape %s (expected 2-D) "
+                "— skipping auto-align; schema mismatch may cause AP≈0 on keypoint models.",
+                tuple(_early_kp_mask.shape),
+            )
+
     # Detection checkpoints/configs may omit keypoint schema fields; absence means no keypoint reconciliation.
     configured_keypoint_schema = list(getattr(mc, "num_keypoints_per_class", []) or [])
     checkpoint_keypoint_schema = None
@@ -490,8 +608,8 @@ def load_pretrain_weights(
     model_state_dict = nn_model.state_dict() if hasattr(nn_model, "state_dict") else {}
     model_kp_active_mask = model_state_dict.get("_kp_active_mask") if isinstance(model_state_dict, dict) else None
     if (
-        isinstance(ckpt_kp_active_mask, torch.Tensor)
-        and isinstance(model_kp_active_mask, torch.Tensor)
+        isinstance(ckpt_kp_active_mask, Tensor)
+        and isinstance(model_kp_active_mask, Tensor)
         and ckpt_kp_active_mask.shape != model_kp_active_mask.shape
         and not should_restore_config_keypoint_schema
     ):
@@ -526,7 +644,7 @@ def load_pretrain_weights(
     return class_names
 
 
-def apply_lora(nn_model: torch.nn.Module) -> None:
+def apply_lora(nn_model: LWDETR) -> None:
     """Apply LoRA adapters to the backbone encoder of *nn_model*.
 
     Replaces ``nn_model.backbone[0].encoder`` in-place with a PEFT-wrapped encoder using DoRA with rank 16 and alpha 16.
@@ -544,6 +662,7 @@ def apply_lora(nn_model: torch.nn.Module) -> None:
     """
     try:
         from peft import LoraConfig, get_peft_model
+        from transformers import PreTrainedModel
     except ImportError as exc:
         raise ImportError(
             "LoRA requires the 'peft' dependency. "
@@ -567,4 +686,9 @@ def apply_lora(nn_model: torch.nn.Module) -> None:
             "register_tokens",
         ],
     )
-    nn_model.backbone[0].encoder = get_peft_model(nn_model.backbone[0].encoder, lora_config)
+    backbone = cast(Backbone, nn_model.backbone[0])
+    # PEFT's type signature requires a PreTrainedModel, but DinoV2 is a compatible nn.Module
+    # wrapper at runtime. Cast both sides of this dynamic wrapper boundary instead of relying
+    # on an environment-sensitive ignore for PEFT's evolving type annotations.
+    peft_encoder = get_peft_model(cast(PreTrainedModel, backbone.encoder), lora_config)
+    backbone.encoder = cast(DinoV2, peft_encoder)

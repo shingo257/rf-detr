@@ -7,10 +7,17 @@
 
 from types import SimpleNamespace
 
+import pytest
 import torch
 from torch import nn
 
-from rfdetr.models.transformer import Transformer, TransformerDecoder, TransformerDecoderLayer, build_transformer
+from rfdetr.models.transformer import (
+    Transformer,
+    TransformerDecoder,
+    TransformerDecoderLayer,
+    _additive_attn_mask,
+    build_transformer,
+)
 
 
 def _build_transformer_inputs(
@@ -19,6 +26,12 @@ def _build_transformer_inputs(
     num_levels: int = 2,
 ) -> tuple[list[torch.Tensor], list[torch.Tensor], list[torch.Tensor], torch.Tensor, torch.Tensor]:
     """Build minimal synthetic multi-scale inputs for `Transformer.forward`.
+
+    Examples:
+        >>> srcs, masks, pos_embeds, refpoint_embed, query_feat = _build_transformer_inputs(hidden_dim=8)
+        >>> len(srcs), srcs[0].shape[1]
+        (2, 8)
+
 
     Args:
         batch_size: Mini-batch size.
@@ -58,10 +71,11 @@ def test_transformer_keypoint_disabled_matches_default_contract() -> None:
     )
 
     outputs = transformer(srcs, masks, pos_embeds, refpoint_embed, query_feat, cross_attn_srcs=None)
-    assert len(outputs) == 4, f"Expected 4 outputs, got {len(outputs)}"
-    hs, references, memory_ts, boxes_ts = outputs
+    assert len(outputs) == 5, f"Expected 5 outputs, got {len(outputs)}"
+    hs, references, memory_ts, boxes_ts, cls_ts = outputs
     assert hs is not None and references is not None
     assert memory_ts is None and boxes_ts is None
+    assert cls_ts is None
 
 
 def test_transformer_keypoint_enabled_shapes() -> None:
@@ -85,8 +99,8 @@ def test_transformer_keypoint_enabled_shapes() -> None:
     transformer.enc_out_bbox_embed = nn.ModuleList([nn.Linear(16, 4)])
 
     outputs = transformer(srcs, masks, pos_embeds, refpoint_embed, query_feat, cross_attn_srcs=None)
-    assert len(outputs) == 7, f"Expected 7 outputs, got {len(outputs)}"
-    hs, references, memory_ts, boxes_ts, keypoint_hs, enc_kp_predictions, keypoint_memory_ts = outputs
+    assert len(outputs) == 8, f"Expected 8 outputs, got {len(outputs)}"
+    hs, references, memory_ts, boxes_ts, keypoint_hs, enc_kp_predictions, keypoint_memory_ts, _ = outputs
 
     assert isinstance(hs, torch.Tensor)
     assert hs.shape[-1] == 16
@@ -125,6 +139,36 @@ def test_build_transformer_defaults_inter_instance_keypoint_attention_to_config_
     assert isinstance(decoder_layer, TransformerDecoderLayer)
     assert decoder_layer.enable_keypoint_processing
     assert not decoder_layer.inter_instance_kp_attn
+
+
+def _cross_class_mask() -> torch.Tensor:
+    """Return the keypoint class mask for a ``[3, 2]`` schema.
+
+    Token 0 is the instance; tokens 1-3 and 4-5 are the two keypoint classes.
+
+    Examples:
+        >>> mask = _cross_class_mask()
+        >>> mask.shape, int(mask.sum())
+        (torch.Size([6, 6]), 12)
+    """
+    blocked = torch.zeros(6, 6, dtype=torch.bool)
+    blocked[1:4, 4:] = True
+    blocked[4:, 1:4] = True
+    return blocked
+
+
+@pytest.mark.parametrize(
+    "mask",
+    [pytest.param(_cross_class_mask(), id="cross_class"), pytest.param(torch.zeros(6, 6, dtype=torch.bool), id="none")],
+)
+def test_additive_attn_mask_matches_boolean_mask_in_multihead_attention(mask: torch.Tensor) -> None:
+    """The float mask handed to ``nn.MultiheadAttention`` must give exactly what its boolean form gives."""
+    torch.manual_seed(0)
+    attention = nn.MultiheadAttention(16, 4, batch_first=True).eval()
+    x = torch.randn(3, 6, 16)
+    expected = attention(x, x, x, attn_mask=mask, need_weights=False)[0]
+    actual = attention(x, x, x, attn_mask=_additive_attn_mask(mask, x.dtype), need_weights=False)[0]
+    assert torch.equal(actual, expected)
 
 
 def test_keypoint_class_mask_person_only() -> None:
@@ -211,7 +255,7 @@ def test_enc_keypoint_embed_eval_uses_only_head_zero() -> None:
     with torch.no_grad():
         outputs = transformer(srcs, masks, pos_embeds, refpoint_embed, query_feat, cross_attn_srcs=None)
 
-    _, _, _, _, _, enc_kp_predictions, _ = outputs
+    _, _, _, _, _, enc_kp_predictions, _, _ = outputs
     assert enc_kp_predictions is not None, "enc_kp_predictions should not be None in keypoint mode"
 
     # kp_pred = [kp_xy(2 dims), kp_delta[2:]]; dims 2: are pure MLP output unaffected by ref_xy/wh.
@@ -242,7 +286,7 @@ def test_cross_attn_srcs_none_backward_compat() -> None:
     outputs_default = transformer(srcs, masks, pos_embeds, refpoint_embed, query_feat, cross_attn_srcs=None)
     outputs_explicit = transformer(srcs, masks, pos_embeds, refpoint_embed, query_feat, cross_attn_srcs=srcs)
 
-    assert len(outputs_default) == len(outputs_explicit) == 4
+    assert len(outputs_default) == len(outputs_explicit) == 5
     for default_part, explicit_part in zip(outputs_default, outputs_explicit):
         if default_part is None:
             assert explicit_part is None

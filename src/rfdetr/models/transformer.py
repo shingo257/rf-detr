@@ -14,9 +14,12 @@
 # ------------------------------------------------------------------------
 """Transformer class."""
 
+from __future__ import annotations
+
 import copy
 import math
-from typing import Callable, Optional, Sequence
+from collections.abc import Callable, Sequence
+from typing import cast
 
 import torch
 import torch.nn.functional as F  # noqa: N812
@@ -24,7 +27,21 @@ from torch import Tensor, nn
 
 from rfdetr.models._types import BuilderArgs
 from rfdetr.models.heads.keypoints import ConditionalQueryInitializer
+from rfdetr.models.math import MLP
 from rfdetr.models.ops.modules import MSDeformAttn
+from rfdetr.utilities.compiler import is_compiling
+
+
+def _tracer_absent() -> bool:
+    """Fallback for ``torch.compiler.is_exporting`` on torch versions that lack it.
+
+    ``is_exporting`` was added in torch 2.7. Hoisting this fallback avoids allocating a fresh
+    ``lambda`` in the hot decoder ``forward`` path.
+
+    Returns:
+        Always ``False``.
+    """
+    return False
 
 
 def _safe_multinormalize(dim: int) -> int:
@@ -32,19 +49,30 @@ def _safe_multinormalize(dim: int) -> int:
     return max(1, dim)
 
 
-class MLP(nn.Module):
-    """Very simple multi-layer perceptron (also called FFN)."""
+def _additive_attn_mask(mask: Tensor | None, dtype: torch.dtype) -> Tensor | None:
+    """Return the float form of a boolean attention mask: ``-inf`` where blocked, ``0`` elsewhere.
 
-    def __init__(self, input_dim: int, hidden_dim: int, output_dim: int, num_layers: int) -> None:
-        super().__init__()
-        self.num_layers = num_layers
-        h = [hidden_dim] * (num_layers - 1)
-        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim]))
+    ``nn.MultiheadAttention`` builds this itself from a boolean mask with ``zeros_like(mask, dtype=...)``.
+    coremltools (9.0, 9.1) drops that ``dtype`` keyword when it converts a ``torch.export`` program, so the mask
+    stays boolean and ``scaled_dot_product_attention`` reads it with the opposite meaning. Passing the float mask
+    keeps eager results identical and gives the converters nothing to reinterpret.
 
-    def forward(self, x: Tensor) -> Tensor:
-        for i, layer in enumerate(self.layers):
-            x = F.relu(layer(x)) if i < self.num_layers - 1 else layer(x)
-        return x
+    Args:
+        mask: Boolean mask, ``True`` where attention is blocked, or ``None``.
+        dtype: Floating dtype of the attention inputs.
+
+    Returns:
+        The additive mask in *dtype*, or *mask* unchanged when it is ``None`` or already floating.
+
+    Examples:
+        >>> _additive_attn_mask(torch.tensor([[False, True]]), torch.float32)
+        tensor([[0., -inf]])
+        >>> _additive_attn_mask(None, torch.float32) is None
+        True
+    """
+    if mask is None or mask.dtype != torch.bool:
+        return mask
+    return mask.to(dtype).masked_fill(mask, float("-inf"))
 
 
 def gen_sineembed_for_position(pos_tensor: Tensor, dim: int = 128) -> Tensor:
@@ -71,7 +99,7 @@ def gen_sineembed_for_position(pos_tensor: Tensor, dim: int = 128) -> Tensor:
         pos_h = torch.stack((pos_h[:, :, 0::2].sin(), pos_h[:, :, 1::2].cos()), dim=3).flatten(2)
         pos = torch.cat((pos_y, pos_x, pos_w, pos_h), dim=2)
     else:
-        raise ValueError("Unknown pos_tensor shape(-1):{}".format(pos_tensor.size(-1)))
+        raise ValueError(f"Unknown pos_tensor shape(-1):{pos_tensor.size(-1)}")
     return pos
 
 
@@ -93,6 +121,7 @@ def gen_encoder_output_proposals(
     proposals = []
     _cur = 0
     batch_size, _, _ = memory.shape
+    assert spatial_shapes is not None
     for lvl, (height, width) in enumerate(spatial_shapes):
         if memory_padding_mask is not None:
             # reshape(-1, ...) infers batch dynamically in ONNX instead of baking it in as constants.
@@ -142,6 +171,65 @@ def gen_encoder_output_proposals(
     return output_memory.to(memory.dtype), output_proposals.to(memory.dtype)
 
 
+def _stack_linear_params(modules: Sequence[nn.Linear]) -> tuple[Tensor, Tensor]:
+    """Stack same-shaped ``nn.Linear`` modules' live parameters for a batched matmul.
+
+    Reads ``.weight``/``.bias`` fresh on every call (never cached) so the stacked tensors always
+    reflect the current, possibly just-updated, parameter values.
+
+    Args:
+        modules: Per-group ``nn.Linear`` layers sharing identical ``in_features``/``out_features``.
+
+    Returns:
+        Stacked ``(weight, bias)``, shaped ``(group, out_features, in_features)`` and
+        ``(group, out_features)``.
+    """
+    return torch.stack([m.weight for m in modules]), torch.stack([m.bias for m in modules])
+
+
+def _batched_group_linear(x: Tensor, weight: Tensor, bias: Tensor) -> Tensor:
+    """Apply ``group`` independent affine transforms via one batched matmul.
+
+    Mathematically equivalent to calling a separate ``nn.Linear`` per group. The batched GEMM may
+    use a different floating-point accumulation order, so callers compare within dtype-appropriate
+    tolerance rather than requiring bit equality.
+
+    Args:
+        x: Input of shape ``(group, ..., in_features)``.
+        weight: Stacked per-group weights of shape ``(group, out_features, in_features)``.
+        bias: Stacked per-group biases of shape ``(group, out_features)``.
+
+    Returns:
+        Output of shape ``(group, ..., out_features)``.
+    """
+    leading_shape = x.shape[1:-1]
+    x_flat = x.reshape(x.shape[0], -1, x.shape[-1])
+    out = torch.baddbmm(bias.unsqueeze(1), x_flat, weight.transpose(1, 2))
+    return out.reshape(*x.shape[:1], *leading_shape, weight.shape[-2])
+
+
+def _batched_group_layer_norm(x: Tensor, weight: Tensor, bias: Tensor, eps: float) -> Tensor:
+    """Apply ``group`` independent ``nn.LayerNorm`` affines after one shared normalization pass.
+
+    ``LayerNorm``'s mean/variance reduction is computed per position regardless of which group's
+    affine follows it, so normalizing once (without affine) and then applying each group's own
+    ``weight``/``bias`` is exactly what ``group`` separate ``nn.LayerNorm`` calls compute, just
+    without ``group`` separate reduction kernels.
+
+    Args:
+        x: Input of shape ``(group, ..., channels)``.
+        weight: Stacked per-group scale of shape ``(group, channels)``.
+        bias: Stacked per-group shift of shape ``(group, channels)``.
+        eps: Shared normalization epsilon; the eligibility guard requires equality across groups.
+
+    Returns:
+        Output of shape ``(group, ..., channels)``.
+    """
+    normalized = F.layer_norm(x, (x.shape[-1],), eps=eps)
+    view_shape = (weight.shape[0], *([1] * (x.dim() - 2)), weight.shape[-1])
+    return normalized * weight.view(view_shape) + bias.view(view_shape)
+
+
 class Transformer(nn.Module):
     """Transformer with optional GroupPose keypoint decoder stream support."""
 
@@ -174,6 +262,9 @@ class Transformer(nn.Module):
     ) -> None:
         super().__init__()
         self.encoder = None
+        self.enc_out_class_embed: nn.ModuleList | None = None
+        self.enc_out_bbox_embed: nn.ModuleList | None = None
+        self.enc_out_keypoint_embed: nn.ModuleList | None = None
 
         self.use_grouppose_keypoints = use_grouppose_keypoints
         self.dual_projector_kp_only = dual_projector_kp_only
@@ -198,11 +289,11 @@ class Transformer(nn.Module):
             inter_instance_kp_attn=inter_instance_kp_attn,
         )
         assert decoder_norm_type in ["LN", "Identity"]
-        norm = {
+        norm_ctors: dict[str, Callable[[int], nn.Module]] = {
             "LN": lambda channels: nn.LayerNorm(channels),
             "Identity": lambda channels: nn.Identity(),
         }
-        decoder_norm = norm[decoder_norm_type](d_model)
+        decoder_norm = norm_ctors[decoder_norm_type](d_model)
 
         self.decoder = TransformerDecoder(
             decoder_layer,
@@ -251,11 +342,20 @@ class Transformer(nn.Module):
         self.bbox_reparam = bbox_reparam
 
         self._export = False
+        self._cuda_graph_spatial_shapes: dict[tuple[torch.device, tuple[tuple[int, int], ...]], Tensor] | None = None
 
-    def export(self):
+    def export(self) -> None:
         self._export = True
 
-    def _reset_parameters(self):
+    def enable_cuda_graph_capture(self) -> None:
+        """Cache immutable spatial-shape tensors before their captured reuse.
+
+        The cache is opt-in so eager, compile, and export tensor construction remain unchanged. Device is part of the
+        key to keep a later model move safe.
+        """
+        self._cuda_graph_spatial_shapes = {}
+
+    def _reset_parameters(self) -> None:
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
@@ -272,6 +372,225 @@ class Transformer(nn.Module):
         valid_ratio = torch.stack([valid_ratio_w, valid_ratio_h], -1)
         return valid_ratio
 
+    def _two_stage_batching_eligible(self) -> bool:
+        """Return whether the per-group modules can safely share stacked operations.
+
+        :meth:`_two_stage_group_selection` stacks each group's own ``.weight``/``.bias`` directly instead
+        of calling the module generically, so it only gives correct results for the exact
+        ``nn.Linear``/``nn.LayerNorm``/:class:`~rfdetr.models.math.MLP` types ``LWDETR.__init__`` always
+        deepcopies per group, each with its affine parameters present. Exact ``type(...) is ...`` checks
+        (not ``isinstance``) are required: a subclass of one of these types would otherwise pass an
+        ``isinstance`` check while its own overridden ``forward`` is silently bypassed, since the batched
+        path never calls the module -- it only reads ``.weight``/``.bias``. The ``is not None`` checks
+        reject a ``bias=False`` ``nn.Linear`` or an ``elementwise_affine=False`` ``nn.LayerNorm``, which
+        would otherwise reach ``torch.stack`` over a ``None`` and crash instead of falling back. Modules
+        must also agree on parameter shapes, dtypes, devices, LayerNorm epsilon, and MLP depth because one
+        stacked operation cannot preserve heterogeneous group contracts. Hooks, instance-level ``forward``
+        overrides, and individually compiled children also require the generic call path. A test double, a
+        future custom head, or any of these edge configurations all fall back to the per-group loop in
+        :meth:`forward`, preserving each module's normal call semantics.
+        """
+        assert self.enc_out_class_embed is not None
+        assert self.enc_out_bbox_embed is not None
+        enc_output = cast(Sequence[nn.Linear], self.enc_output)
+        enc_output_norm = cast(Sequence[nn.LayerNorm], self.enc_output_norm)
+        class_embeds = cast(Sequence[nn.Linear], self.enc_out_class_embed)
+        bbox_mlps = cast(Sequence[MLP], self.enc_out_bbox_embed)
+        module_groups = (enc_output, enc_output_norm, class_embeds, bbox_mlps)
+        if any(len(modules) != self.group_detr for modules in module_groups):
+            return False
+        if not (
+            all(type(m) is nn.Linear and m.bias is not None for m in enc_output)
+            and all(type(m) is nn.LayerNorm and m.weight is not None and m.bias is not None for m in enc_output_norm)
+            and all(type(m) is nn.Linear and m.bias is not None for m in class_embeds)
+            and all(
+                type(m) is MLP and all(type(layer) is nn.Linear and layer.bias is not None for layer in m.layers)
+                for m in bbox_mlps
+            )
+        ):
+            return False
+
+        bbox_layers = [layer for mlp in bbox_mlps for layer in mlp.layers]
+        call_modules = [*enc_output, *enc_output_norm, *class_embeds, *bbox_mlps, *bbox_layers]
+        hook_names = ("_forward_hooks", "_forward_pre_hooks", "_backward_hooks", "_backward_pre_hooks")
+        if any(getattr(nn.modules.module, f"_global{name}", {}) for name in hook_names):
+            return False
+        if any(
+            "forward" in module.__dict__
+            or getattr(module, "_compiled_call_impl", None) is not None
+            or any(getattr(module, name, {}) for name in hook_names)
+            for module in call_modules
+        ):
+            return False
+
+        for modules in (enc_output, class_embeds):
+            first_weight = modules[0].weight
+            first_bias = cast(Tensor, modules[0].bias)
+            if any(
+                (m.weight.shape, m.weight.dtype, m.weight.device)
+                != (first_weight.shape, first_weight.dtype, first_weight.device)
+                or (cast(Tensor, m.bias).shape, cast(Tensor, m.bias).dtype, cast(Tensor, m.bias).device)
+                != (first_bias.shape, first_bias.dtype, first_bias.device)
+                for m in modules[1:]
+            ):
+                return False
+
+        first_norm = enc_output_norm[0]
+        if first_norm.normalized_shape != (self.d_model,) or any(
+            m.normalized_shape != first_norm.normalized_shape
+            or m.eps != first_norm.eps
+            or cast(Tensor, m.weight).dtype != cast(Tensor, first_norm.weight).dtype
+            or cast(Tensor, m.weight).device != cast(Tensor, first_norm.weight).device
+            or cast(Tensor, m.bias).dtype != cast(Tensor, first_norm.bias).dtype
+            or cast(Tensor, m.bias).device != cast(Tensor, first_norm.bias).device
+            for m in enc_output_norm[1:]
+        ):
+            return False
+
+        num_layers = bbox_mlps[0].num_layers
+        if any(m.num_layers != num_layers or len(m.layers) != num_layers for m in bbox_mlps):
+            return False
+        for layer_idx in range(num_layers):
+            first_layer = cast(nn.Linear, bbox_mlps[0].layers[layer_idx])
+            first_weight = first_layer.weight
+            first_bias = cast(Tensor, first_layer.bias)
+            if any(
+                (
+                    cast(nn.Linear, m.layers[layer_idx]).weight.shape,
+                    cast(nn.Linear, m.layers[layer_idx]).weight.dtype,
+                    cast(nn.Linear, m.layers[layer_idx]).weight.device,
+                )
+                != (first_weight.shape, first_weight.dtype, first_weight.device)
+                or (
+                    cast(Tensor, cast(nn.Linear, m.layers[layer_idx]).bias).shape,
+                    cast(Tensor, cast(nn.Linear, m.layers[layer_idx]).bias).dtype,
+                    cast(Tensor, cast(nn.Linear, m.layers[layer_idx]).bias).device,
+                )
+                != (first_bias.shape, first_bias.dtype, first_bias.device)
+                for m in bbox_mlps[1:]
+            ):
+                return False
+        return True
+
+    def _two_stage_group_selection(
+        self, output_memory: Tensor, output_proposals: Tensor, group_detr: int
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+        """Run every ``group_detr`` group's two-stage top-k proposal selection in one batched pass.
+
+        Replaces a Python loop that calls each group's own ``enc_output``/``enc_output_norm``/
+        ``enc_out_class_embed``/``enc_out_bbox_embed`` on the SAME ``output_memory`` -- the loop issues
+        one kernel per op per group, and on a host-dispatch-bound GPU that launch count dominates the
+        block's wall time far more than its (small) GEMMs do. Stacking the ``group_detr`` copies of
+        each op's weights and running one batched matmul keeps every group's own weights and drops the
+        per-group launch count to a constant.
+
+        Only called for ``group_detr > 1``, which the caller (:meth:`forward`) only reaches while
+        training -- the ``assert self.training`` below enforces that mechanically. Eval/export always
+        pass ``group_detr=1`` and use the original single-group code path, so this method never touches
+        ONNX/TorchScript tracing (#1155) or ``torch.compile`` export graphs recorded in eval mode.
+
+        The batched GEMMs can use a different accumulation order than separate calls. The paths match
+        within float32 tolerance at real model scale, but under bf16/fp16 a near-tied class score can
+        cross the discrete ``topk`` boundary. Tests therefore cover float32 output/gradient parity and
+        finite mixed-precision gradients, while the accompanying benchmark checks short-run training
+        quality through the public API.
+
+        Args:
+            output_memory: Encoder memory of shape ``(bs, S, d_model)``, shared by every group.
+            output_proposals: Encoder anchor proposals of shape ``(bs, S, 4)``, shared by every group.
+            group_detr: Number of independent groups (``self.group_detr`` while training, and always
+                greater than 1 for every call site).
+
+        Returns:
+            ``(refpoint_embed_ts, memory_ts, boxes_ts, cls_ts)``, matching the per-group loop's own
+            ``torch.cat(parts, dim=1)`` outputs and query order (group 0's queries first, then group
+            1's, ...). ``cls_ts`` is ``enc_out_class_embed``'s output at the same selected positions,
+            gathered from the ranking pass rather than recomputed by the caller.
+        """
+        # Training-only by contract, and the contract is load-bearing: the eval/export loop in forward
+        # gathers the pre-norm rows so an fp16 CoreML program keeps its Neural Engine placement, while
+        # this path norms the full length and gathers post-norm. An eval or exported graph routed here
+        # would still produce correct numbers, so nothing would fail -- the model would just silently
+        # lose the ANE and fall back to CPU. Assert instead of trusting the caller's guard.
+        assert self.training
+        assert self.enc_out_class_embed is not None
+        assert self.enc_out_bbox_embed is not None
+        bs = output_memory.shape[0]
+        class_embeds = cast(Sequence[nn.Linear], self.enc_out_class_embed)
+        bbox_mlps = cast(Sequence[MLP], self.enc_out_bbox_embed)
+        topk = min(self.num_queries, output_memory.shape[-2])
+
+        enc_output_weight, enc_output_bias = _stack_linear_params(cast(Sequence[nn.Linear], self.enc_output))
+        norm_weight = torch.stack([cast(nn.LayerNorm, m).weight for m in self.enc_output_norm])
+        norm_bias = torch.stack([cast(nn.LayerNorm, m).bias for m in self.enc_output_norm])
+        norm_eps = cast(nn.LayerNorm, self.enc_output_norm[0]).eps
+
+        memory_expanded = output_memory.unsqueeze(0).expand(group_detr, -1, -1, -1)
+        output_memory_all = _batched_group_linear(memory_expanded, enc_output_weight, enc_output_bias)
+        output_memory_all = _batched_group_layer_norm(output_memory_all, norm_weight, norm_bias, norm_eps)
+
+        class_weight, class_bias = _stack_linear_params(class_embeds)
+        class_logits_all = _batched_group_linear(output_memory_all, class_weight, class_bias)
+        # (group, bs, S) -> (group, bs, nq); torch.topk batches over every leading dim natively.
+        topk_proposals_all = torch.topk(class_logits_all.max(-1)[0], topk, dim=-1)[1]
+
+        # enc_out_class_embed is a plain per-position Linear, so gathering its already-computed
+        # output at the same indices used below is exactly what re-running it on the gathered
+        # hidden state would produce (Linear(x)[idx] == Linear(x[idx])) -- reuse instead of the
+        # caller re-running enc_out_class_embed a second time on the gathered subset.
+        cls_logits_selected = torch.gather(
+            class_logits_all, 2, topk_proposals_all.unsqueeze(-1).expand(-1, -1, -1, class_logits_all.shape[-1])
+        )
+
+        tgt_undetach_all = torch.gather(
+            output_memory_all, 2, topk_proposals_all.unsqueeze(-1).expand(-1, -1, -1, self.d_model)
+        )
+        proposals_expanded = output_proposals.unsqueeze(0).expand(group_detr, -1, -1, -1)
+        # See the loop's own comment: gather before the pointwise box MLP, not after.
+        output_proposals_all = torch.gather(
+            proposals_expanded, 2, topk_proposals_all.unsqueeze(-1).expand(-1, -1, -1, 4)
+        )
+
+        hidden = tgt_undetach_all
+        num_layers = bbox_mlps[0].num_layers
+        for layer_idx in range(num_layers):
+            layer_weight, layer_bias = _stack_linear_params(
+                cast(Sequence[nn.Linear], [mlp.layers[layer_idx] for mlp in bbox_mlps])
+            )
+            hidden = _batched_group_linear(hidden, layer_weight, layer_bias)
+            if layer_idx < num_layers - 1:
+                hidden = F.relu(hidden)
+        enc_outputs_coord_delta_all = hidden
+
+        if self.bbox_reparam:
+            coord_cxcy_all = (
+                enc_outputs_coord_delta_all[..., :2] * output_proposals_all[..., 2:] + output_proposals_all[..., :2]
+            )
+            coord_wh_all = enc_outputs_coord_delta_all[..., 2:].exp() * output_proposals_all[..., 2:]
+            refpoint_embed_all_undetach = torch.concat([coord_cxcy_all, coord_wh_all], dim=-1)
+        else:
+            refpoint_embed_all_undetach = enc_outputs_coord_delta_all + output_proposals_all
+        refpoint_embed_all = refpoint_embed_all_undetach.detach()
+
+        def _merge_groups(t: Tensor) -> Tensor:
+            """Flatten the leading group dimension into the query dimension, group 0 first.
+
+            Args:
+                t: Tensor of shape ``(group, bs, nq, C)``.
+
+            Returns:
+                Tensor of shape ``(bs, group * nq, C)``, matching the per-group loop's own
+                ``torch.cat(parts, dim=1)`` order (group 0's queries first, then group 1's, ...).
+            """
+            return t.permute(1, 0, 2, 3).reshape(bs, group_detr * topk, t.shape[-1])
+
+        return (
+            _merge_groups(refpoint_embed_all),
+            _merge_groups(tgt_undetach_all),
+            _merge_groups(refpoint_embed_all_undetach),
+            _merge_groups(cls_logits_selected),
+        )
+
     def forward(
         self,
         srcs: list[Tensor],
@@ -279,99 +598,205 @@ class Transformer(nn.Module):
         pos_embeds: list[Tensor],
         refpoint_embed: Tensor,
         query_feat: Tensor,
-        cross_attn_srcs: Sequence[Tensor | nn.Module] | None = None,
+        cross_attn_srcs: Sequence[Tensor] | None = None,
     ) -> tuple[Tensor | None, ...]:
+        """Flatten the multi-scale features, run the two-stage query selection, then the decoder.
+
+        Args:
+            srcs: Per-level feature maps, each ``(bs, d_model, h, w)``.
+            masks: Per-level padding masks, each ``(bs, h, w)``, or ``None`` for unpadded input.
+            pos_embeds: Per-level positional embeddings matching ``srcs``.
+            refpoint_embed: Learned reference points, ``(num_queries * group_detr, 4)``.
+            query_feat: Learned query features, ``(num_queries * group_detr, d_model)``.
+            cross_attn_srcs: Optional separate feature maps for decoder cross-attention.
+
+        Returns:
+            ``(hs, references, memory_ts, boxes_ts)``, followed by ``(keypoint_hs, enc_kp_predictions,
+            keypoint_memory_ts)`` when grouped-pose keypoints are enabled, and always ending with ``cls_ts``.
+            The two-stage entries are ``None`` when ``two_stage`` is off; ``hs``/``references`` are ``None``
+            without a decoder.
+        """
         src_flatten = []
-        mask_flatten = [] if masks is not None else None
-        lvl_pos_embed_flatten = []
-        # Build spatial_shapes as a tensor directly so that the ONNX tracer
-        # can track h/w symbolically instead of baking constants into a constant
-        # shape node.
-        spatial_shapes = torch.empty((len(srcs), 2), device=srcs[0].device, dtype=torch.long)
+        mask_flatten_parts: list[Tensor] | None = [] if masks is not None else None
+        lvl_pos_embed_flatten_parts = []
         spatial_shapes_hw: list[tuple[int, int]] = []
-        valid_ratios = [] if masks is not None else None
         for lvl, (src, pos_embed) in enumerate(zip(srcs, pos_embeds)):
             _, c, h, w = src.shape
-            spatial_shapes[lvl, 0] = h
-            spatial_shapes[lvl, 1] = w
             spatial_shapes_hw.append((h, w))
 
             src = src.flatten(2).transpose(1, 2)  # bs, hw, c
             pos_embed = pos_embed.flatten(2).transpose(1, 2)  # bs, hw, c
-            lvl_pos_embed_flatten.append(pos_embed)
+            lvl_pos_embed_flatten_parts.append(pos_embed)
             src_flatten.append(src)
             if masks is not None:
                 mask = masks[lvl].flatten(1)  # bs, hw
-                mask_flatten.append(mask)
+                assert mask_flatten_parts is not None
+                mask_flatten_parts.append(mask)
 
-        memory = torch.cat(src_flatten, 1)  # bs, \sum{hxw}, c
+        # MultiScaleProjector ends each stage with its channel LayerNorm, which returns channels-last storage viewed
+        # as NCHW. Its real flattened/transposed output is already contiguous; contiguous() preserves the old layout
+        # contract for custom strided inputs.
+        memory = src_flatten[0].contiguous() if len(src_flatten) == 1 else torch.cat(src_flatten, 1)  # bs, \sum{hxw}, c
+        mask_flatten: Tensor | None = None
+        valid_ratios: Tensor | None = None
         if masks is not None:
-            mask_flatten = torch.cat(mask_flatten, 1)  # bs, \sum{hxw}
+            assert mask_flatten_parts is not None
+            # Real padding masks are contiguous after flatten(1), so the single-level contiguous() is a no-op.
+            # It preserves cat's contiguous-layout contract for custom strided masks.
+            mask_flatten = (
+                mask_flatten_parts[0].contiguous() if len(mask_flatten_parts) == 1 else torch.cat(mask_flatten_parts, 1)
+            )  # bs, \sum{hxw}
             valid_ratios = torch.stack([self.get_valid_ratio(m) for m in masks], 1)
-        lvl_pos_embed_flatten = torch.cat(lvl_pos_embed_flatten, 1)  # bs, \sum{hxw}, c
+        # PositionEmbeddingSine produces channels-last storage viewed as NCHW, so flatten+transpose above is already
+        # contiguous. Current nondeprecated models use one projector level; contiguous() is then a no-op, while
+        # preserving cat's contiguous-layout contract for custom strided position tensors.
+        lvl_pos_embed_flatten = (
+            lvl_pos_embed_flatten_parts[0].contiguous()
+            if len(lvl_pos_embed_flatten_parts) == 1
+            else torch.cat(lvl_pos_embed_flatten_parts, 1)
+        )  # bs, \sum{hxw}, c
+        # spatial_shapes must not be built by torch.empty(...) + in-place index assignment:
+        # that emits a ScatterND feeding a shape tensor (level_start_index), which TensorRT
+        # rejects ("IScatterLayer cannot be used to compute a shape tensor").
+        # torch.as_tensor(python-int list) avoids ScatterND but bakes values as a Constant.
+        # torch.stack of per-level torch._shape_as_tensor slices also produces a Constant
+        # node in TorchScript ONNX export (the tracer records concrete H,W values at trace
+        # time), but that Constant is accepted by TensorRT as a valid shape tensor source —
+        # unlike ScatterND. torch._shape_as_tensor(t) is a private ATen op that returns a
+        # 1-D int64 tensor of t's dimension sizes; [2:4] extracts (H, W) from NCHW.
+        # torch.export (ExecuTorch) cannot trace torch._shape_as_tensor — it raises "the tensor has
+        # a non-zero number of elements, but its data is not allocated yet". Under that trace build
+        # spatial_shapes directly from the concrete Python-int (H, W) pairs instead; ExecuTorch uses
+        # static shapes, so the baked constant is exact. torch.compile needs the same branch for a
+        # different reason: Dynamo polyfills torch._shape_as_tensor to return a torch.Size, so
+        # torch.stack raises "expected Tensor as element 0 in argument 0, but got torch.Size" and
+        # the compile aborts (suppress_errors=True does not catch it — the TypeError comes from
+        # user code, not from Dynamo). Neither guard is true in eager or under torch.jit.trace, so
+        # the eager and TorchScript-ONNX/TensorRT (#1155) paths keep the _shape_as_tensor form.
+        # ``torch.compiler.is_compiling`` is public from torch 2.3 onward. The compatibility
+        # helper uses the legacy Dynamo predicate for supported torch 2.2 environments, while
+        # ``is_exporting`` remains absent below torch 2.7.
+        if self._cuda_graph_spatial_shapes is not None:
+            spatial_key = (srcs[0].device, tuple(spatial_shapes_hw))
+            spatial_shapes = self._cuda_graph_spatial_shapes.get(spatial_key)
+            if spatial_shapes is None:
+                spatial_shapes = torch.as_tensor(spatial_shapes_hw, device=srcs[0].device, dtype=torch.long)
+                self._cuda_graph_spatial_shapes[spatial_key] = spatial_shapes
+        elif getattr(torch.compiler, "is_exporting", _tracer_absent)() or is_compiling():
+            spatial_shapes = torch.as_tensor(spatial_shapes_hw, device=srcs[0].device, dtype=torch.long)
+        else:
+            spatial_shapes = torch.stack([torch._shape_as_tensor(src)[2:4] for src in srcs]).to(
+                device=srcs[0].device, dtype=torch.long
+            )
         level_start_index = torch.cat((spatial_shapes.new_zeros((1,)), spatial_shapes.prod(1).cumsum(0)[:-1]))
 
         # Flatten optional dual-projector features for keypoint-specific cross-attention.
+        # NOTE: cross-attention reuses ``spatial_shapes_hw`` derived from ``srcs`` above — this assumes
+        # ``cross_attn_srcs`` share the per-level (H, W) geometry of ``srcs`` (they differ only in channel
+        # features from the dual projector). If a future variant produces cross-attn features with a different
+        # level count or spatial geometry, the deformable sampling would mis-index; build a separate
+        # ``cross_attn_spatial_shapes_hw`` at that point.
         cross_attn_memory = None
         if cross_attn_srcs is not None:
             ca_flatten = []
-            for src in cross_attn_srcs:
-                tensor = getattr(src, "tensors", src)
+            for cross_src in cross_attn_srcs:
+                tensor = getattr(cross_src, "tensors", cross_src)
                 ca_flatten.append(tensor.flatten(2).transpose(1, 2))
-            cross_attn_memory = torch.cat(ca_flatten, 1)
+            # The dual-projector path uses the same MultiScaleProjector layout as memory above.
+            cross_attn_memory = ca_flatten[0].contiguous() if len(ca_flatten) == 1 else torch.cat(ca_flatten, 1)
 
+        cls_ts = None
         if self.two_stage:
+            assert self.enc_out_class_embed is not None
+            assert self.enc_out_bbox_embed is not None
             output_memory, output_proposals = gen_encoder_output_proposals(
                 memory, mask_flatten, spatial_shapes_hw, unsigmoid=not self.bbox_reparam
             )
             # group detr for first stage
-            refpoint_embed_ts, memory_ts, boxes_ts = [], [], []
             group_detr = self.group_detr if self.training else 1
-            for g_idx in range(group_detr):
-                output_memory_gidx = self.enc_output_norm[g_idx](self.enc_output[g_idx](output_memory))
-
-                enc_outputs_class_unselected_gidx = self.enc_out_class_embed[g_idx](output_memory_gidx)
-                if self.bbox_reparam:
-                    enc_outputs_coord_delta_gidx = self.enc_out_bbox_embed[g_idx](output_memory_gidx)
-                    enc_outputs_coord_cxcy_gidx = (
-                        enc_outputs_coord_delta_gidx[..., :2] * output_proposals[..., 2:] + output_proposals[..., :2]
-                    )
-                    enc_outputs_coord_wh_gidx = enc_outputs_coord_delta_gidx[..., 2:].exp() * output_proposals[..., 2:]
-                    enc_outputs_coord_unselected_gidx = torch.concat(
-                        [enc_outputs_coord_cxcy_gidx, enc_outputs_coord_wh_gidx], dim=-1
-                    )
-                else:
-                    enc_outputs_coord_unselected_gidx = (
-                        self.enc_out_bbox_embed[g_idx](output_memory_gidx) + output_proposals
-                    )
-
-                topk = min(self.num_queries, enc_outputs_class_unselected_gidx.shape[-2])
-                topk_proposals_gidx = torch.topk(enc_outputs_class_unselected_gidx.max(-1)[0], topk, dim=1)[1]  # bs, nq
-
-                refpoint_embed_gidx_undetach = torch.gather(
-                    enc_outputs_coord_unselected_gidx, 1, topk_proposals_gidx.unsqueeze(-1).repeat(1, 1, 4)
-                )  # unsigmoid
-                # for decoder layer, detached as initial ones, (bs, nq, 4)
-                refpoint_embed_gidx = refpoint_embed_gidx_undetach.detach()
-
-                # get memory tgt
-                tgt_undetach_gidx = torch.gather(
-                    output_memory_gidx, 1, topk_proposals_gidx.unsqueeze(-1).repeat(1, 1, self.d_model)
+            if group_detr > 1 and self._two_stage_batching_eligible():
+                # Stack each group's own weights to replace the per-group launches with one batched
+                # call per operation. The eligibility guard keeps custom or heterogeneous modules on
+                # the loop below. Eval/export use group_detr=1, so tracing never sees the batched path.
+                refpoint_embed_ts, memory_ts, boxes_ts, cls_ts = self._two_stage_group_selection(
+                    output_memory, output_proposals, group_detr
                 )
+            else:
+                refpoint_embed_ts_parts, memory_ts_parts, boxes_ts_parts = [], [], []
+                for g_idx in range(group_detr):
+                    output_memory_prenorm_gidx = self.enc_output[g_idx](output_memory)
+                    output_memory_gidx = self.enc_output_norm[g_idx](output_memory_prenorm_gidx)
 
-                refpoint_embed_ts.append(refpoint_embed_gidx)
-                memory_ts.append(tgt_undetach_gidx)
-                boxes_ts.append(refpoint_embed_gidx_undetach)
-            # concat on dim=1, the nq dimension, (bs, nq, d) --> (bs, nq, d)
-            refpoint_embed_ts = torch.cat(refpoint_embed_ts, dim=1)
-            # (bs, nq, d)
-            memory_ts = torch.cat(memory_ts, dim=1)
-            boxes_ts = torch.cat(boxes_ts, dim=1)
+                    enc_outputs_class_unselected_gidx = self.enc_out_class_embed[g_idx](output_memory_gidx)
+                    topk = min(self.num_queries, enc_outputs_class_unselected_gidx.shape[-2])
+                    topk_proposals_gidx = torch.topk(enc_outputs_class_unselected_gidx.max(-1)[0], topk, dim=1)[
+                        1
+                    ]  # bs, nq
+
+                    # get memory tgt. LayerNorm acts per token, so gathering the pre-norm rows and normalizing
+                    # only the selected ones is mathematically the same as gathering the normalized rows. It
+                    # also keeps the full-length norm output from crossing into the CPU-resident topk/gather.
+                    # That crossing makes Apple's Neural Engine compiler reject a whole fp16 CoreML program
+                    # ("Invalid layer") when enc_output_norm still has its identity affine (weight all ones,
+                    # bias all zeros) and the token count is a multiple of 32. This reordering relies on
+                    # enc_output_norm being token-pointwise, like the box-MLP reordering below; a cross-token
+                    # norm must gather after.
+                    # _two_stage_group_selection still gathers post-norm: it runs only while training, and export
+                    # always takes this loop, so no exported graph reaches the ANE through that path.
+                    tgt_undetach_gidx = self.enc_output_norm[g_idx](
+                        torch.gather(
+                            output_memory_prenorm_gidx,
+                            1,
+                            topk_proposals_gidx.unsqueeze(-1).expand(-1, -1, self.d_model),
+                        )
+                    )
+                    # Ranking needs every position's class score, but the box MLP is a pointwise (no
+                    # cross-token mixing) transform of a single token's features -- gather the selected
+                    # tokens first and run the MLP only on those, instead of on every encoder position and
+                    # discarding all but ``topk`` of the results. This is equivalent only while
+                    # ``enc_out_bbox_embed`` remains token-pointwise; a future stateful or cross-token head
+                    # must move the MLP back before this gather.
+                    output_proposals_gidx = torch.gather(
+                        output_proposals, 1, topk_proposals_gidx.unsqueeze(-1).expand(-1, -1, 4)
+                    )
+                    if self.bbox_reparam:
+                        enc_outputs_coord_delta_gidx = self.enc_out_bbox_embed[g_idx](tgt_undetach_gidx)
+                        enc_outputs_coord_cxcy_gidx = (
+                            enc_outputs_coord_delta_gidx[..., :2] * output_proposals_gidx[..., 2:]
+                            + output_proposals_gidx[..., :2]
+                        )
+                        enc_outputs_coord_wh_gidx = (
+                            enc_outputs_coord_delta_gidx[..., 2:].exp() * output_proposals_gidx[..., 2:]
+                        )
+                        refpoint_embed_gidx_undetach = torch.concat(
+                            [enc_outputs_coord_cxcy_gidx, enc_outputs_coord_wh_gidx], dim=-1
+                        )
+                    else:
+                        refpoint_embed_gidx_undetach = (
+                            self.enc_out_bbox_embed[g_idx](tgt_undetach_gidx) + output_proposals_gidx
+                        )  # unsigmoid
+                    # for decoder layer, detached as initial ones, (bs, nq, 4)
+                    refpoint_embed_gidx = refpoint_embed_gidx_undetach.detach()
+
+                    refpoint_embed_ts_parts.append(refpoint_embed_gidx)
+                    memory_ts_parts.append(tgt_undetach_gidx)
+                    boxes_ts_parts.append(refpoint_embed_gidx_undetach)
+                # concat on dim=1, the nq dimension, (bs, nq, d) --> (bs, nq, d)
+                refpoint_embed_ts = torch.cat(refpoint_embed_ts_parts, dim=1)
+                # (bs, nq, d)
+                memory_ts = torch.cat(memory_ts_parts, dim=1)
+                boxes_ts = torch.cat(boxes_ts_parts, dim=1)
+                # This loop discards its own per-group class ranking scores after topk (same as the
+                # batched path above) instead of gathering them -- unlike the batched path, this rare
+                # fallback (custom/heterogeneous group modules, or group_detr==1) is left as is; the
+                # caller re-runs enc_out_class_embed for this case, same as before this change.
+                cls_ts = None
 
         enc_kp_predictions = None
         init_kp_ref_xy = None
         keypoint_memory_ts = None
         if self.two_stage and self.use_grouppose_keypoints and hasattr(self, "keypoint_query_initializer"):
+            assert self.enc_out_keypoint_embed is not None
             batch_size, _, _ = memory_ts.shape
             keypoint_memory_ts = self.keypoint_query_initializer_enc(memory_ts)
             boxes_ref = boxes_ts if self.bbox_reparam else boxes_ts.sigmoid()
@@ -382,6 +807,9 @@ class Transformer(nn.Module):
             kp_pred_chunks = []
             for g_idx in range(group_detr):
                 kp_delta = self.enc_out_keypoint_embed[g_idx](kp_mem_chunks[g_idx])
+                # Sanitize the full encoder prediction at this model boundary: its channels feed both the
+                # shared box-reference multiply and outer classification/matching consumers.
+                kp_delta = torch.nan_to_num(kp_delta, nan=0.0, posinf=0.0, neginf=0.0)
                 ref_wh = boxes_chunks[g_idx][..., 2:].unsqueeze(-2)
                 ref_xy = boxes_chunks[g_idx][..., :2].unsqueeze(-2)
                 kp_xy = kp_delta[..., :2] * ref_wh + ref_xy
@@ -417,15 +845,19 @@ class Transformer(nn.Module):
                 original_num_queries_per_group = tgt.shape[1] // group_count
                 reg_tgt = self.register_tokens.unsqueeze(0).expand(bs, -1, -1)
                 reg_ref = self.register_ref_points.unsqueeze(0).expand(bs, -1, -1)
-                tgt_chunks = list(tgt.split(original_num_queries_per_group, dim=1))
-                ref_chunks = list(refpoint_embed.split(original_num_queries_per_group, dim=1))
+                tgt_chunks = list(tgt.split(original_num_queries_per_group, dim=1))  # type: ignore[no-untyped-call]
+                ref_chunks = list(
+                    refpoint_embed.split(original_num_queries_per_group, dim=1)  # type: ignore[no-untyped-call]
+                )
                 tgt = torch.cat([torch.cat([chunk, reg_tgt], dim=1) for chunk in tgt_chunks], dim=1)
                 refpoint_embed = torch.cat([torch.cat([chunk, reg_ref], dim=1) for chunk in ref_chunks], dim=1)
                 if init_kp_ref_xy is not None:
                     num_keypoints = init_kp_ref_xy.shape[2]
                     reg_kp_xy = self.register_ref_points[:, :2].sigmoid()
                     reg_kp_xy = reg_kp_xy.unsqueeze(0).unsqueeze(2).expand(bs, -1, num_keypoints, -1)
-                    kp_ref_chunks = list(init_kp_ref_xy.split(original_num_queries_per_group, dim=1))
+                    kp_ref_chunks = list(
+                        init_kp_ref_xy.split(original_num_queries_per_group, dim=1)  # type: ignore[no-untyped-call]
+                    )
                     init_kp_ref_xy = torch.cat([torch.cat([chunk, reg_kp_xy], dim=1) for chunk in kp_ref_chunks], dim=1)
 
             tgt_keypoints = None
@@ -451,6 +883,7 @@ class Transformer(nn.Module):
                 refpoints_unsigmoid=refpoint_embed,
                 level_start_index=level_start_index,
                 spatial_shapes=spatial_shapes,
+                spatial_shapes_hw=spatial_shapes_hw,
                 valid_ratios=valid_ratios.to(decoder_memory.dtype) if valid_ratios is not None else valid_ratios,
                 tgt_keypoints=tgt_keypoints,
                 init_kp_ref_xy=init_kp_ref_xy,
@@ -501,6 +934,10 @@ class Transformer(nn.Module):
             return_values.append(enc_kp_predictions)
             return_values.append(keypoint_memory_ts if self.two_stage else None)
 
+        # Always last: callers that need it grab it by position ([-1] or an explicit slice), so this
+        # append must never move without updating every unpacking site (LWDETR.forward, forward_export).
+        return_values.append(cls_ts)
+
         return tuple(return_values)
 
 
@@ -549,6 +986,9 @@ class TransformerDecoder(nn.Module):
 
     def _create_keypoint_class_mask(self) -> Tensor:
         """Create attention mask that blocks cross-class keypoint interactions."""
+        # NOTE: near-duplicate of LWDETR._create_keypoint_class_mask in models/lwdetr.py (same
+        # mask logic; that one is a pure static taking num_keypoints_per_class, this reads
+        # self.num_keypoints_per_class and registers the keypoint_class_mask buffer). Keep in sync.
         if not self.num_keypoints_per_class:
             mask = torch.zeros(1, 1, dtype=torch.bool)
         else:
@@ -571,7 +1011,7 @@ class TransformerDecoder(nn.Module):
             self._buffers["keypoint_class_mask"] = mask
         else:
             self.register_buffer("keypoint_class_mask", mask, persistent=True)
-        return self.keypoint_class_mask
+        return cast(Tensor, self.keypoint_class_mask)
 
     def refpoints_refine(self, refpoints_unsigmoid: Tensor, new_refpoints_delta: Tensor) -> Tensor:
         if self.bbox_reparam:
@@ -588,21 +1028,23 @@ class TransformerDecoder(nn.Module):
         self,
         tgt: Tensor,
         memory: Tensor,
-        tgt_mask: Optional[Tensor] = None,
-        memory_mask: Optional[Tensor] = None,
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        memory_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
-        refpoints_unsigmoid: Optional[Tensor] = None,
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        pos: Tensor | None = None,
+        refpoints_unsigmoid: Tensor | None = None,
         # for memory
-        level_start_index: Optional[Tensor] = None,  # num_levels
-        spatial_shapes: Optional[Tensor] = None,  # num_levels, 2
-        valid_ratios: Optional[Tensor] = None,
+        level_start_index: Tensor | None = None,  # num_levels
+        spatial_shapes: Tensor | None = None,  # num_levels, 2
+        spatial_shapes_hw: list[tuple[int, int]] | None = None,  # num_levels (H, W) Python ints
+        valid_ratios: Tensor | None = None,
         # keypoints
-        tgt_keypoints: Optional[Tensor] = None,
-        init_kp_ref_xy: Optional[Tensor] = None,
-        kp_cross_attn_memory: Optional[Tensor] = None,
+        tgt_keypoints: Tensor | None = None,
+        init_kp_ref_xy: Tensor | None = None,
+        kp_cross_attn_memory: Tensor | None = None,
     ) -> Tensor | tuple[Tensor, ...]:
+        assert refpoints_unsigmoid is not None
         output = tgt
 
         intermediate = []
@@ -626,14 +1068,19 @@ class TransformerDecoder(nn.Module):
                 .expand(keypoint_tgt.shape[0], keypoint_tgt.shape[1], -1, -1)
             )
 
-        def get_reference(refpoints):
+        def get_reference(refpoints: Tensor) -> tuple[Tensor, Tensor, Tensor, Tensor]:
             # [num_queries, batch_size, 4]
             obj_center = refpoints[..., :4]
 
             if self._export:
                 query_sine_embed = gen_sineembed_for_position(obj_center, self.d_model // 2)  # bs, nq, 256*2
+                # "Materialize one shared box to per-level references" happens at different layers per mode:
+                # eager (below) multiplies by valid_ratios to produce per-level refs, while export keeps the
+                # singleton level dim here and defers expansion to MSDeformAttn's internal .expand(). Export's
+                # expand omits eager's valid_ratios scaling — sound only under the no-padding export assumption.
                 refpoints_input = obj_center[:, :, None]  # bs, nq, 1, 4
             else:
+                assert valid_ratios is not None
                 refpoints_input = obj_center[:, :, None] * torch.cat([valid_ratios, valid_ratios], -1)[:, None]
                 query_sine_embed = gen_sineembed_for_position(refpoints_input[:, :, 0, :], self.d_model // 2)
 
@@ -643,22 +1090,18 @@ class TransformerDecoder(nn.Module):
         # always use init refpoints
         if self.lite_refpoint_refine:
             if self.bbox_reparam:
-                obj_center, refpoints_input, query_pos, query_sine_embed = get_reference(refpoints_unsigmoid)
+                obj_center, refpoints_input, query_pos, _query_sine_embed = get_reference(refpoints_unsigmoid)
             else:
-                obj_center, refpoints_input, query_pos, query_sine_embed = get_reference(refpoints_unsigmoid.sigmoid())
+                obj_center, refpoints_input, query_pos, _query_sine_embed = get_reference(refpoints_unsigmoid.sigmoid())
 
         for layer_id, layer in enumerate(self.layers):
             if not self.lite_refpoint_refine:
                 if self.bbox_reparam:
-                    obj_center, refpoints_input, query_pos, query_sine_embed = get_reference(refpoints_unsigmoid)
+                    obj_center, refpoints_input, query_pos, _query_sine_embed = get_reference(refpoints_unsigmoid)
                 else:
-                    obj_center, refpoints_input, query_pos, query_sine_embed = get_reference(
+                    obj_center, refpoints_input, query_pos, _query_sine_embed = get_reference(
                         refpoints_unsigmoid.sigmoid()
                     )
-
-            # Keep first-layer behavior stable.
-            pos_transformation = 1
-            query_pos = query_pos * pos_transformation
 
             if self.enable_keypoint_processing and keypoint_tgt is not None:
                 layer_outputs = layer(
@@ -668,12 +1111,10 @@ class TransformerDecoder(nn.Module):
                     memory_mask=memory_mask,
                     tgt_key_padding_mask=tgt_key_padding_mask,
                     memory_key_padding_mask=memory_key_padding_mask,
-                    pos=pos,
                     query_pos=query_pos,
-                    query_sine_embed=query_sine_embed,
-                    is_first=(layer_id == 0),
                     reference_points=refpoints_input,
                     spatial_shapes=spatial_shapes,
+                    spatial_shapes_hw=spatial_shapes_hw,
                     level_start_index=level_start_index,
                     keypoint_tgt=keypoint_tgt,
                     keypoint_pos=kp_query_pos,
@@ -690,16 +1131,15 @@ class TransformerDecoder(nn.Module):
                     memory_mask=memory_mask,
                     tgt_key_padding_mask=tgt_key_padding_mask,
                     memory_key_padding_mask=memory_key_padding_mask,
-                    pos=pos,
                     query_pos=query_pos,
-                    query_sine_embed=query_sine_embed,
-                    is_first=(layer_id == 0),
                     reference_points=refpoints_input,
                     spatial_shapes=spatial_shapes,
+                    spatial_shapes_hw=spatial_shapes_hw,
                     level_start_index=level_start_index,
                 )
 
             if not self.lite_refpoint_refine:
+                assert self.bbox_embed is not None
                 new_refpoints_delta = self.bbox_embed(output)
                 new_refpoints_unsigmoid = self.refpoints_refine(refpoints_unsigmoid, new_refpoints_delta)
                 if layer_id != self.num_layers - 1:
@@ -707,6 +1147,7 @@ class TransformerDecoder(nn.Module):
                 refpoints_unsigmoid = new_refpoints_unsigmoid.detach()
 
             if self.return_intermediate:
+                assert self.norm is not None
                 intermediate.append(self.norm(output))
 
         if self.norm is not None:
@@ -847,41 +1288,39 @@ class TransformerDecoderLayer(nn.Module):
             self.instance_kp_layer_scale = nn.Parameter(torch.ones(1) * 1e-6)
         self._export = False
 
-    def with_pos_embed(self, tensor: Tensor, pos: Optional[Tensor]) -> Tensor:
+    def with_pos_embed(self, tensor: Tensor, pos: Tensor | None) -> Tensor:
         return tensor if pos is None else tensor + pos
 
     def forward_post(
         self,
         tgt: Tensor,
         memory: Tensor,
-        tgt_mask: Optional[Tensor] = None,
-        memory_mask: Optional[Tensor] = None,
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        memory_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
-        query_pos: Optional[Tensor] = None,
-        query_sine_embed: Optional[Tensor] = None,
-        is_first: bool = False,
-        reference_points: Optional[Tensor] = None,
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        query_pos: Tensor | None = None,
+        reference_points: Tensor | None = None,
         spatial_shapes: Tensor | None = None,
+        spatial_shapes_hw: list[tuple[int, int]] | None = None,
         level_start_index: Tensor | None = None,
         # Keypoint processing parameters
-        keypoint_tgt: Optional[Tensor] = None,  # [B, N, total_kp_per_instance, C]
-        keypoint_pos: Optional[Tensor] = None,  # [B, N, total_kp_per_instance, C]
-        keypoint_class_mask: Optional[Tensor] = None,  # [1 + K, 1 + K]
-        kp_cross_attn_memory: Optional[Tensor] = None,
+        keypoint_tgt: Tensor | None = None,  # [B, N, total_kp_per_instance, C]
+        keypoint_pos: Tensor | None = None,  # [B, N, total_kp_per_instance, C]
+        keypoint_class_mask: Tensor | None = None,  # [1 + K, 1 + K]
+        kp_cross_attn_memory: Tensor | None = None,
     ) -> Tensor | tuple[Tensor, ...]:
         bs, num_queries, _ = tgt.shape
 
         # ========== Begin of Self-Attention =============
         # Apply projections here
         # shape: batch_size x num_queries x 256
-        q = k = tgt + query_pos
+        q = k = self.with_pos_embed(tgt, query_pos)
         v = tgt
         if self.training:
-            q = torch.cat(q.split(num_queries // self.group_detr, dim=1), dim=0)
-            k = torch.cat(k.split(num_queries // self.group_detr, dim=1), dim=0)
-            v = torch.cat(v.split(num_queries // self.group_detr, dim=1), dim=0)
+            q = torch.cat(q.split(num_queries // self.group_detr, dim=1), dim=0)  # type: ignore[no-untyped-call]
+            k = q
+            v = torch.cat(v.split(num_queries // self.group_detr, dim=1), dim=0)  # type: ignore[no-untyped-call]
 
         tgt2 = self.self_attn(q, k, v, attn_mask=tgt_mask, key_padding_mask=tgt_key_padding_mask, need_weights=False)[0]
 
@@ -900,6 +1339,7 @@ class TransformerDecoderLayer(nn.Module):
             spatial_shapes,
             level_start_index,
             memory_key_padding_mask,
+            input_spatial_shapes_hw=spatial_shapes_hw,
         )
         # ========== End of Cross-Attention =============
 
@@ -912,6 +1352,8 @@ class TransformerDecoderLayer(nn.Module):
         if self.enable_keypoint_processing:
             if keypoint_tgt is None or keypoint_pos is None:
                 raise ValueError("Keypoint processing is enabled but keypoint_tgt/keypoint_pos missing")
+            if reference_points is None:
+                raise ValueError("Keypoint processing is enabled but reference_points missing")
 
             tgt_for_kp = self.inst_in_proj(tgt)
             tgt_for_kp_pos = self.inst_pos_in_proj(query_pos)
@@ -930,7 +1372,9 @@ class TransformerDecoderLayer(nn.Module):
             q = k = combined_feat + combined_pos
             v = combined_feat
 
-            combined_out = self.kp_inst_self_attn(q, k, v, attn_mask=keypoint_class_mask, need_weights=False)[0]
+            combined_out = self.kp_inst_self_attn(
+                q, k, v, attn_mask=_additive_attn_mask(keypoint_class_mask, q.dtype), need_weights=False
+            )[0]
             combined_out = combined_out.reshape(bs, num_queries, 1 + num_kp, kp_dim)
             tgt2 = combined_out[:, :, 0, :]
             keypoint_tgt2 = combined_out[:, :, 1:, :]
@@ -989,6 +1433,7 @@ class TransformerDecoderLayer(nn.Module):
                         spatial_shapes,
                         level_start_index,
                         memory_key_padding_mask,
+                        input_spatial_shapes_hw=spatial_shapes_hw,
                     ).reshape(bs, num_queries, num_kp, kp_dim)
                 )
                 keypoint_tgt = self.kp_cross_attn_norm(keypoint_tgt)
@@ -1010,21 +1455,19 @@ class TransformerDecoderLayer(nn.Module):
         self,
         tgt: Tensor,
         memory: Tensor,
-        tgt_mask: Optional[Tensor] = None,
-        memory_mask: Optional[Tensor] = None,
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        memory_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
-        query_pos: Optional[Tensor] = None,
-        query_sine_embed: Optional[Tensor] = None,
-        is_first: bool = False,
-        reference_points: Optional[Tensor] = None,
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        query_pos: Tensor | None = None,
+        reference_points: Tensor | None = None,
         spatial_shapes: Tensor | None = None,
+        spatial_shapes_hw: list[tuple[int, int]] | None = None,
         level_start_index: Tensor | None = None,
-        keypoint_tgt: Optional[Tensor] = None,
-        keypoint_pos: Optional[Tensor] = None,
-        keypoint_class_mask: Optional[Tensor] = None,
-        kp_cross_attn_memory: Optional[Tensor] = None,
+        keypoint_tgt: Tensor | None = None,
+        keypoint_pos: Tensor | None = None,
+        keypoint_class_mask: Tensor | None = None,
+        kp_cross_attn_memory: Tensor | None = None,
     ) -> Tensor | tuple[Tensor, ...]:
         return self.forward_post(
             tgt,
@@ -1033,12 +1476,10 @@ class TransformerDecoderLayer(nn.Module):
             memory_mask=memory_mask,
             tgt_key_padding_mask=tgt_key_padding_mask,
             memory_key_padding_mask=memory_key_padding_mask,
-            pos=pos,
             query_pos=query_pos,
-            query_sine_embed=query_sine_embed,
-            is_first=is_first,
             reference_points=reference_points,
             spatial_shapes=spatial_shapes,
+            spatial_shapes_hw=spatial_shapes_hw,
             level_start_index=level_start_index,
             keypoint_tgt=keypoint_tgt,
             keypoint_pos=keypoint_pos,
@@ -1059,16 +1500,16 @@ def build_transformer(args: BuilderArgs) -> Transformer:
         sa_nhead=args.sa_nheads,
         ca_nhead=args.ca_nheads,
         num_queries=args.num_queries,
-        dropout=args.dropout,
+        dropout=args.dropout,  # type: ignore[attr-defined]
         dim_feedforward=args.dim_feedforward,
         num_decoder_layers=args.dec_layers,
         return_intermediate_dec=True,
         group_detr=args.group_detr,
         two_stage=two_stage,
-        num_feature_levels=args.num_feature_levels,
+        num_feature_levels=args.num_feature_levels,  # type: ignore[attr-defined]
         dec_n_points=args.dec_n_points,
         lite_refpoint_refine=args.lite_refpoint_refine,
-        decoder_norm_type=args.decoder_norm,
+        decoder_norm_type=args.decoder_norm,  # type: ignore[attr-defined]
         bbox_reparam=args.bbox_reparam,
         # Detection-only builder args may omit keypoint-only fields; default to the non-keypoint path.
         use_grouppose_keypoints=getattr(args, "use_grouppose_keypoints", False),
@@ -1081,12 +1522,13 @@ def build_transformer(args: BuilderArgs) -> Transformer:
     )
 
 
+#: Functional activation per name accepted by the transformer layers.
+_ACTIVATION_FNS: dict[str, Callable[[Tensor], Tensor]] = {"relu": F.relu, "gelu": F.gelu, "glu": F.glu}
+
+
 def _get_activation_fn(activation: str) -> Callable[[Tensor], Tensor]:
     """Return an activation function given a string."""
-    if activation == "relu":
-        return F.relu
-    if activation == "gelu":
-        return F.gelu
-    if activation == "glu":
-        return F.glu
-    raise RuntimeError(f"activation should be relu/gelu, not {activation}.")
+    try:
+        return _ACTIVATION_FNS[activation]
+    except KeyError:
+        raise RuntimeError(f"activation should be one of {tuple(_ACTIVATION_FNS)}, not {activation}.") from None

@@ -27,6 +27,7 @@ import torch
 
 from rfdetr.config import (
     RFDETRBaseConfig,
+    RFDETRKeypointPreviewConfig,
     RFDETRLargeConfig,
     RFDETRMediumConfig,
     RFDETRNanoConfig,
@@ -53,6 +54,13 @@ def _make_checkpoint(num_classes=91, num_queries=300, group_detr=13):
         num_classes: Total classes including background (bias shape).
         num_queries: Number of object queries per group.
         group_detr: Number of groups.
+
+    Examples:
+        >>> checkpoint = _make_checkpoint(num_classes=3, num_queries=2, group_detr=4)
+        >>> checkpoint["model"]["class_embed.bias"].shape
+        torch.Size([3])
+        >>> checkpoint["model"]["query_feat.weight"].shape
+        torch.Size([8, 256])
     """
     total_queries = num_queries * group_detr
     state = {
@@ -70,33 +78,15 @@ def _make_checkpoint(num_classes=91, num_queries=300, group_detr=13):
     return {"model": state, "args": ckpt_args}
 
 
-def _make_train_config():
-    """Return a minimal TrainConfig for use in load_pretrain_weights.
-
-    Returns:
-        Minimal TrainConfig with placeholder dataset and output dirs.
-    """
-    return TrainConfig(
-        dataset_dir="/nonexistent/dataset",
-        output_dir="/nonexistent/output",
-        epochs=10,
-        lr=1e-4,
-        lr_encoder=1.5e-4,
-        batch_size=2,
-        weight_decay=1e-4,
-        lr_drop=8,
-        warmup_epochs=1.0,
-        drop_path=0.0,
-        multi_scale=False,
-        expanded_scales=False,
-        do_random_resize_via_padding=False,
-        grad_accum_steps=1,
-        tensorboard=False,
-    )
-
-
 def _suppress_pretrain_io(monkeypatch) -> None:
-    """Suppress download/validate/file-existence side effects on the canonical load path."""
+    """Suppress download/validate/file-existence side effects on the canonical load path.
+
+    Examples:
+        Needs pytest's ``monkeypatch`` fixture, so the live call is covered by tests rather than doctest.
+
+        >>> callable(_suppress_pretrain_io)  # doctest: +SKIP
+        True
+    """
     monkeypatch.setattr("rfdetr.models.weights.download_pretrain_weights", lambda *a, **kw: None)
     monkeypatch.setattr("rfdetr.models.weights.validate_pretrain_weights", lambda *a, **kw: None)
     monkeypatch.setattr("rfdetr.models.weights.validate_checkpoint_compatibility", lambda *a, **kw: None)
@@ -534,25 +524,6 @@ class TestL1FacadePEInterpolationEndToEnd:
 
 
 # ---------------------------------------------------------------------------
-# Deprecation: train_config argument
-# ---------------------------------------------------------------------------
-
-
-class TestLoadPretrainWeightsDeprecation:
-    """Passing train_config must emit a DeprecationWarning."""
-
-    def test_emits_deprecation_warning_when_train_config_passed(self, monkeypatch):
-        """Any non-None train_config triggers a DeprecationWarning."""
-        from rfdetr.models.weights import load_pretrain_weights
-
-        mc = RFDETRBaseConfig(pretrain_weights=None, device="cpu")
-        tc = _make_train_config()
-
-        with pytest.warns(FutureWarning, match="train_config.*deprecated"):
-            load_pretrain_weights(MagicMock(), mc, tc)
-
-
-# ---------------------------------------------------------------------------
 # Regression #1038: PE interpolation for custom resolution — training path
 # ---------------------------------------------------------------------------
 
@@ -607,12 +578,11 @@ class TestModuleLoadPretrainWeightsPEInterpolationCustomResolution:
             lr_encoder=1.5e-4,
             batch_size=2,
             weight_decay=1e-4,
-            lr_drop=1,
+            lr_scheduler_kwargs={"lr_drop": 1},
             warmup_epochs=0.0,
             drop_path=0.0,
             multi_scale=False,
             expanded_scales=False,
-            do_random_resize_via_padding=False,
             grad_accum_steps=1,
             tensorboard=False,
         )
@@ -683,3 +653,185 @@ class TestModuleLoadPretrainWeightsPEInterpolationCustomResolution:
         pe = checkpoint["model"][PE_KEY]
         assert pe.shape == torch.Size([1, pe_size * pe_size + 1, dim]), "Matching PE must not be modified."
         assert torch.equal(pe, original_pe), "Matching PE values must not be modified."
+
+
+# ---------------------------------------------------------------------------
+# Regression: keypoint schema auto-align from checkpoint _kp_active_mask
+# ---------------------------------------------------------------------------
+
+
+def _make_kp_checkpoint(kp_schema: list[int], num_queries: int = 300, group_detr: int = 13) -> dict:
+    """Build a minimal keypoint checkpoint encoding *kp_schema* via ``_kp_active_mask``.
+
+    Args:
+        kp_schema: Keypoints-per-class list, e.g. ``[0, 17]`` for bg-first or ``[17]`` for active-first.
+        num_queries: Number of queries per group.
+        group_detr: Number of decoder groups.
+
+    Returns:
+        Checkpoint dict with ``model``, ``args``, and schema-derived ``_kp_active_mask``.
+    """
+    num_classes = len(kp_schema)
+    total_queries = num_queries * group_detr
+    max_kp = max(kp_schema) if kp_schema else 0
+    mask = torch.zeros(num_classes, max_kp, dtype=torch.bool)
+    for idx, n_kp in enumerate(kp_schema):
+        mask[idx, :n_kp] = True
+    state = {
+        "class_embed.weight": torch.randn(num_classes + 1, 256),
+        "class_embed.bias": torch.randn(num_classes + 1),
+        "refpoint_embed.weight": torch.randn(total_queries, 4),
+        "query_feat.weight": torch.randn(total_queries, 256),
+        "_kp_active_mask": mask,
+    }
+    ckpt_args = SimpleNamespace(segmentation_head=False, patch_size=14, class_names=[])
+    return {"model": state, "args": ckpt_args}
+
+
+def _make_kp_fake_model(initial_schema: list[int]) -> MagicMock:
+    """Build a fake nn_model mock that mimics the GroupPose keypoint model interface.
+
+    Args:
+        initial_schema: Keypoints-per-class schema the model was built with.
+
+    Returns:
+        Configured MagicMock with keypoint schema methods and ``_kp_active_mask`` state.
+    """
+    max_kp = max(initial_schema) if initial_schema else 0
+    current_schema = list(initial_schema)
+    mask = torch.zeros(len(initial_schema), max_kp, dtype=torch.bool)
+    for idx, n in enumerate(initial_schema):
+        mask[idx, :n] = True
+
+    fake_model = MagicMock()
+    fake_model.state_dict.return_value = {"_kp_active_mask": mask.clone()}
+
+    def _reinit_kp(schema):
+        current_schema[:] = schema
+        new_max = max(schema) if schema else 0
+        new_mask = torch.zeros(len(schema), new_max, dtype=torch.bool)
+        for i, n in enumerate(schema):
+            new_mask[i, :n] = True
+        fake_model.state_dict.return_value = {"_kp_active_mask": new_mask}
+        fake_model.get_num_keypoints_per_class.return_value = list(schema)
+
+    fake_model.reinitialize_keypoint_head.side_effect = _reinit_kp
+    fake_model.get_num_keypoints_per_class.return_value = list(initial_schema)
+    fake_model.get_num_keypoints_per_class_from_checkpoint = lambda sd: (
+        [int(n) for n in sd["_kp_active_mask"].sum(dim=1).tolist()] if "_kp_active_mask" in sd else None
+    )
+    return fake_model
+
+
+class TestLoadPretrainWeightsKeypointSchemaAutoAlign:
+    """Regression for AP=0 when loading bg-first checkpoint into active-first default config.
+
+    Before the fix, ``load_pretrain_weights`` would restore ``mc.num_keypoints_per_class`` to the config default
+    ``[17]`` after loading a ``[0, 17]`` pretrained checkpoint.  The detection-head trimming kept rows 0 (background)
+    and 1 (person) from the checkpoint but the active-first schema treats row 0 as person, producing AP≈0.
+
+    The fix auto-aligns ``mc.num_keypoints_per_class`` from the checkpoint ``_kp_active_mask`` when the user did not
+    explicitly set the field, mirroring the existing ``num_classes`` auto-align pattern.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _patch_io(self, monkeypatch):
+        """Suppress all download and file-existence side effects."""
+        _suppress_pretrain_io(monkeypatch)
+
+    def test_bg_first_checkpoint_auto_aligns_active_first_config(self, monkeypatch):
+        """Loading bg-first [0,17] checkpoint into active-first [17] config auto-aligns schema."""
+        mc = RFDETRKeypointPreviewConfig(pretrain_weights="/fake/kp.pth", device="cpu")
+        assert mc.num_keypoints_per_class == [17], "Precondition: config default is active-first [17]."
+
+        checkpoint = _make_kp_checkpoint([0, 17])
+        monkeypatch.setattr("rfdetr.models.weights.torch.load", lambda *a, **kw: checkpoint)
+        fake_model = _make_kp_fake_model([17])
+
+        load_pretrain_weights(fake_model, mc)
+
+        assert mc.num_keypoints_per_class == [0, 17], (
+            f"expected auto-align to [0, 17], got {mc.num_keypoints_per_class}"
+        )
+        assert mc.num_classes == 2, (
+            f"mc.num_classes must be auto-aligned to 2 (checkpoint has 3 logit slots), got {mc.num_classes}"
+        )
+
+    def test_matching_schema_no_change(self, monkeypatch):
+        """Config and checkpoint with same schema leaves mc.num_keypoints_per_class unchanged."""
+        mc = RFDETRKeypointPreviewConfig(pretrain_weights="/fake/kp.pth", device="cpu")
+        mc.num_keypoints_per_class = [17]
+
+        checkpoint = _make_kp_checkpoint([17])
+        monkeypatch.setattr("rfdetr.models.weights.torch.load", lambda *a, **kw: checkpoint)
+        fake_model = _make_kp_fake_model([17])
+
+        load_pretrain_weights(fake_model, mc)
+
+        assert mc.num_keypoints_per_class == [17]
+
+    def test_user_explicit_schema_not_overridden(self, monkeypatch):
+        """Explicit num_keypoints_per_class from user survives even when checkpoint differs."""
+        mc = RFDETRKeypointPreviewConfig(pretrain_weights="/fake/kp.pth", device="cpu")
+        # Simulate user explicitly providing num_keypoints_per_class
+        mc.num_keypoints_per_class = [0, 33]
+        mc.model_fields_set.add("num_keypoints_per_class")
+
+        checkpoint = _make_kp_checkpoint([0, 17])
+        monkeypatch.setattr("rfdetr.models.weights.torch.load", lambda *a, **kw: checkpoint)
+        fake_model = _make_kp_fake_model([0, 33])
+
+        load_pretrain_weights(fake_model, mc)
+
+        assert mc.num_keypoints_per_class == [0, 33], (
+            "Explicit user schema must not be overridden by checkpoint auto-align."
+        )
+
+    def test_1d_kp_active_mask_skips_auto_align_with_warning(self, monkeypatch):
+        """Malformed 1-D _kp_active_mask skips auto-align and emits a logger.warning."""
+        mc = RFDETRKeypointPreviewConfig(pretrain_weights="/fake/kp.pth", device="cpu")
+        assert mc.num_keypoints_per_class == [17], "Precondition: config default is active-first [17]."
+
+        checkpoint = _make_kp_checkpoint([0, 17])
+        # Replace the 2-D mask with a malformed 1-D tensor.
+        checkpoint["model"]["_kp_active_mask"] = torch.ones(17, dtype=torch.bool)
+        monkeypatch.setattr("rfdetr.models.weights.torch.load", lambda *a, **kw: checkpoint)
+        fake_model = _make_kp_fake_model([17])
+        # The fake model's get_num_keypoints_per_class_from_checkpoint calls sum(dim=1),
+        # which raises IndexError on a 1-D tensor; return None to skip that code path.
+        fake_model.get_num_keypoints_per_class_from_checkpoint = lambda sd: None
+
+        warned: list[str] = []
+        monkeypatch.setattr("rfdetr.models.weights.logger.warning", lambda msg, *args: warned.append(msg % args))
+
+        load_pretrain_weights(fake_model, mc)
+
+        assert mc.num_keypoints_per_class == [17], (
+            "Auto-align must not fire for a 1-D _kp_active_mask; config default should be unchanged."
+        )
+        assert any("unexpected shape" in msg for msg in warned), (
+            f"Expected a warning mentioning 'unexpected shape'; got: {warned}"
+        )
+
+    def test_all_zero_kp_active_mask_skips_auto_align_with_warning(self, monkeypatch):
+        """All-zero 2-D _kp_active_mask (degenerate) skips auto-align and emits a logger.warning."""
+        mc = RFDETRKeypointPreviewConfig(pretrain_weights="/fake/kp.pth", device="cpu")
+        assert mc.num_keypoints_per_class == [17], "Precondition: config default is active-first [17]."
+
+        checkpoint = _make_kp_checkpoint([0, 17])
+        # Replace mask with a valid 2-D shape but all zeros (no active slots).
+        checkpoint["model"]["_kp_active_mask"] = torch.zeros(2, 17, dtype=torch.bool)
+        monkeypatch.setattr("rfdetr.models.weights.torch.load", lambda *a, **kw: checkpoint)
+        fake_model = _make_kp_fake_model([17])
+
+        warned: list[str] = []
+        monkeypatch.setattr("rfdetr.models.weights.logger.warning", lambda msg, *args: warned.append(msg % args))
+
+        load_pretrain_weights(fake_model, mc)
+
+        assert mc.num_keypoints_per_class == [17], (
+            "Auto-align must not fire for an all-zero _kp_active_mask; config default should be unchanged."
+        )
+        assert any("no active slots" in msg for msg in warned), (
+            f"Expected a warning mentioning 'no active slots'; got: {warned}"
+        )

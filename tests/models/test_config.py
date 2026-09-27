@@ -4,6 +4,8 @@
 # Licensed under the Apache License, Version 2.0 [see LICENSE for details]
 # ------------------------------------------------------------------------
 
+import functools
+import json
 import os
 import warnings
 from pathlib import Path
@@ -13,9 +15,12 @@ import pytest
 import torch
 from pydantic import ValidationError
 
+import rfdetr.config as config_module
 from rfdetr.config import (
+    AugmentationBackend,
     KeypointTrainConfig,
     ModelConfig,
+    MultiScale,
     PretrainWeightsCompatibilityWarning,
     RFDETRBaseConfig,
     RFDETRLargeConfig,
@@ -28,8 +33,13 @@ from rfdetr.config import (
     RFDETRSegSmallConfig,
     RFDETRSegXLargeConfig,
     RFDETRSmallConfig,
+    SegmentationTrainConfig,
     TrainConfig,
+    _cuda_bf16_supported_on_devices,
+    _cuda_supports_native_bf16,
+    _cuda_training_device_indices,
     _detect_device,
+    _resolve_amp_dtype,
 )
 
 
@@ -179,8 +189,8 @@ class TestRFDETRBaseConfigEncoder:
             RFDETRBaseConfig(encoder="not_a_real_encoder", pretrain_weights=None)
 
 
-class TestSegmentationTrainConfigNumSelect:
-    """Unit tests for per-model num_select values (ModelConfig variants)."""
+class TestModelConfigNumSelect:
+    """Unit tests for ModelConfig.num_select per-model default values."""
 
     @pytest.mark.parametrize(
         "config_class, expected_num_select",
@@ -197,6 +207,76 @@ class TestSegmentationTrainConfigNumSelect:
         assert config_class().num_select == expected_num_select
 
 
+class TestTrainConfigRejectsUnknownKwargs:
+    """TrainConfig must raise on unknown/typo'd kwargs instead of silently ignoring them (extra='forbid')."""
+
+    def test_typo_kwarg_raises_with_helpful_message(self, tmp_path) -> None:
+        """A typo'd kwarg (epoch instead of epochs) raises listing the unknown and available parameters."""
+        with pytest.raises(ValidationError, match=r"Unknown parameter\(s\): 'epoch'"):
+            TrainConfig(dataset_dir=str(tmp_path), output_dir=str(tmp_path), epoch=5)
+
+    def test_typo_error_lists_available_parameters(self, tmp_path) -> None:
+        """The rejection message includes the available parameter list so the typo is easy to fix."""
+        with pytest.raises(ValidationError, match=r"Available parameter\(s\):.*epochs"):
+            TrainConfig(dataset_dir=str(tmp_path), output_dir=str(tmp_path), epoch=5)
+
+    @pytest.mark.parametrize(
+        "config_class",
+        [
+            pytest.param(SegmentationTrainConfig, id="segmentation"),
+            pytest.param(KeypointTrainConfig, id="keypoint"),
+        ],
+    )
+    def test_subclasses_reject_unknown_kwargs(self, tmp_path, config_class) -> None:
+        """TrainConfig subclasses inherit the forbid behaviour."""
+        with pytest.raises(ValidationError, match=r"Unknown parameter\(s\): 'epoch'"):
+            config_class(dataset_dir=str(tmp_path), output_dir=str(tmp_path), epoch=5)
+
+    def test_get_train_config_raises_for_typo_kwarg(self, tmp_path) -> None:
+        """The public RFDETR.get_train_config path surfaces the typo instead of swallowing it."""
+        from types import SimpleNamespace
+
+        from rfdetr.detr import RFDETR
+
+        stub = SimpleNamespace(_train_config_class=TrainConfig)
+        with pytest.raises(ValidationError, match=r"Unknown parameter\(s\): 'epoch'"):
+            RFDETR.get_train_config(stub, dataset_dir=str(tmp_path), output_dir=str(tmp_path), epoch=5)
+
+
+class TestTrainConfigMultiScale:
+    """`multi_scale` is a `MultiScale` enum; booleans are accepted as aliases and never stored."""
+
+    def test_default_is_batch(self, tmp_path) -> None:
+        """The default mode is the per-batch scale draw, matching the old `multi_scale=True` behaviour."""
+        assert TrainConfig(dataset_dir=str(tmp_path)).multi_scale is MultiScale.PER_BATCH
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            pytest.param(True, MultiScale.PER_BATCH, id="legacy-true"),
+            pytest.param(False, MultiScale.OFF, id="legacy-false"),
+            pytest.param("per-batch", MultiScale.PER_BATCH, id="per-batch"),
+            pytest.param("per-sample", MultiScale.PER_SAMPLE, id="per-sample"),
+            pytest.param("off", MultiScale.OFF, id="off"),
+            pytest.param(MultiScale.PER_SAMPLE, MultiScale.PER_SAMPLE, id="member"),
+        ],
+    )
+    def test_inputs_normalize_to_member(self, tmp_path, value, expected) -> None:
+        """Booleans, string values, and members all land on the matching enum member."""
+        assert TrainConfig(dataset_dir=str(tmp_path), multi_scale=value).multi_scale is expected
+
+    def test_model_dump_serializes_to_string(self, tmp_path) -> None:
+        """`model_dump` yields the plain string value so checkpoint hyperparameters stay JSON-safe."""
+        assert (
+            TrainConfig(dataset_dir=str(tmp_path), multi_scale="per-sample").model_dump()["multi_scale"] == "per-sample"
+        )
+
+    def test_unknown_mode_rejected(self, tmp_path) -> None:
+        """A string outside the enum is a validation error."""
+        with pytest.raises(ValidationError, match="multi_scale"):
+            TrainConfig(dataset_dir=str(tmp_path), multi_scale="image")
+
+
 class TestTrainConfigT42PromotedFields:
     """T4-2: Promoted fields exist with correct defaults; device field is absent."""
 
@@ -211,17 +291,34 @@ class TestTrainConfigT42PromotedFields:
         """Device must not appear in TrainConfig.model_fields (PTL auto-detects accelerator)."""
         assert "device" not in TrainConfig.model_fields
 
-    def test_device_kwarg_silently_ignored(self, tmp_path):
-        """Passing device= to TrainConfig is silently ignored (extra='ignore'); PTL absorbs it."""
-        # TrainConfig uses Pydantic default extra='ignore', so unknown kwargs don't raise.
-        tc = self._tc(tmp_path, device="cpu")
-        assert not hasattr(tc, "device")  # field not set on the instance
+    def test_device_kwarg_rejected(self, tmp_path):
+        """Passing device= directly to TrainConfig raises (extra='forbid'); RFDETR.train() pops it beforehand."""
+        with pytest.raises(ValidationError, match=r"Unknown parameter\(s\): 'device'"):
+            self._tc(tmp_path, device="cpu")
 
     # --- promoted fields: defaults ---
 
     def test_clip_max_norm_default(self, tmp_path):
         """clip_max_norm defaults to 0.1."""
         assert self._tc(tmp_path).clip_max_norm == pytest.approx(0.1)
+
+    def test_clip_max_norm_rejects_negative(self, tmp_path):
+        """A negative clip_max_norm fails at construction instead of silently disabling clipping.
+
+        Every consumer gates clipping behind ``> 0`` (``RFDETRModelModule._clip_manual_optimization_gradients``,
+        ``FusedAdamWEMA``), so a negative value would train unclipped for the whole run with no error and no warning —
+        the failure this boundary constraint turns into a construction error.
+        """
+        with pytest.raises(ValidationError, match="clip_max_norm"):
+            self._tc(tmp_path, clip_max_norm=-0.1)
+
+    def test_clip_max_norm_accepts_zero(self, tmp_path):
+        """clip_max_norm=0.0 stays legal as the documented way to disable gradient clipping.
+
+        The constraint has to be ``ge``, not ``gt``: callers already pass 0.0 to opt out of clipping (e.g. the keypoint
+        DDP training test), so rejecting it would break a supported configuration.
+        """
+        assert self._tc(tmp_path, clip_max_norm=0.0).clip_max_norm == pytest.approx(0.0)
 
     def test_seed_default_is_none(self, tmp_path):
         """Seed defaults to None (no seeding)."""
@@ -239,9 +336,26 @@ class TestTrainConfigT42PromotedFields:
         """lr_scheduler defaults to 'step'."""
         assert self._tc(tmp_path).lr_scheduler == "step"
 
-    def test_lr_min_factor_default(self, tmp_path):
-        """lr_min_factor defaults to 0.0."""
-        assert self._tc(tmp_path).lr_min_factor == pytest.approx(0.0)
+    def test_best_model_metric_default_is_map(self, tmp_path):
+        """best_model_metric defaults to 'map' for backward compatibility."""
+        assert self._tc(tmp_path).best_model_metric == "map"
+
+    def test_best_model_metric_accepts_mar(self, tmp_path):
+        """best_model_metric accepts 'mar' to rank checkpoints/early-stop by recall instead of mAP."""
+        assert self._tc(tmp_path, best_model_metric="mar").best_model_metric == "mar"
+
+    def test_best_model_metric_rejects_invalid_value(self, tmp_path):
+        """best_model_metric rejects any value outside the 'map'/'mar' literal."""
+        with pytest.raises(ValidationError):
+            self._tc(tmp_path, best_model_metric="f1")
+
+    def test_optimizer_default_is_adamw(self, tmp_path):
+        """Optimizer defaults to AdamW for backward compatibility."""
+        assert self._tc(tmp_path).optimizer == "adamw"
+
+    def test_optimizer_kwargs_default_is_empty_dict(self, tmp_path):
+        """optimizer_kwargs defaults to an empty dict."""
+        assert self._tc(tmp_path).optimizer_kwargs == {}
 
     def test_dont_save_weights_default_is_false(self, tmp_path):
         """dont_save_weights defaults to False."""
@@ -263,9 +377,56 @@ class TestTrainConfigT42PromotedFields:
         """ema_update_interval defaults to 1 (update every step)."""
         assert self._tc(tmp_path).ema_update_interval == 1
 
-    def test_compute_val_loss_default_is_true(self, tmp_path):
-        """compute_val_loss defaults to True."""
-        assert self._tc(tmp_path).compute_val_loss is True
+    def test_compute_val_loss_default_is_auto(self, tmp_path):
+        """compute_val_loss defaults to the automatic validation-monitor policy."""
+        assert self._tc(tmp_path).compute_val_loss == "auto"
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(True, id="enabled"),
+            pytest.param(False, id="disabled"),
+            pytest.param("auto", id="automatic"),
+        ],
+    )
+    def test_compute_val_loss_accepts_bool_or_auto(self, tmp_path, value):
+        """compute_val_loss preserves explicit boolean and automatic policies."""
+        assert self._tc(tmp_path, compute_val_loss=value).compute_val_loss == value
+
+    @pytest.mark.parametrize(
+        "raw, expected",
+        [
+            pytest.param("true", True, id="string-true-coerces-to-True"),
+            pytest.param("false", False, id="string-false-coerces-to-False"),
+            pytest.param("yes", True, id="string-yes-coerces-to-True"),
+            pytest.param("no", False, id="string-no-coerces-to-False"),
+            pytest.param("auto", "auto", id="string-auto-matches-literal"),
+        ],
+    )
+    def test_compute_val_loss_coerces_string_aliases(self, tmp_path, raw, expected):
+        """compute_val_loss silently coerces common string aliases via pydantic's lax bool parsing.
+
+        The bool | Literal["auto"] union tries the bool arm first, so "yes"/"no"/"true"/"false" coerce silently instead
+        of raising; "auto" instead matches the Literal arm unchanged. Pinning this behavior catches a pydantic upgrade
+        that changes union member resolution order.
+        """
+        assert self._tc(tmp_path, compute_val_loss=raw).compute_val_loss == expected
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            pytest.param("Auto", id="capitalized-auto-rejected"),
+            pytest.param("AUTO", id="uppercase-auto-rejected"),
+        ],
+    )
+    def test_compute_val_loss_rejects_case_variant_of_auto(self, tmp_path, raw):
+        """compute_val_loss rejects any casing of 'auto' other than the exact lowercase literal.
+
+        Literal["auto"] is case-strict and these variants don't match the bool arm's alias set either, so pydantic must
+        raise rather than silently normalizing casing.
+        """
+        with pytest.raises(ValidationError):
+            self._tc(tmp_path, compute_val_loss=raw)
 
     def test_compute_test_loss_default_is_true(self, tmp_path):
         """compute_test_loss defaults to True."""
@@ -281,7 +442,11 @@ class TestTrainConfigT42PromotedFields:
             pytest.param("sync_bn", True, id="sync_bn"),
             pytest.param("fp16_eval", True, id="fp16_eval"),
             pytest.param("lr_scheduler", "cosine", id="lr_scheduler_cosine"),
-            pytest.param("lr_min_factor", 0.01, id="lr_min_factor"),
+            pytest.param("lr_scheduler_kwargs", {"min_factor": 0.01}, id="lr_scheduler_kwargs"),
+            pytest.param("lr_scheduler_interval", "epoch", id="lr_scheduler_interval"),
+            pytest.param("lr_scheduler_monitor", "train/loss", id="lr_scheduler_monitor"),
+            pytest.param("optimizer", "sgd", id="optimizer"),
+            pytest.param("optimizer_kwargs", {"betas": (0.9, 0.99)}, id="optimizer_kwargs"),
             pytest.param("dont_save_weights", True, id="dont_save_weights"),
             pytest.param("run_test", True, id="run_test"),
             pytest.param("eval_interval", 3, id="eval_interval"),
@@ -307,6 +472,81 @@ class TestTrainConfigT42PromotedFields:
         with pytest.raises((ValueError, ValidationError)):
             self._tc(tmp_path, lr_scheduler="cyclic")
 
+    def test_optimizer_rejects_empty_name(self, tmp_path):
+        """Optimizer must be a non-empty name."""
+        with pytest.raises((ValueError, ValidationError)):
+            self._tc(tmp_path, optimizer="  ")
+
+    @pytest.mark.parametrize(
+        "optimizer",
+        [
+            pytest.param("lion", id="unknown_short_name"),
+            # Pytorch-optimizer names are not selectable by short name (use an import path).
+            pytest.param("pytorch_optimizer:lion", id="non_torch_optim_short_name"),
+        ],
+    )
+    def test_optimizer_rejects_non_native_short_name(self, tmp_path, optimizer):
+        """A bare short name that does not resolve to a torch.optim optimizer is rejected at config time."""
+        with pytest.raises((ValueError, ValidationError), match="native optimizer"):
+            self._tc(tmp_path, optimizer=optimizer)
+
+    def test_optimizer_accepts_native_short_name(self, tmp_path):
+        """A native torch.optim short name (e.g. 'sgd') is accepted."""
+        assert self._tc(tmp_path, optimizer="sgd").optimizer == "sgd"
+
+    @pytest.mark.parametrize(
+        "reserved_key",
+        [
+            pytest.param("params", id="params"),
+            pytest.param("lr", id="lr"),
+            pytest.param("weight_decay", id="weight_decay"),
+            pytest.param("fused", id="fused"),
+        ],
+    )
+    def test_optimizer_kwargs_reject_reserved_keys(self, tmp_path, reserved_key):
+        """optimizer_kwargs must not override RF-DETR-managed optimizer arguments."""
+        with pytest.raises((ValueError, ValidationError)):
+            self._tc(tmp_path, optimizer_kwargs={reserved_key: 1})
+
+    def test_optimizer_accepts_dotted_import_path(self, tmp_path):
+        """A dotted import path is accepted verbatim as an explicit optimizer."""
+        assert self._tc(tmp_path, optimizer="torch.optim.AdamW").optimizer == "torch.optim.AdamW"
+
+    def test_dotted_optimizer_kwargs_allow_managed_keys(self, tmp_path):
+        """Explicit (dotted) optimizers may pass otherwise-managed keys such as weight_decay."""
+        tc = self._tc(tmp_path, optimizer="torch.optim.AdamW", optimizer_kwargs={"weight_decay": 0.1})
+        assert tc.optimizer_kwargs == {"weight_decay": 0.1}
+
+    def test_callable_class_desugars_to_dotted_path(self, tmp_path):
+        """A plain optimizer class desugars to its canonical dotted import path for serialization."""
+        expected_path = f"{torch.optim.AdamW.__module__}.{torch.optim.AdamW.__qualname__}"
+        tc = self._tc(tmp_path, optimizer=torch.optim.AdamW)
+        assert tc.optimizer == expected_path
+        assert tc.optimizer_kwargs == {}
+
+    def test_partial_optimizer_desugars_to_path_and_kwargs(self, tmp_path):
+        """A functools.partial desugars to a dotted path plus its keyword arguments."""
+        expected_path = f"{torch.optim.AdamW.__module__}.{torch.optim.AdamW.__qualname__}"
+        tc = self._tc(tmp_path, optimizer=functools.partial(torch.optim.AdamW, weight_decay=0.1))
+        assert tc.optimizer == expected_path
+        assert tc.optimizer_kwargs == {"weight_decay": 0.1}
+
+    def test_callable_optimizer_kwargs_are_ignored_with_warning(self, tmp_path):
+        """optimizer_kwargs are ignored (with a warning) when optimizer is a callable."""
+        with pytest.warns(UserWarning, match="optimizer_kwargs is ignored"):
+            tc = self._tc(
+                tmp_path,
+                optimizer=functools.partial(torch.optim.AdamW, weight_decay=0.1),
+                optimizer_kwargs={"betas": (0.9, 0.99)},
+            )
+        assert tc.optimizer_kwargs == {"weight_decay": 0.1}
+
+    def test_non_reconstructable_optimizer_warns(self, tmp_path):
+        """A lambda optimizer cannot be serialized and warns while staying an in-memory callable."""
+        with pytest.warns(UserWarning, match="cannot be saved"):
+            tc = self._tc(tmp_path, optimizer=lambda params: torch.optim.AdamW(params))
+        assert callable(tc.optimizer) and not isinstance(tc.optimizer, str)
+
     @pytest.mark.parametrize(
         ("field", "value"),
         [
@@ -326,6 +566,20 @@ class TestTrainConfigT42PromotedFields:
         tc = self._tc(tmp_path, batch_size="auto")
         assert tc.batch_size == "auto"
 
+    def test_fp8_rejects_auto_batch(self, tmp_path: Path) -> None:
+        """The ordinary autocast probe cannot size a Transformer Engine model."""
+        with pytest.raises(ValueError, match="FP8.*explicit.*batch_size"):
+            self._tc(tmp_path, batch_size="auto", amp_dtype="fp8")
+
+    @pytest.mark.parametrize("amp_dtype", ["auto", "bf16", "fp16"])
+    def test_other_precisions_allow_auto_batch(self, tmp_path: Path, amp_dtype: str) -> None:
+        """Existing autocast modes retain automatic batch sizing."""
+        assert self._tc(tmp_path, batch_size="auto", amp_dtype=amp_dtype).batch_size == "auto"
+
+    def test_fp8_allows_explicit_batch(self, tmp_path: Path) -> None:
+        """An explicit FP8 micro-batch does not need the unsupported probe."""
+        assert self._tc(tmp_path, batch_size=1, amp_dtype="fp8").batch_size == 1
+
     @pytest.mark.parametrize(
         "field,value",
         [
@@ -340,11 +594,339 @@ class TestTrainConfigT42PromotedFields:
         with pytest.raises((ValueError, ValidationError)):
             self._tc(tmp_path, **{field: value})
 
+    def test_grad_accum_steps_defaults_to_one(self, tmp_path: Path) -> None:
+        """Gradient accumulation is opt-in: the default is 1, so the default effective batch is batch_size alone."""
+        assert self._tc(tmp_path).grad_accum_steps == 1
+
+    @pytest.mark.parametrize(
+        "eval_batch_size",
+        [
+            pytest.param(0, id="zero"),
+            pytest.param(-1, id="negative"),
+        ],
+    )
+    def test_eval_batch_size_rejects_non_positive_values(self, tmp_path: Path, eval_batch_size: int) -> None:
+        """eval_batch_size must be >= 1 when provided."""
+        with pytest.raises(ValidationError, match=r"eval_batch_size\s+Value error, eval_batch_size must be >= 1"):
+            self._tc(tmp_path, eval_batch_size=eval_batch_size)
+
+    def test_eval_batch_size_rejects_auto_sentinel(self, tmp_path: Path) -> None:
+        """eval_batch_size rejects batch_size's automatic-sizing sentinel."""
+        with pytest.raises(ValidationError, match=r"eval_batch_size\s+Input should be a valid integer"):
+            self._tc(tmp_path, eval_batch_size="auto")
+
+    def test_eval_batch_size_defaults_to_none(self, tmp_path: Path) -> None:
+        """eval_batch_size defaults to None so eval loaders inherit the resolved train batch size."""
+        assert self._tc(tmp_path).eval_batch_size is None
+
+    @pytest.mark.parametrize(
+        "pad_targets_to",
+        [
+            pytest.param(0, id="zero"),
+            pytest.param(-1, id="negative"),
+        ],
+    )
+    def test_pad_targets_to_rejects_non_positive_values(self, tmp_path: Path, pad_targets_to: int) -> None:
+        """pad_targets_to must be >= 1 when provided, caught at construction, not at first collate."""
+        with pytest.raises(
+            ValidationError, match=r"pad_targets_to\s+Value error, pad_targets_to must be a positive integer"
+        ):
+            self._tc(tmp_path, pad_targets_to=pad_targets_to)
+
+    def test_pad_targets_to_defaults_to_none(self, tmp_path: Path) -> None:
+        """pad_targets_to defaults to None so training keeps the variable-length path CUDA wants."""
+        assert self._tc(tmp_path).pad_targets_to is None
+
     @pytest.mark.parametrize("ema_headroom", [0.0, 1.5])
     def test_auto_batch_ema_headroom_must_be_in_open_one(self, tmp_path, ema_headroom):
         """auto_batch_ema_headroom must be in (0, 1]."""
         with pytest.raises((ValueError, ValidationError)):
             self._tc(tmp_path, auto_batch_ema_headroom=ema_headroom)
+
+    def test_eval_ema_only_requires_use_ema(self, tmp_path):
+        """eval_ema_only=True with use_ema=False must raise — no EMA model exists to evaluate.
+
+        The flag is deprecated but still validated: a contradictory pair must fail loudly rather than
+        be silently absorbed by the deprecation shim.
+        """
+        with pytest.raises(ValidationError, match="eval_ema_only"):
+            with pytest.warns(FutureWarning):
+                self._tc(tmp_path, eval_ema_only=True, use_ema=False)
+
+    def test_eval_ema_only_accepted_with_use_ema(self, tmp_path):
+        """eval_ema_only=True is accepted when use_ema=True (the default), and warns that it is deprecated.
+
+        Evaluating only the selected model is now the default, so the flag is inert. Existing scripts that set it must
+        keep working through the 0.3-cycle deprecation window rather than failing on an unknown field.
+        """
+        with pytest.warns(FutureWarning, match="eval_ema_only"):
+            tc = self._tc(tmp_path, eval_ema_only=True, use_ema=True)
+        assert tc.eval_ema_only is True
+
+    def test_legacy_eval_ema_only_false_maps_to_base_model(self, tmp_path):
+        """An old explicit ``eval_ema_only=False`` input retains its prior base-plus-EMA behavior."""
+        with pytest.warns(FutureWarning, match="eval_ema_only"):
+            tc = self._tc(tmp_path, eval_ema_only=False, use_ema=True)
+
+        assert tc.eval_base_model is True
+
+    def test_dumped_eval_ema_only_config_reloads_without_warning(self, tmp_path):
+        """A new config dump carries the migrated policy and can reload without repeating the deprecation warning."""
+        with pytest.warns(FutureWarning, match="eval_ema_only"):
+            original = self._tc(tmp_path, eval_ema_only=True, use_ema=True)
+
+        dumped = original.model_dump()
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", FutureWarning)
+            reloaded = TrainConfig(**dumped)
+
+        assert reloaded.eval_base_model is False
+
+    def test_eval_ema_only_defaults_to_false_without_warning(self, tmp_path):
+        """eval_ema_only defaults to False and a config that never sets it must not warn.
+
+        Round-tripping a dumped config carries every field explicitly at its default; warning on the default value would
+        make every reload noisy.
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", FutureWarning)
+            tc = self._tc(tmp_path)
+        assert tc.eval_ema_only is False
+
+    def test_eval_base_model_defaults_to_false(self, tmp_path):
+        """eval_base_model defaults to False: validation evaluates only the selected model.
+
+        This is the PR12 behaviour change — with use_ema=True the base-model forward pass is no longer run every
+        validation batch, which is the ~3-3.5%-of-epoch saving.
+        """
+        tc = self._tc(tmp_path)
+        assert tc.eval_base_model is False
+
+    def test_eval_base_model_can_be_enabled(self, tmp_path):
+        """eval_base_model=True is accepted and restores the base+EMA two-forward comparison."""
+        tc = self._tc(tmp_path, eval_base_model=True)
+        assert tc.eval_base_model is True
+
+    def test_eval_base_model_is_accepted_without_ema(self, tmp_path):
+        """eval_base_model=True with use_ema=False must not raise — the base model is evaluated either way.
+
+        A default must be inert in every legal configuration; the opt-in that reverses it has to be too, so no cross-
+        field validator may reject this pair.
+        """
+        tc = self._tc(tmp_path, eval_base_model=True, use_ema=False)
+        assert tc.eval_base_model is True
+
+    def test_eval_ema_only_conflicts_with_eval_base_model(self, tmp_path):
+        """eval_ema_only=True together with eval_base_model=True must raise — the two requests contradict.
+
+        The deprecated flag asks for EMA-only evaluation while the new opt-in asks for the base model as well; silently
+        picking a winner would give one of the two settings no effect.
+        """
+        with pytest.raises(ValidationError, match="eval_base_model"):
+            with pytest.warns(FutureWarning):
+                self._tc(tmp_path, eval_ema_only=True, eval_base_model=True)
+
+    def test_eval_masks_head_resolution_defaults_to_false(self, tmp_path):
+        """eval_masks_head_resolution defaults to False, preserving full-resolution mask upsampling."""
+        tc = self._tc(tmp_path)
+        assert tc.eval_masks_head_resolution is False
+
+    def test_eval_masks_head_resolution_can_be_enabled(self, tmp_path):
+        """eval_masks_head_resolution=True is accepted (opt-in, no cross-field constraint)."""
+        tc = self._tc(tmp_path, eval_masks_head_resolution=True)
+        assert tc.eval_masks_head_resolution is True
+
+
+class TestResolveAmpDtype:
+    """``amp_dtype`` is the live AMP authority; ``ModelConfig.amp`` is a deprecated fallback."""
+
+    def _tc(self, tmp_path: Path, **kwargs: object) -> TrainConfig:
+        """Build a minimal training configuration.
+
+        Examples:
+            >>> config = TestResolveAmpDtype()._tc(Path("/tmp"), amp_dtype=None)
+            >>> config.amp_dtype is None
+            True
+        """
+        defaults = dict(dataset_dir=str(tmp_path), output_dir=str(tmp_path), tensorboard=False)
+        defaults.update(kwargs)
+        return TrainConfig(**defaults)
+
+    def test_default_resolves_to_auto(self, tmp_path):
+        """Neither field touched: AMP stays on with the auto-selected dtype."""
+        assert _resolve_amp_dtype(RFDETRNanoConfig(), self._tc(tmp_path)) == "auto"
+
+    def test_explicit_none_disables_amp(self, tmp_path):
+        """amp_dtype=None is the supported way to train in full fp32."""
+        assert _resolve_amp_dtype(RFDETRNanoConfig(), self._tc(tmp_path, amp_dtype=None)) is None
+
+    def test_explicit_amp_dtype_outranks_deprecated_amp_false(self, tmp_path):
+        """A caller-set amp_dtype is never silently disabled by a stale amp=False."""
+        assert _resolve_amp_dtype(RFDETRNanoConfig(amp=False), self._tc(tmp_path, amp_dtype="bf16")) == "bf16"
+
+    def test_explicit_fp8_outranks_deprecated_amp_false(self, tmp_path):
+        """Fp8 is no exception to the precedence rule; hardware checks, not amp, gate it downstream."""
+        resolved = _resolve_amp_dtype(RFDETRNanoConfig(amp=False), self._tc(tmp_path, amp_dtype="fp8", batch_size=4))
+        assert resolved == "fp8"
+
+    def test_deprecated_amp_false_applies_when_amp_dtype_is_default(self, tmp_path):
+        """Legacy amp=False keeps working while amp_dtype is untouched."""
+        with pytest.warns(FutureWarning, match="ModelConfig.amp is deprecated"):
+            assert _resolve_amp_dtype(RFDETRNanoConfig(amp=False), self._tc(tmp_path)) is None
+
+    def test_deprecated_amp_false_survives_a_train_config_round_trip(self, tmp_path):
+        """A reloaded config carries amp_dtype explicitly; that must not silently void the legacy toggle."""
+        reloaded = TrainConfig(**self._tc(tmp_path).model_dump())
+        with pytest.warns(FutureWarning, match="ModelConfig.amp is deprecated"):
+            assert _resolve_amp_dtype(RFDETRNanoConfig(amp=False), reloaded) is None
+
+    def test_amp_true_does_not_warn(self, tmp_path):
+        """The default amp=True is not a deprecated usage and must stay silent."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", FutureWarning)
+            assert _resolve_amp_dtype(RFDETRNanoConfig(), self._tc(tmp_path)) == "auto"
+
+    def test_none_is_accepted_by_validation(self, tmp_path):
+        """None is a valid amp_dtype, not an unknown value coerced back to 'auto'."""
+        assert self._tc(tmp_path, amp_dtype=None).amp_dtype is None
+
+
+class TestDeprecatedFp16Eval:
+    """``fp16_eval`` is inert and superseded by ``amp_dtype``."""
+
+    def _tc(self, tmp_path, **kwargs):
+        defaults = dict(dataset_dir=str(tmp_path), output_dir=str(tmp_path), tensorboard=False)
+        defaults.update(kwargs)
+        return TrainConfig(**defaults)
+
+    def test_explicit_true_warns(self, tmp_path):
+        """Setting the flag surfaces that it does nothing rather than silently ignoring it."""
+        with pytest.warns(FutureWarning, match="fp16_eval is deprecated"):
+            self._tc(tmp_path, fp16_eval=True)
+
+    def test_default_does_not_warn(self, tmp_path):
+        """The untouched default must stay silent, including on a dumped-config reload."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", FutureWarning)
+            TrainConfig(**self._tc(tmp_path).model_dump())
+
+
+class TestTrainConfigLRScheduler:
+    """Configurable LR-scheduler surface: preset validation, explicit paths/callables, and deprecation folding."""
+
+    def _tc(self, tmp_path, **kwargs):
+        defaults = dict(dataset_dir=str(tmp_path), output_dir=str(tmp_path), tensorboard=False)
+        defaults.update(kwargs)
+        return TrainConfig(**defaults)
+
+    def test_lr_scheduler_default_is_step(self, tmp_path):
+        """lr_scheduler defaults to the managed 'step' preset."""
+        assert self._tc(tmp_path).lr_scheduler == "step"
+
+    def test_lr_scheduler_kwargs_default_is_empty_dict(self, tmp_path):
+        """lr_scheduler_kwargs defaults to an empty dict."""
+        assert self._tc(tmp_path).lr_scheduler_kwargs == {}
+
+    @pytest.mark.parametrize("preset", [pytest.param("step", id="step"), pytest.param("cosine", id="cosine")])
+    def test_lr_scheduler_accepts_managed_preset(self, tmp_path, preset):
+        """Both managed presets are accepted as bare names."""
+        assert self._tc(tmp_path, lr_scheduler=preset).lr_scheduler == preset
+
+    def test_lr_scheduler_rejects_empty_name(self, tmp_path):
+        """lr_scheduler must be a non-empty name."""
+        with pytest.raises((ValueError, ValidationError)):
+            self._tc(tmp_path, lr_scheduler="  ")
+
+    def test_lr_scheduler_rejects_unknown_bare_name(self, tmp_path):
+        """A bare name that is not a managed preset is rejected (steer to a dotted path)."""
+        with pytest.raises((ValueError, ValidationError), match="managed preset"):
+            self._tc(tmp_path, lr_scheduler="StepLR")
+
+    def test_lr_scheduler_accepts_dotted_import_path(self, tmp_path):
+        """A dotted import path is accepted verbatim as an explicit scheduler."""
+        tc = self._tc(tmp_path, lr_scheduler="torch.optim.lr_scheduler.StepLR", lr_scheduler_kwargs={"step_size": 5})
+        assert tc.lr_scheduler == "torch.optim.lr_scheduler.StepLR"
+
+    def test_compute_val_loss_false_rejects_plateau_loss_monitor(self, tmp_path):
+        """A plateau scheduler monitoring val/loss cannot disable the metric it requires."""
+        with pytest.raises(ValidationError, match="compute_val_loss=False requires a non-val/loss monitor"):
+            self._tc(
+                tmp_path,
+                compute_val_loss=False,
+                lr_scheduler="torch.optim.lr_scheduler.ReduceLROnPlateau",
+                lr_scheduler_monitor="val/loss",
+            )
+
+    def test_callable_class_desugars_to_dotted_path(self, tmp_path):
+        """A plain scheduler class desugars to its canonical dotted import path for serialization."""
+        scheduler_class = torch.optim.lr_scheduler.StepLR
+        expected_path = f"{scheduler_class.__module__}.{scheduler_class.__qualname__}"
+        tc = self._tc(tmp_path, lr_scheduler=scheduler_class)
+        assert tc.lr_scheduler == expected_path
+        assert tc.lr_scheduler_kwargs == {}
+
+    def test_partial_scheduler_desugars_to_path_and_kwargs(self, tmp_path):
+        """A functools.partial desugars to a dotted path plus its keyword arguments."""
+        scheduler_class = torch.optim.lr_scheduler.StepLR
+        expected_path = f"{scheduler_class.__module__}.{scheduler_class.__qualname__}"
+        tc = self._tc(tmp_path, lr_scheduler=functools.partial(scheduler_class, step_size=7))
+        assert tc.lr_scheduler == expected_path
+        assert tc.lr_scheduler_kwargs == {"step_size": 7}
+
+    def test_callable_scheduler_kwargs_are_ignored_with_warning(self, tmp_path):
+        """lr_scheduler_kwargs are ignored (with a warning) when lr_scheduler is a callable."""
+        with pytest.warns(UserWarning, match="lr_scheduler_kwargs is ignored"):
+            tc = self._tc(
+                tmp_path,
+                lr_scheduler=functools.partial(torch.optim.lr_scheduler.StepLR, step_size=7),
+                lr_scheduler_kwargs={"gamma": 0.5},
+            )
+        assert tc.lr_scheduler_kwargs == {"step_size": 7}
+
+    def test_non_reconstructable_scheduler_warns(self, tmp_path):
+        """A lambda scheduler cannot be serialized and warns while staying an in-memory callable."""
+        with pytest.warns(UserWarning, match="cannot be saved"):
+            tc = self._tc(tmp_path, lr_scheduler=lambda optimizer: torch.optim.lr_scheduler.StepLR(optimizer, 5))
+        assert callable(tc.lr_scheduler) and not isinstance(tc.lr_scheduler, str)
+
+    @pytest.mark.parametrize("field", ["lr_drop", "lr_min_factor"])
+    def test_removed_lr_fields_are_rejected(self, tmp_path, field):
+        """The v1.9-deprecated top-level LR fields were removed in v1.11 and are now unknown kwargs."""
+        with pytest.raises(ValidationError, match=field):
+            self._tc(tmp_path, **{field: 1})
+
+    def test_managed_preset_rejects_unknown_kwargs(self, tmp_path):
+        """Managed presets reject lr_scheduler_kwargs keys they do not consume (mirrors optimizer_kwargs)."""
+        with pytest.raises((ValueError, ValidationError), match="unknown key"):
+            self._tc(tmp_path, lr_scheduler="cosine", lr_scheduler_kwargs={"minfactor": 0.1})
+
+    def test_managed_preset_accepts_consumed_kwargs(self, tmp_path):
+        """Managed presets accept the kwargs they consume (min_factor, lr_drop)."""
+        tc = self._tc(tmp_path, lr_scheduler="cosine", lr_scheduler_kwargs={"min_factor": 0.1, "lr_drop": 50})
+        assert tc.lr_scheduler_kwargs == {"min_factor": pytest.approx(0.1), "lr_drop": 50}
+
+    def test_explicit_scheduler_round_trips_through_model_dump(self, tmp_path):
+        """An explicit dotted scheduler and its kwargs survive a model_dump() -> reload round-trip unchanged."""
+        original = self._tc(
+            tmp_path,
+            lr_scheduler="torch.optim.lr_scheduler.StepLR",
+            lr_scheduler_kwargs={"step_size": 30, "gamma": 0.1},
+        )
+        reloaded = TrainConfig(**original.model_dump())
+        assert reloaded.lr_scheduler == "torch.optim.lr_scheduler.StepLR"
+        assert reloaded.lr_scheduler_kwargs == {"step_size": 30, "gamma": pytest.approx(0.1)}
+
+    def test_partial_with_positional_args_is_not_serializable(self, tmp_path):
+        """A functools.partial with positional args cannot be desugared; it warns and stays an in-memory callable."""
+        with pytest.warns(UserWarning, match="cannot be saved"):
+            tc = self._tc(tmp_path, lr_scheduler=functools.partial(torch.optim.lr_scheduler.StepLR, 5))
+        assert callable(tc.lr_scheduler) and not isinstance(tc.lr_scheduler, str)
+
+    def test_partial_with_non_json_kwargs_is_not_serializable(self, tmp_path):
+        """A functools.partial carrying non-JSON kwargs cannot be desugared; it warns and stays a callable."""
+        with pytest.warns(UserWarning, match="cannot be saved"):
+            tc = self._tc(tmp_path, lr_scheduler=functools.partial(torch.optim.lr_scheduler.StepLR, gamma=object()))
+        assert callable(tc.lr_scheduler) and not isinstance(tc.lr_scheduler, str)
 
 
 class TestBuildTrainerUsesRealFields:
@@ -393,7 +975,7 @@ class TestBuildTrainerUsesRealFields:
 
     def test_clip_max_norm_owned_by_model_module_for_keypoints(self, tmp_path):
         """Keypoint models use manual optimization; trainer-owned clipping is disabled and ``clip_max_norm`` is applied
-        inside ``RFDETRModelModule._step_optimizer`` instead."""
+        inside ``RFDETRModelModule.on_before_optimizer_step`` instead."""
         from rfdetr.training import build_trainer
 
         trainer = build_trainer(
@@ -402,14 +984,12 @@ class TestBuildTrainerUsesRealFields:
         )
         assert trainer.gradient_clip_val is None
 
-    def test_seed_not_applied_in_build_trainer_factory(self, tmp_path):
+    @patch("pytorch_lightning.seed_everything")
+    def test_seed_not_applied_in_build_trainer_factory(self, mock_seed, tmp_path):
         """Seeding is deferred to RFDETRModule.on_fit_start, not build_trainer()."""
-        import unittest.mock as mock
-
         from rfdetr.training import build_trainer
 
-        with mock.patch("pytorch_lightning.seed_everything") as mock_seed:
-            build_trainer(self._tc(tmp_path, seed=99), self._mc())
+        build_trainer(self._tc(tmp_path, seed=99), self._mc())
         mock_seed.assert_not_called()
 
     def test_sync_bn_forwarded_to_trainer(self, tmp_path):
@@ -570,6 +1150,204 @@ class TestDetectDevice:
         assert _detect_device() == "cpu"
 
 
+class TestCudaTrainingDeviceIndicesClamping:
+    """``_cuda_training_device_indices`` returns only indices this host can actually see.
+
+    Every index it returns is handed straight to a per-device probe such as ``torch.cuda.get_device_capability``, which
+    trips a bare internal ``assert`` on an unknown index. A run configured with more devices than the host has (or with
+    an explicit index that does not exist) must still fail in Lightning's own words, not with that ``AssertionError``.
+    """
+
+    @pytest.mark.parametrize(
+        ("devices", "expected"),
+        [
+            pytest.param(4, [0, 1], id="count-above-device-count"),
+            pytest.param([0, 3], [0], id="index-above-device-count"),
+            pytest.param("0,3", [0], id="comma-index-above-device-count"),
+            pytest.param("auto", [0, 1], id="auto-is-every-visible-device"),
+        ],
+    )
+    def test_requested_indices_are_clamped_to_the_visible_devices(
+        self, devices: int | str | list[int], expected: list[int]
+    ) -> None:
+        """Indices beyond ``torch.cuda.device_count()`` are dropped instead of forwarded to a per-device probe.
+
+        The host here has two GPUs, so ``devices=4``, ``[0, 3]`` and ``"0,3"`` all name at least one device that does
+        not exist — the shapes a user hits by copying a multi-GPU recipe onto a smaller machine.
+        """
+        with patch("torch.cuda.device_count", return_value=2):
+            assert _cuda_training_device_indices(devices) == expected
+
+    def test_a_host_without_cuda_selects_no_device(self) -> None:
+        """With no visible CUDA device every ``devices`` form resolves to an empty index list.
+
+        This is the CPU-only case (CI, laptops): the callers then fall back to probing the current device, which reports
+        no bfloat16 support because CUDA is unavailable.
+        """
+        with patch("torch.cuda.device_count", return_value=0):
+            assert _cuda_training_device_indices(2) == []
+
+
+class TestCudaSupportsNativeBf16:
+    """``_cuda_supports_native_bf16`` answers "native bfloat16 on this device?", which ``is_bf16_supported()`` does
+    not."""
+
+    @pytest.mark.parametrize(
+        ("capability", "hip", "native"),
+        [
+            pytest.param((7, 5), None, False, id="t4"),
+            pytest.param((7, 0), None, False, id="v100"),
+            pytest.param((8, 0), None, True, id="a100"),
+            pytest.param((8, 9), None, True, id="rtx-4090"),
+            pytest.param((7, 5), "5.7.31921", True, id="rocm-pre-ampere-shaped-capability"),
+        ],
+    )
+    def test_native_means_compute_capability_8_or_newer(
+        self, capability: tuple[int, int], hip: str | None, native: bool
+    ) -> None:
+        """Only Ampere and newer run bfloat16 natively on CUDA, even though ``is_bf16_supported()`` says True on a T4.
+
+        Every ROCm device (``torch.version.hip`` truthy) is the exception: it short-circuits to native bf16 without
+        consulting compute capability at all, so a pre-Ampere-shaped capability tuple paired with a truthy hip must
+        still resolve to True, not fall through to the capability comparison.
+        """
+        with (
+            patch("torch.cuda.is_available", return_value=True),
+            patch("torch.cuda.is_bf16_supported", return_value=True),
+            patch("torch.cuda.get_device_capability", return_value=capability),
+            patch("torch.version.hip", hip),
+        ):
+            assert _cuda_supports_native_bf16() is native
+
+    def test_checks_the_requested_device_not_the_current_one(self) -> None:
+        """On a host with a T4 at index 0 and an A100 at index 1, each index gets its own answer."""
+        capabilities = {0: (7, 5), 1: (8, 0)}
+        with (
+            patch("torch.cuda.is_available", return_value=True),
+            patch("torch.cuda.get_device_capability", side_effect=lambda device=None: capabilities[device or 0]),
+            patch("torch.version.hip", None),
+        ):
+            assert _cuda_supports_native_bf16(0) is False, "the T4 at index 0 has no native bf16"
+            assert _cuda_supports_native_bf16(1) is True, "the A100 at index 1 has native bf16"
+
+    @pytest.mark.parametrize(
+        "capability",
+        [
+            pytest.param((8, 0), id="a100-shaped-capability"),
+            pytest.param((7, 5), id="t4-shaped-capability"),
+        ],
+    )
+    def test_returns_false_when_cuda_is_unavailable_regardless_of_capability(self, capability: tuple[int, int]) -> None:
+        """``is_available() == False`` short-circuits to False before the capability check ever runs.
+
+        The mocked capability is Ampere-shaped in one case, so a True result here could only come from skipping the
+        ``is_available()`` guard, not from a capability read that never happens.
+        """
+        with (
+            patch("torch.cuda.is_available", return_value=False),
+            patch("torch.cuda.get_device_capability", return_value=capability),
+            patch("torch.version.hip", None),
+        ):
+            assert _cuda_supports_native_bf16() is False
+
+    def test_accepts_a_torch_device_argument(self) -> None:
+        """Type-hint completeness only: ``device`` accepts a ``torch.device``, matching its declared ``torch.device |
+        int | None`` annotation.
+
+        No production call site passes a ``torch.device`` here today -- ``auto_batch.py`` never calls
+        ``_cuda_supports_native_bf16`` directly; it goes through ``_cuda_native_bf16_on_devices``, which only ever
+        forwards int indices or ``None`` derived from ``TrainConfig.devices``. This case exists to cover the annotated
+        type, not to reproduce a real call path.
+        """
+        with (
+            patch("torch.cuda.is_available", return_value=True),
+            patch("torch.cuda.get_device_capability", return_value=(8, 0)),
+            patch("torch.version.hip", None),
+        ):
+            assert _cuda_supports_native_bf16(torch.device("cuda", 0)) is True
+
+
+class TestCudaTrainingDeviceIndices:
+    """``_cuda_training_device_indices`` turns a Lightning ``devices`` value into the CUDA indices it trains on."""
+
+    @pytest.mark.parametrize(
+        "devices",
+        [
+            "auto",
+            -1,
+            0,
+            "gpu0",
+        ],
+    )
+    def test_every_all_visible_sentinel_falls_through_to_every_device(self, devices: int | str) -> None:
+        """``"auto"``, ``-1``, and ``0`` are the documented "every visible device" sentinels.
+
+        A non-numeric typo like ``"gpu0"`` is not distinguished from those sentinels: it fails the same ``isdigit()``
+        check ``"auto"`` does and silently takes the identical fallback path instead of raising. This test documents
+        that identical behaviour explicitly rather than asserting a distinction that does not exist.
+        """
+        with patch("torch.cuda.device_count", return_value=3):
+            assert _cuda_training_device_indices(devices) == [0, 1, 2]
+
+    def test_empty_sequence_returns_empty_not_every_device(self) -> None:
+        """An empty explicit sequence (``devices=[]``) returns an empty list, not every visible device.
+
+        The fallback to the current device (``[None]``) for an empty result happens one layer up, in
+        ``_cuda_native_bf16_on_devices``, not inside this function.
+        """
+        assert _cuda_training_device_indices([]) == []
+
+
+class TestCudaBf16SupportedOnDevices:
+    """``_cuda_bf16_supported_on_devices`` gates an explicit ``amp_dtype="bf16"``, emulated bfloat16 included.
+
+    The gate and the "this GPU only emulates bfloat16" warning beside it must read the same devices, so this asks
+    ``torch.cuda.is_bf16_supported()``'s wider question for the GPUs a run trains on rather than the current device.
+    """
+
+    def test_a_device_that_only_emulates_bf16_still_counts_as_supported(self) -> None:
+        """A pre-Ampere training GPU reports bfloat16 through emulation, so an explicit request is honoured.
+
+        This is the T4/V100 case: ``amp_dtype="bf16"`` stays bf16 (with a warning about the cost) instead of silently
+        falling back to fp16.
+        """
+        with (
+            patch("torch.cuda.is_available", return_value=True),
+            patch("torch.version.hip", None),
+            patch("torch.cuda.device_count", return_value=2),
+            patch("torch.cuda.get_device_capability", return_value=(7, 5)),
+            patch("torch.cuda.is_bf16_supported", return_value=True),
+        ):
+            assert _cuda_bf16_supported_on_devices([1]) is True
+
+    def test_no_bf16_even_through_emulation_is_unsupported(self) -> None:
+        """When PyTorch reports no bfloat16 at all the gate is False, which is what triggers the fp16 fallback.
+
+        A device below Ampere on a CUDA build without bfloat16 emulation, so neither half of the question passes.
+        """
+        with (
+            patch("torch.cuda.is_available", return_value=True),
+            patch("torch.version.hip", None),
+            patch("torch.cuda.device_count", return_value=1),
+            patch("torch.cuda.get_device_capability", return_value=(6, 1)),
+            patch("torch.cuda.is_bf16_supported", return_value=False),
+        ):
+            assert _cuda_bf16_supported_on_devices(1) is False
+
+    def test_a_rocm_build_without_a_visible_gpu_is_unsupported(self) -> None:
+        """No CUDA device means no bfloat16, even on a build whose bare PyTorch probe answers True.
+
+        ``torch.cuda.is_bf16_supported()`` reads ``torch.version.hip`` before ``torch.cuda.is_available()``, so a ROCm
+        wheel on a machine with no GPU returns True from it — the helper must not inherit that answer.
+        """
+        with (
+            patch("torch.cuda.is_available", return_value=False),
+            patch("torch.version.hip", "6.0.0"),
+            patch("torch.cuda.is_bf16_supported", return_value=True),
+        ):
+            assert _cuda_bf16_supported_on_devices(1) is False
+
+
 class TestPretrainWeightsCompatibilityWarning:
     """Config-time warning for overrides that prevent pretrained weights from loading.
 
@@ -621,27 +1399,23 @@ class TestPretrainWeightsCompatibilityWarning:
         assert len(captured) == 1
         assert field in str(captured[0].message)
 
-    def test_mask_downsample_ratio_warns_on_seg_variant(self) -> None:
-        """``mask_downsample_ratio`` change is silently miscalibrating; must warn at config time."""
-        captured = self._capture(RFDETRSegNanoConfig, mask_downsample_ratio=2)
+    @pytest.mark.parametrize(
+        "config_cls, field, value",
+        [
+            pytest.param(RFDETRSegNanoConfig, "mask_downsample_ratio", 2, id="mask_downsample_ratio"),
+            # patch_size already raises in load_pretrain_weights; this warning is defense-in-depth.
+            # Value differs from RFDETRNanoConfig's default (16).
+            pytest.param(RFDETRNanoConfig, "patch_size", 14, id="patch_size"),
+            # RFDETRNanoConfig has segmentation_head=False; flipping it to True is the override,
+            # which also raises at load time but the warning fires first.
+            pytest.param(RFDETRNanoConfig, "segmentation_head", True, id="segmentation_head"),
+        ],
+    )
+    def test_single_field_override_warns(self, config_cls: type, field: str, value: object) -> None:
+        """A single breaking-field override on its variant config fires exactly one warning naming the field."""
+        captured = self._capture(config_cls, **{field: value})
         assert len(captured) == 1
-        assert "mask_downsample_ratio" in str(captured[0].message)
-
-    def test_patch_size_override_warns_defense_in_depth(self) -> None:
-        """patch_size already raises in load_pretrain_weights; the new warning is defense-in-depth.
-
-        We change patch_size to a value that differs from RFDETRNanoConfig's default (16).
-        """
-        captured = self._capture(RFDETRNanoConfig, patch_size=14)
-        assert len(captured) == 1
-        assert "patch_size" in str(captured[0].message)
-
-    def test_segmentation_head_override_warns(self) -> None:
-        """segmentation_head also raises at load time but warning fires first."""
-        # RFDETRNanoConfig has segmentation_head=False; flipping it to True is the override.
-        captured = self._capture(RFDETRNanoConfig, segmentation_head=True)
-        assert len(captured) == 1
-        assert "segmentation_head" in str(captured[0].message)
+        assert field in str(captured[0].message)
 
     @pytest.mark.parametrize(
         "field, value",
@@ -809,3 +1583,139 @@ class TestBreakingListIntegrity:
         }
         stale = all_breaking - set(ModelConfig.model_fields.keys())
         assert not stale, f"Fields in breaking lists not in ModelConfig.model_fields: {stale}"
+
+
+class TestTrainConfigAugmentationBackendSerialization:
+    """Serialization contract for ``TrainConfig.augmentation_backend`` used by checkpoint writers (Item #6).
+
+    ``BestModelCallback`` serializes the training config with a plain ``model_dump()`` before writing it into the
+    ``.pth`` checkpoint's ``args``.  A ``@field_serializer`` renders the ``AugmentationBackend`` enum as its plain
+    string value so the writer stays JSON-safe without a blanket ``model_dump(mode="json")`` that would silently coerce
+    every *other* field's serialized shape (e.g. ``int`` loss coefficients to ``float``).
+    """
+
+    def test_backend_dumps_to_json_safe_string(self, tmp_path: Path) -> None:
+        """Plain ``model_dump()`` (as BestModelCallback uses) renders the enum as its ``str`` value."""
+        config = TrainConfig(dataset_dir=str(tmp_path), augmentation_backend="torchvision")
+        dumped = config.model_dump()
+        assert dumped["augmentation_backend"] == AugmentationBackend.TV.value
+        assert type(dumped["augmentation_backend"]) is str
+
+    def test_dumped_backend_survives_json_sidecar(self, tmp_path: Path) -> None:
+        """The dumped backend survives the ``json.dump(..., default=str)`` sidecar path unchanged."""
+        config = TrainConfig(dataset_dir=str(tmp_path), augmentation_backend="torchvision")
+        dumped = config.model_dump()
+        round_tripped = json.loads(json.dumps(dumped, default=str))
+        assert round_tripped["augmentation_backend"] == "torchvision"
+
+    def test_dumped_backend_reconstructs_to_enum_member(self, tmp_path: Path) -> None:
+        """Reloading a config from its dumped args restores the concrete ``AugmentationBackend`` member."""
+        config = TrainConfig(dataset_dir=str(tmp_path), augmentation_backend="torchvision")
+        dumped = config.model_dump()
+        with warnings.catch_warnings():
+            # Reconstructing from a full dump sets deprecated fields; those warnings are unrelated
+            # to the backend round-trip under test.
+            warnings.simplefilter("ignore", DeprecationWarning)
+            reloaded = TrainConfig(**dumped)
+        assert reloaded.augmentation_backend is AugmentationBackend.TV
+
+    def test_plain_dump_does_not_coerce_int_field(self, tmp_path: Path) -> None:
+        """Plain ``model_dump()`` keeps native field types — guards against a blanket ``mode="json"`` regression.
+
+        Under ``model_dump(mode="json")`` this ``int`` default is silently coerced to ``float``; the
+        ``field_serializer`` lets the writer stay on plain ``model_dump()`` so unrelated fields keep their shape.
+        """
+        config = TrainConfig(dataset_dir=str(tmp_path), augmentation_backend="torchvision")
+        dumped = config.model_dump()
+        assert type(dumped["keypoint_l1_loss_coef"]) is int
+
+    @pytest.mark.parametrize(
+        "sentinel",
+        [
+            pytest.param("cpu", id="cpu"),
+            pytest.param("auto", id="auto"),
+        ],
+    )
+    def test_sentinel_backend_passes_through_as_string(self, tmp_path: Path, sentinel: str) -> None:
+        """The ``"cpu"``/``"auto"`` auto-pick sentinels serialize unchanged as plain strings."""
+        config = TrainConfig(dataset_dir=str(tmp_path), augmentation_backend=sentinel)
+        dumped = config.model_dump()
+        assert dumped["augmentation_backend"] == sentinel
+
+
+class TestAugmentationBackendAvailability:
+    """Availability probes use the backend-specific optional dependency contract."""
+
+    @pytest.mark.parametrize(
+        ("backend", "module_name"),
+        [
+            pytest.param(AugmentationBackend.ALBU, "albumentations", id="albumentations"),
+            pytest.param(AugmentationBackend.KORNIA, "kornia.augmentation", id="kornia"),
+            pytest.param(AugmentationBackend.GPU, "kornia.augmentation", id="gpu-alias"),
+            pytest.param(AugmentationBackend.TV, "torchvision.transforms.v2", id="torchvision-v2"),
+        ],
+    )
+    def test_backend_probes_its_required_module(self, backend: AugmentationBackend, module_name: str) -> None:
+        """Each backend checks the module that implements its transform path."""
+        package_importable = MagicMock(return_value=True)
+
+        with patch.object(config_module, "_package_importable", package_importable):
+            assert backend._is_available()
+
+        package_importable.assert_called_once_with(module_name)
+
+    @pytest.mark.parametrize(
+        ("backend", "module_name"),
+        [
+            pytest.param(AugmentationBackend.ALBU, "albumentations", id="albumentations"),
+            pytest.param(AugmentationBackend.KORNIA, "kornia.augmentation", id="kornia"),
+            pytest.param(AugmentationBackend.TV, "torchvision.transforms.v2", id="torchvision-v2"),
+        ],
+    )
+    def test_backend_propagates_a_failed_module_probe(self, backend: AugmentationBackend, module_name: str) -> None:
+        """Each backend reports unavailable when its required module is absent."""
+        package_importable = MagicMock(return_value=False)
+
+        with patch.object(config_module, "_package_importable", package_importable):
+            assert not backend._is_available()
+
+        package_importable.assert_called_once_with(module_name)
+
+    def test_gpu_is_an_alias_for_kornia(self) -> None:
+        """The legacy GPU spelling retains Kornia availability semantics."""
+        assert AugmentationBackend.GPU is AugmentationBackend.KORNIA
+
+
+class TestTrainConfigAugmentationBackendConstruction:
+    """Construction-time validation for ``TrainConfig.augmentation_backend`` (Item #7).
+
+    The ``@field_validator(mode="before")`` only maps legacy alias strings (``"gpu"``, ``"tv"``, ``"albu"``) to their
+    current form; it never runs custom logic for non-string input, so an already-concrete ``AugmentationBackend`` member
+    must be accepted unchanged. Unrecognized strings must surface as a Pydantic ``ValidationError`` — not some other
+    exception or a silent fallback to a default backend.
+    """
+
+    def test_unrecognized_backend_string_raises_validation_error(self, tmp_path: Path) -> None:
+        """An unrecognized backend string raises ``ValidationError``, not a silent fallback."""
+        with pytest.raises(ValidationError, match="augmentation_backend"):
+            TrainConfig(dataset_dir=str(tmp_path), augmentation_backend="not_a_real_backend")
+
+    def test_enum_member_accepted_directly_without_alias_lookup(self, tmp_path: Path) -> None:
+        """Passing a concrete ``AugmentationBackend`` member at construction bypasses the alias map."""
+        config = TrainConfig(dataset_dir=str(tmp_path), augmentation_backend=AugmentationBackend.ALBU)
+        assert config.augmentation_backend is AugmentationBackend.ALBU
+
+    @pytest.mark.parametrize(
+        "alias,expected",
+        [
+            pytest.param("gpu", AugmentationBackend.KORNIA, id="gpu-aliases-to-kornia"),
+            pytest.param("tv", AugmentationBackend.TV, id="tv-aliases-to-torchvision"),
+            pytest.param("albu", AugmentationBackend.ALBU, id="albu-aliases-to-albumentations"),
+        ],
+    )
+    def test_legacy_alias_string_resolves_to_current_enum_member(
+        self, tmp_path: Path, alias: str, expected: AugmentationBackend
+    ) -> None:
+        """Legacy alias strings (``"gpu"``, ``"tv"``, ``"albu"``) still resolve to their current backend."""
+        config = TrainConfig(dataset_dir=str(tmp_path), augmentation_backend=alias)
+        assert config.augmentation_backend is expected

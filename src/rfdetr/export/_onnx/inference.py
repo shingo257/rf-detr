@@ -14,23 +14,38 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 from PIL import Image as PILImage
 from supervision import Detections
 
+from rfdetr.export._runtime.decode import decode_detections
+from rfdetr.export._runtime.preprocess import preprocess_to_nchw
 from rfdetr.utilities.logger import get_logger
 
 logger = get_logger()
 
 
-def _create_onnx_session(model_path: str | Path) -> Any:
+def _create_onnx_session(model_path: str | Path, providers: list[str] | None = None) -> Any:
     """Load an ONNX model and create an ONNX Runtime inference session.
 
     Imports ``onnxruntime`` at call time so that the rest of the package remains usable without it installed.  Input and
     output names / shapes are logged at DEBUG level for troubleshooting.
 
+    When ``providers`` is ``None``, the session auto-selects the best available backend: CUDA if ``onnxruntime-gpu`` is
+    installed, otherwise CPU (with a warning).  Pass an explicit list to pin the backend — useful for benchmarking
+    CPU vs CUDA side-by-side.
+
+    The session's CPU intra-op thread pool -- the one actually created under this function's default sequential
+    execution mode -- is configured to block rather than busy-spin while idle, since spinning would otherwise contend
+    for CPU with any other work sharing the process for as long as the session lives, including this module's own
+    ``preprocess_to_nchw`` step, which prefers torchvision when it is installed. The inter-op entry is set for the
+    same reason but has no effect here: ONNX Runtime only creates an inter-op thread pool under
+    ``ExecutionMode.ORT_PARALLEL``, which this function never requests.
+
     Args:
         model_path: Path to the ``.onnx`` model file.
+        providers: Ordered list of ORT execution providers, e.g.
+            ``["CUDAExecutionProvider", "CPUExecutionProvider"]``.  When ``None`` (default), the best available
+            provider is selected automatically.
 
     Returns:
         An ``onnxruntime.InferenceSession`` ready for inference.
@@ -51,7 +66,30 @@ def _create_onnx_session(model_path: str | Path) -> Any:
             "ONNX Runtime inference requires 'onnxruntime'. Install it: `pip install onnxruntime`"
         ) from exc
 
-    session = ort.InferenceSession(str(model_path))
+    if providers is None:
+        _preferred = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        _available = ort.get_available_providers()
+        providers = [p for p in _preferred if p in _available] or ["CPUExecutionProvider"]
+        if providers[0] == "CPUExecutionProvider":
+            logger.warning(
+                "CUDAExecutionProvider not available — running ONNX inference on CPU. "
+                "Install onnxruntime-gpu for GPU acceleration: `pip install onnxruntime-gpu`"
+            )
+    session_options = ort.SessionOptions()
+    # ORT's default CPU intra-op thread pool busy-spins while idle instead of blocking, trading
+    # wake-up latency for CPU usage between calls. That spinning contends for CPU with any other
+    # work in this process -- including this module's own torchvision-based preprocessing in
+    # ``preprocess_to_nchw`` -- for as long as the session lives, and measurably slows down the
+    # session's own next call too. Disabling it only changes how idle threads wait, not computed
+    # values. This session never sets ``execution_mode``, so it stays at ORT's default
+    # ExecutionMode.ORT_SEQUENTIAL, under which ORT never creates an inter-op thread pool at all --
+    # that pool only exists under ORT_PARALLEL. The inter-op entry below is set defensively for
+    # that case; it has no effect on this function's own (sequential) behavior, applies identically
+    # regardless of the requested execution provider, and does not change computed values either way.
+    session_options.add_session_config_entry("session.intra_op.allow_spinning", "0")
+    session_options.add_session_config_entry("session.inter_op.allow_spinning", "0")
+    session = ort.InferenceSession(str(model_path), sess_options=session_options, providers=providers)
+    logger.debug("ONNX Runtime providers in use: %s", session.get_providers())
     for inp in session.get_inputs():
         logger.debug("Input  : name=%s  shape=%s  type=%s", inp.name, inp.shape, inp.type)
     for out in session.get_outputs():
@@ -63,6 +101,8 @@ def _run_inference(
     session: Any,
     image_path: str | Path,
     threshold: float = 0.3,
+    num_select: int | None = None,
+    background_class_id: int | None = -1,
 ) -> tuple[Detections, PILImage.Image]:
     """Preprocess one image, run ONNX Runtime inference, and decode detections.
 
@@ -72,11 +112,15 @@ def _run_inference(
 
     **Input contract** (must match ``RFDETR.predict()`` preprocessing exactly):
 
-    - Image is opened as-is and converted to ``"RGB"`` (3-channel) or ``"L"``
-      (1-channel greyscale) depending on the model's channel count.
-    - Resize uses ``PIL.Image.Resampling.BILINEAR`` — matching
-      ``torchvision.transforms.functional.resize()`` which defaults to ``InterpolationMode.BILINEAR``.  Using PIL's
-      default (``BICUBIC``) would produce slightly different pixel values and can degrade confidence.
+    - Image is opened with Pillow and converted to ``"RGB"`` (3-channel) or ``"L"``
+      (1-channel greyscale) depending on the model's channel count. PIL is used only to decode and
+      convert — never to resize.
+    - Resize follows ``RFDETR.predict()``'s exact convention — bilinear, half-pixel centers,
+      ``antialias=False`` — applied by :func:`~rfdetr.export._runtime.preprocess.preprocess_to_nchw` via
+      ``torchvision`` when importable
+      (bit-exact) or the pure-NumPy ``_bilinear_resize_half_pixel`` fallback. PIL's own BILINEAR/BICUBIC
+      filters apply adaptive antialiasing when downscaling and would shift pixel values away from predict(),
+      degrading confidence.
     - Pixel values are scaled to ``[0, 1]`` then normalised with ImageNet
       statistics: ``mean=[0.485, 0.456, 0.406]``, ``std=[0.229, 0.224, 0.225]``.
     - The tensor is kept as ``[1, C, H, W]`` (NCHW) — unlike the TFLite helper
@@ -89,6 +133,11 @@ def _run_inference(
         image_path: Path to the input image (any format supported by Pillow).
             RGB images are used as-is; RGBA / palette images are converted.
         threshold: Confidence threshold; detections below this are discarded.
+        num_select: Maximum query/class pairs selected before thresholding. ``None`` uses the exported model's query
+            count, matching shipped RF-DETR configurations; pass an explicit value for custom exports.
+        background_class_id: Exported class slot to exclude before selection. The default ``-1`` preserves the common
+            final-slot background convention. Pass ``None`` for sparse COCO checkpoints, whose final slot is class 90,
+            or ``0`` for legacy background-first keypoint checkpoints.
 
     Returns:
         A tuple of ``(detections, pil_img)`` where ``detections`` contains pixel-space ``xyxy`` boxes and ``pil_img`` is
@@ -107,30 +156,8 @@ def _run_inference(
     # ONNX NCHW: [batch, channels, height, width]
     _, channels, height, width = inputs[0].shape
 
-    _imagenet_mean = [0.485, 0.456, 0.406]
-    _imagenet_std = [0.229, 0.224, 0.225]
-    mean = np.array([_imagenet_mean[i % 3] for i in range(channels)], dtype=np.float32)
-    std = np.array([_imagenet_std[i % 3] for i in range(channels)], dtype=np.float32)
-
-    pil_img = PILImage.open(image_path)
-    pil_mode = "L" if channels == 1 else "RGB"
-    # Use BILINEAR resampling to match torchvision.transforms.functional.resize()
-    # which defaults to InterpolationMode.BILINEAR.  PIL's default (None → BICUBIC)
-    # produces different pixel values and can cause a measurable confidence drop.
-    arr = (
-        np.array(
-            pil_img.convert(pil_mode).resize((width, height), PILImage.Resampling.BILINEAR),
-            dtype=np.float32,
-        )
-        / 255.0
-    )
-    if arr.ndim == 2:  # "L" → (height, width); needs (height, width, 1)
-        arr = arr[:, :, np.newaxis]
-
-    # Normalise HWC, then transpose to CHW for ONNX (NCHW)
-    arr = (arr - mean) / std
-    arr = arr.transpose(2, 0, 1)  # HWC → CHW
-    inp_tensor = arr[np.newaxis].astype(np.float32)  # (1, C, H, W)
+    with PILImage.open(image_path) as pil_img:
+        inp_tensor = preprocess_to_nchw(pil_img, height, width, channels)
 
     raw_outputs = session.run(None, {input_name: inp_tensor})
 
@@ -175,34 +202,17 @@ def _run_inference(
             )
 
     boxes_cwh = raw_outputs[boxes_idx][0]  # (Q, 4) normalised cxcywh
-    # Drop last logit column: RF-DETR adds +1 to num_classes (no-object slot, criterion.py:323).
-    # Keeping it causes class_id == len(class_names) → IndexError at display time.
-    logits = raw_outputs[logits_idx][0, :, :-1]  # (Q, num_classes)
+    # Background placement is checkpoint-dependent and cannot be inferred from the tensor width alone.
+    logits = raw_outputs[logits_idx][0]
 
-    # RF-DETR uses per-class sigmoid (not softmax) — mirrors PostProcess.forward in postprocess.py.
-    logger.debug(
-        "Logits stats: shape=%s min=%.3f max=%.3f mean=%.3f",
-        logits.shape,
-        float(logits.min()),
-        float(logits.max()),
-        float(logits.mean()),
+    decoded = decode_detections(
+        boxes_cwh,
+        logits,
+        pil_img.size,
+        threshold=threshold,
+        num_select=num_select,
+        background_class_id=background_class_id,
     )
-    one = np.asarray(1, dtype=logits.dtype)
-    scores_all = one / (one + np.exp(-logits.clip(-88, 88)))
-    scores = scores_all.max(axis=-1)
-    cls = scores_all.argmax(axis=-1)
-    logger.debug(
-        "Scores stats: min=%.3f max=%.3f — detections above threshold %.2f: %d",
-        float(scores.min()),
-        float(scores.max()),
-        threshold,
-        int((scores > threshold).sum()),
-    )
-    keep = scores > threshold
 
-    cx, cy, bw, bh = boxes_cwh[keep].T
-    ow, oh = pil_img.size
-    xyxy = np.stack([cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2], axis=1)
-    xyxy *= np.array([ow, oh, ow, oh], dtype=np.float32)
-
-    return Detections(xyxy=xyxy, confidence=scores[keep], class_id=cls[keep].astype(int)), pil_img
+    detections = Detections(xyxy=decoded.xyxy, confidence=decoded.confidence, class_id=decoded.class_id.astype(int))
+    return detections, pil_img
