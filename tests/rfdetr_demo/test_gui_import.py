@@ -7,7 +7,14 @@
 
 from __future__ import annotations
 
+import importlib.util
 
+import pytest
+
+_HAS_TK = importlib.util.find_spec("tkinter") is not None
+
+
+@pytest.mark.skipif(not _HAS_TK, reason="tkinter not installed")
 def test_main_window_imports() -> None:
     from rfdetr_demo.gui.main_window import VideoDemoGuiApp
 
