@@ -67,6 +67,20 @@
     
     
   
+  
+  
+  <meta name="robots" content="noindex, follow">
+  
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5M220DKLMB"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){window.dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-5M220DKLMB');
+  </script>
   <link rel="preconnect" href="https://storage.googleapis.com">
 
   
@@ -91,7 +105,7 @@
   
   
   
-  <meta property="article:modified_time" content="2026-06-13T00:36:02">
+  <meta property="article:modified_time" content="2026-09-27T10:01:04">
   
   <script type="application/ld+json">
   {
@@ -106,7 +120,7 @@
     "inLanguage": "en",
     "keywords": "RF-DETR, rfdetr, object detection, instance segmentation, computer vision, Roboflow",
     "datePublished": "2025-03-01",
-    "dateModified": "2026-06-13T00:36:02",
+    "dateModified": "2026-09-27T10:01:04",
     "image": "https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png",
     "author": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
     "publisher": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
@@ -171,6 +185,14 @@
     
       <div data-md-color-scheme="default" data-md-component="outdated" hidden>
         
+          <aside class="md-banner md-banner--warning">
+            <div class="md-banner__inner md-grid md-typeset">
+              You are reading the unreleased development version of the documentation, built from the <code>develop</code> branch.<br>
+APIs described here may change or may never ship in a release, so use the <a href="https://rfdetr.roboflow.com/latest/"><strong>latest stable release</strong></a> instead.
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),base=new URL("../../.."),outdated=__md_get("__outdated",sessionStorage,base);!0===outdated&&el&&(el.hidden=!1)</script>
+          </aside>
+        
       </div>
     
     
@@ -195,7 +217,7 @@
       data-md-component="logo"
     >
       
-  <img src="../../../assets/roboflow-logo.svg" alt="logo">
+  <img src="../../../assets/roboflow-logo.svg" alt="RF-DETR" width="24" height="24">
 
     </a>
 
@@ -224,7 +246,7 @@
             id="item-logo"
             >
             
-  <img src="../../../assets/roboflow-logo.svg" alt="logo">
+  <img src="../../../assets/roboflow-logo.svg" alt="RF-DETR" width="24" height="24">
 
             </a>
             
@@ -246,7 +268,7 @@
         </label>
 
         <!-- Search interface -->
-        <div class="md-search" data-md-component="search" role="dialog">
+        <div class="md-search" data-md-component="search" role="dialog" aria-modal="true" aria-label="Search">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
@@ -284,7 +306,7 @@
 
     <ul class="header-list">
         <li style="align-items: center;" id="resources-list">
-            <label for="dropdown-resources"><span>Resources <img src="https://ka-p.fontawesome.com/releases/v6.6.0/svgs/regular/chevron-down.svg?v=2&token=a463935e93" style="height: 0.5rem;" /></span></label>
+            <label for="dropdown-resources"><span>Resources <span class="header-chevron" aria-hidden="true"></span></span></label>
             <input type="radio" name="dropdown" id="dropdown-resources" style="display: none;" />
             <ul class="resources-sublist sublist">
                 <li><a href="https://blog.roboflow.com">Blog</a></li>
@@ -294,7 +316,7 @@
             </ul>
         </li>
         <li style="align-items: center;" id="products-list">
-            <label for="dropdown-products"><span>Docs <img src="https://ka-p.fontawesome.com/releases/v6.6.0/svgs/regular/chevron-down.svg?v=2&token=a463935e93" style="height: 0.5rem;" /></span></label>
+            <label for="dropdown-products"><span>Docs <span class="header-chevron" aria-hidden="true"></span></span></label>
             <input type="radio" name="dropdown" id="dropdown-products" style="display: none;" />
             <ul class="products-sublist sublist">
                 <li><a href="https://inference.roboflow.com">Inference</a></li>
@@ -305,79 +327,72 @@
                 <li><a href="https://docs.roboflow.com">Roboflow</a></li>
             </ul>
         </li>
-        <script>
-          document.addEventListener('click', function(event) {
-            const resourcesList = document.getElementById('resources-list');
-            const productsList = document.getElementById('products-list');
-            const dropdownResources = document.getElementById('dropdown-resources');
-            const dropdownProducts = document.getElementById('dropdown-products');
-
-            if (!resourcesList.contains(event.target)) {
-              dropdownResources.checked = false;
-            }
-            if (!productsList.contains(event.target)) {
-              dropdownProducts.checked = false;
-            }
-          });
-          // on mouse over
-          document.getElementById('resources-list').addEventListener('mouseover', function() {
-            document.getElementById('dropdown-resources').checked = true;
-          });
-          document.getElementById('products-list').addEventListener('mouseover', function() {
-            document.getElementById('dropdown-products').checked = true;
-          });
-          // on mouse out
-          document.getElementById('resources-list').addEventListener('mouseout', function() {
-            // if not hovering over the sublist or the label, uncheck the dropdown
-            // wait 1 sec
-            setTimeout(function() {
-              if (!document.querySelector('.resources-sublist:hover') && !document.querySelector('#resources-list:hover')) {
-                document.getElementById('dropdown-resources').checked = false;
-              }
-            }, 350);
-          });
-          // if mouseout of sublist, uncheck immediately
-          document.querySelector('.resources-sublist').addEventListener('mouseout', function() {
-            setTimeout(function() {
-              if (!document.querySelector('.resources-sublist:hover') && !document.querySelector('#resources-list:hover')) {
-                document.getElementById('dropdown-resources').checked = false;
-              }
-            }, 450);
-          });
-          document.getElementById('products-list').addEventListener('mouseout', function() {
-            // if not hovering over the sublist, uncheck the dropdown
-            // wait 1 sec
-            setTimeout(function() {
-              if (!document.querySelector('.products-sublist:hover') && !document.querySelector('#products-list:hover')) {
-                document.getElementById('dropdown-products').checked = false;
-              }
-            }, 500);
-          });
-          // if mouseout of sublist, uncheck immediately
-          document.querySelector('.products-sublist').addEventListener('mouseout', function() {
-            setTimeout(function() {
-              if (!document.querySelector('.products-sublist:hover') && !document.querySelector('#products-list:hover')) {
-                document.getElementById('dropdown-products').checked = false;
-              }
-            }, 500);
-          });
-
-        </script>
-        <style>
-          #dropdown-resources:checked ~ .resources-sublist {
-            display: block;
-          }
-          #dropdown-products:checked ~ .products-sublist {
-            display: block;
-          }
-          /* Hide dropdown if clicking outside */
-          body:not(:has(#dropdown-resources:checked)) .resources-sublist,
-          body:not(:has(#dropdown-products:checked)) .products-sublist {
-            display: none;
-          }
-        </style>
-        <a href="https://github.com/roboflow/rf-detr"><li class="header-btn" style="border-radius: 5px; color: white; background: var(--md-typeset-a-color); padding-top: 0.25rem; padding-left: 0.5rem; padding-bottom: 0.25rem; padding-right: 0.5rem; border: 1px solid #8315F9;">Go to GitHub</li></a>
+        <li>
+          <a href="https://github.com/roboflow/rf-detr" class="header-btn" style="border-radius: 5px; color: white; background: var(--md-typeset-a-color); padding-top: 0.25rem; padding-left: 0.5rem; padding-bottom: 0.25rem; padding-right: 0.5rem; border: 1px solid #8315F9;">Go to GitHub</a>
+        </li>
     </ul>
+    <script>
+      document.addEventListener('click', function(event) {
+        const resourcesList = document.getElementById('resources-list');
+        const productsList = document.getElementById('products-list');
+        const dropdownResources = document.getElementById('dropdown-resources');
+        const dropdownProducts = document.getElementById('dropdown-products');
+
+        if (!resourcesList.contains(event.target)) {
+          dropdownResources.checked = false;
+        }
+        if (!productsList.contains(event.target)) {
+          dropdownProducts.checked = false;
+        }
+      });
+      document.getElementById('resources-list').addEventListener('mouseover', function() {
+        document.getElementById('dropdown-resources').checked = true;
+      });
+      document.getElementById('products-list').addEventListener('mouseover', function() {
+        document.getElementById('dropdown-products').checked = true;
+      });
+      document.getElementById('resources-list').addEventListener('mouseout', function() {
+        setTimeout(function() {
+          if (!document.querySelector('.resources-sublist:hover') && !document.querySelector('#resources-list:hover')) {
+            document.getElementById('dropdown-resources').checked = false;
+          }
+        }, 350);
+      });
+      document.querySelector('.resources-sublist').addEventListener('mouseout', function() {
+        setTimeout(function() {
+          if (!document.querySelector('.resources-sublist:hover') && !document.querySelector('#resources-list:hover')) {
+            document.getElementById('dropdown-resources').checked = false;
+          }
+        }, 450);
+      });
+      document.getElementById('products-list').addEventListener('mouseout', function() {
+        setTimeout(function() {
+          if (!document.querySelector('.products-sublist:hover') && !document.querySelector('#products-list:hover')) {
+            document.getElementById('dropdown-products').checked = false;
+          }
+        }, 500);
+      });
+      document.querySelector('.products-sublist').addEventListener('mouseout', function() {
+        setTimeout(function() {
+          if (!document.querySelector('.products-sublist:hover') && !document.querySelector('#products-list:hover')) {
+            document.getElementById('dropdown-products').checked = false;
+          }
+        }, 500);
+      });
+      function labelCurrentVersion() {
+        document.querySelectorAll('.md-version__current').forEach(function(button) {
+          const label = button.textContent.trim();
+          if (label) {
+            button.setAttribute('aria-label', label);
+          }
+        });
+      }
+      labelCurrentVersion();
+      const versionMenu = document.querySelector('.md-version');
+      if (versionMenu) {
+        new MutationObserver(labelCurrentVersion).observe(versionMenu, { childList: true, subtree: true });
+      }
+    </script>
   </nav>
 
   <!-- Navigation tabs (sticky) -->
@@ -458,6 +473,25 @@
         </a>
       </li>
     
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../faq/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  FAQ
+
+      </a>
+    </li>
   
 
       
@@ -548,7 +582,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../.." title="RF-DETR" class="md-nav__button md-logo" aria-label="RF-DETR" data-md-component="logo">
       
-  <img src="../../../assets/roboflow-logo.svg" alt="logo">
+  <img src="../../../assets/roboflow-logo.svg" alt="RF-DETR" width="24" height="24">
 
     </a>
     RF-DETR
@@ -1160,6 +1194,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Learning Rate Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#custom-optimizer-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Optimizer Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1192,6 +1243,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Hardware Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#training-precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training precision
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1298,6 +1366,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Evaluation Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#validation-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1508,9 +1593,25 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../export/" class="md-nav__link">
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -1524,7 +1625,363 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Export Model
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../exports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4_2" id="__nav_2_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export Formats
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Export Formats
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../exports/onnx/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ONNX
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../exports/tensorrt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TensorRT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../exports/tflite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TFLite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../exports/litert/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LiteRT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../exports/openvino/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenVINO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../exports/executorch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ExecuTorch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../exports/coreml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CoreML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../exports/coreai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core AI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../exports/blueprint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exporter Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2463,6 +2920,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../cookbooks/" class="md-nav__link">
         
   
@@ -2611,6 +3095,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Learning Rate Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#custom-optimizer-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Optimizer Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2643,6 +3144,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Hardware Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#training-precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training precision
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2750,6 +3268,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Evaluation Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#validation-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2854,12 +3389,12 @@
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">dataset_dir</span><span class="o">=</span><span class="s2">"path/to/dataset"</span><span class="p">,</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">grad_accum_steps</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">lr</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">output_dir</span><span class="o">=</span><span class="s2">"output"</span><span class="p">,</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">batch_size</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">,</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">lr</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">output_dir</span><span class="o">=</span><span class="s2">"output"</span><span class="p">,</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">)</span>
 </span></code></pre></div>
+<p><code>batch_size="auto"</code> requires a CUDA-capable GPU because it probes CUDA memory. For CPU or MPS training, provide a concrete integer batch size and use <code>grad_accum_steps</code> if memory limits the physical batch.</p>
 <h2 id="core-parameters">Core Parameters<a class="headerlink" href="#core-parameters" title="Permanent link">&para;</a></h2>
 <p>These are the essential parameters for training:</p>
 <table>
@@ -2892,29 +3427,55 @@
 </tr>
 <tr>
 <td><code>batch_size</code></td>
-<td><code>int</code></td>
+<td><code>int or "auto"</code></td>
 <td><code>4</code></td>
-<td>Number of samples processed per iteration. Higher values require more GPU memory.</td>
+<td>Number of samples processed per iteration. Higher values require more GPU memory. Set to <code>"auto"</code> to probe the GPU for the largest safe batch size automatically.</td>
 </tr>
 <tr>
 <td><code>grad_accum_steps</code></td>
 <td><code>int</code></td>
-<td><code>4</code></td>
-<td>Accumulates gradients over multiple mini-batches. Use with <code>batch_size</code> to achieve effective batch size.</td>
+<td><code>1</code></td>
+<td>Accumulates gradients over several mini-batches before each optimizer step. Opt-in: raise it only when memory caps <code>batch_size</code> below the nominal effective-batch target you want.</td>
+</tr>
+<tr>
+<td><code>eval_batch_size</code></td>
+<td><code>int or None</code></td>
+<td><code>None</code></td>
+<td>Batch size for the validation, test and predict dataloaders. <code>None</code> inherits <code>batch_size</code>. <code>no_grad</code> avoids autograd activation storage, but in-fit evaluation still shares device memory with the model and optimizer state and needs memory for its forward outputs.</td>
+</tr>
+<tr>
+<td><code>auto_batch_target_effective</code></td>
+<td><code>int</code></td>
+<td><code>16</code></td>
+<td>Only used when <code>batch_size="auto"</code>. Global nominal effective-batch target; the probe derives a per-device target before scaling by <code>devices * num_nodes</code>.</td>
+</tr>
+<tr>
+<td><code>auto_batch_max_targets_per_image</code></td>
+<td><code>int</code></td>
+<td><code>100</code></td>
+<td>Only used when <code>batch_size="auto"</code>. Synthetic target count per image the probe uses to simulate worst-case matcher/loss memory.</td>
+</tr>
+<tr>
+<td><code>auto_batch_ema_headroom</code></td>
+<td><code>float</code></td>
+<td><code>0.7</code></td>
+<td>Only used when <code>batch_size="auto"</code> and <code>use_ema=True</code>. Fraction of the probed batch size reserved as headroom for the EMA model's extra memory use. Must be in <code>(0, 1]</code>.</td>
 </tr>
 <tr>
 <td><code>resume</code></td>
 <td><code>str</code></td>
 <td><code>None</code></td>
-<td>Path to a saved checkpoint to continue training. Restores model weights, optimizer state, and scheduler.</td>
+<td>Path to a saved checkpoint to continue training. Full <code>.ckpt</code> files restore model, optimizer, and scheduler state; lightweight best <code>.pth</code> files restart optimizer and scheduler state.</td>
 </tr>
 </tbody>
 </table>
 <h3 id="understanding-batch-size">Understanding Batch Size<a class="headerlink" href="#understanding-batch-size" title="Permanent link">&para;</a></h3>
-<p>The <strong>effective batch size</strong> is calculated as:</p>
+<p>The <strong>nominal effective batch size</strong> is calculated as:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>effective_batch_size = batch_size × grad_accum_steps × num_gpus
 </span></code></pre></div>
-<p>Recommended configurations for different GPUs (targeting effective batch size of 16):</p>
+<p><strong>Set <code>batch_size</code> first, <code>grad_accum_steps</code> second.</strong> Raise <code>batch_size</code> only as far as the selected model, task, resolution, and GPU allow, and leave <code>grad_accum_steps</code> at its default of <code>1</code> when possible. If hardware memory prevents the physical batch from reaching your nominal target, increase <code>grad_accum_steps</code> to recover that target's optimizer-step window. This is not an optimization-equivalent substitute: it splits the window across smaller forward/backward passes, changes microbatch cadence, and a small physical batch tends to leave the GPU under-occupied. On one L4 training <code>rfdetr-small</code>, <code>batch_size=16, grad_accum_steps=1</code> ran about 27% faster per epoch than <code>batch_size=4, grad_accum_steps=4</code> at the same nominal effective batch of 16, with mAP equal within run-to-run noise. That figure is one GPU and one dataset, so treat the direction as the lesson, not the number.</p>
+<p>When you trade between the two, use the product <code>batch_size × grad_accum_steps</code> as a nominal effective-batch target. Keeping that product constant does not guarantee identical optimization behavior: changing <code>batch_size</code> changes the forward/backward microbatch cadence even when the nominal images-per-optimizer-update target is unchanged. Start with <code>batch_size="auto"</code> on CUDA when the available memory or workload is uncertain; on CPU or MPS, choose a conservative integer batch size instead.</p>
+<p>Configurations reaching a nominal effective batch size of 16 on illustrative hardware:</p>
 <table>
 <thead>
 <tr>
@@ -2957,6 +3518,11 @@
 </tr>
 </tbody>
 </table>
+<p>These are illustrative starting configurations from the documented model/workload setup, not capacity guarantees. Actual safe values depend on the model, task, resolution, augmentations, optimizer state, and other workloads on the device. Use <code>batch_size="auto"</code> on CUDA or validate a conservative integer batch size before increasing it.</p>
+<div class="admonition note">
+<p class="admonition-title">The default nominal effective batch is 4, not 16</p>
+<p><code>grad_accum_steps</code> defaults to <code>1</code> (it was <code>4</code> in earlier versions), so the defaults give a nominal effective batch of <code>batch_size × 1 = 4</code>. If you were relying on the old defaults and want the previous nominal target of 16, set <code>grad_accum_steps=4</code> explicitly, then validate the resulting training behavior. Runs using <code>batch_size="auto"</code> are unaffected by this default change: the probe sets both values itself.</p>
+</div>
 <h2 id="learning-rate-parameters">Learning Rate Parameters<a class="headerlink" href="#learning-rate-parameters" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2980,6 +3546,18 @@
 <td><code>1.5e-4</code></td>
 <td>Learning rate specifically for the backbone encoder. Can be set lower than <code>lr</code> if you want to fine-tune the encoder more conservatively than the rest of the model.</td>
 </tr>
+<tr>
+<td><code>optimizer</code></td>
+<td><code>str \| Callable</code></td>
+<td><code>"adamw"</code></td>
+<td>Optimizer as a native <code>torch.optim</code> short name, dotted import path, or callable. Managed short names (native <code>torch.optim</code> only, e.g. <code>"adamw"</code>, <code>"sgd"</code>) have RF-DETR inject <code>lr</code>/<code>weight_decay</code>; a dotted import path (<code>"torch.optim.AdamW"</code>, <code>"pytorch_optimizer.Lion"</code>) or callable is built from <code>optimizer_kwargs</code> / its own bound arguments only. See <a href="../customization/#custom-optimizer">Custom optimizer</a>.</td>
+</tr>
+<tr>
+<td><code>optimizer_kwargs</code></td>
+<td><code>dict</code></td>
+<td><code>{}</code></td>
+<td>Keyword arguments for the optimizer constructor. Managed short names reserve <code>params</code>/<code>lr</code>/<code>weight_decay</code>/<code>fused</code>; explicit import paths take them here; ignored (with a warning) for callables.</td>
+</tr>
 </tbody>
 </table>
 <div class="admonition tip">
@@ -2990,6 +3568,14 @@
 <li>For training from scratch (not recommended), you may need higher learning rates</li>
 </ul>
 </div>
+<h3 id="custom-optimizer-example">Custom Optimizer Example<a class="headerlink" href="#custom-optimizer-example" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">dataset_dir</span><span class="o">=</span><span class="s2">"path/to/dataset"</span><span class="p">,</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">optimizer</span><span class="o">=</span><span class="s2">"pytorch_optimizer.Lion"</span><span class="p">,</span>  <span class="c1"># third-party optimizer by import path (install it yourself)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">optimizer_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"weight_decouple"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>Bare short names resolve to native <code>torch.optim</code> optimizers; any other optimizer is given by full dotted import path or a callable, always preserving RF-DETR's parameter groups and layer-wise learning rates.</p>
 <h2 id="resolution-parameters">Resolution Parameters<a class="headerlink" href="#resolution-parameters" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3048,17 +3634,34 @@
 <tr>
 <td><code>device</code></td>
 <td><code>str</code></td>
-<td><code>"cuda"</code></td>
-<td>Device to run training on. Options: <code>"cuda"</code>, <code>"cpu"</code>, <code>"mps"</code> (Apple Silicon).</td>
+<td><code>None</code></td>
+<td>Device to run training on. <code>None</code> means auto-detected by PyTorch Lightning. Options: <code>"cuda"</code>, <code>"cpu"</code>, <code>"mps"</code> (Apple Silicon).</td>
+</tr>
+<tr>
+<td><code>compile</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td><strong>Constructor-only parameter.</strong> Compile the detector with <code>torch.compile</code>.</td>
+</tr>
+<tr>
+<td><code>cuda_graphs</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td><strong>Constructor-only parameter.</strong> Capture and replay the detection training forward on one CUDA GPU with BF16 precision. Each input shape pays a first-use capture cost and retains graph memory. Unsupported configurations use eager training with a warning. Combined with <code>compile=True</code>, replay is delegated to Inductor CUDA graph trees (single-GPU detection, no gradient accumulation); capture errors stop training and require a process restart before retrying eagerly. See <a href="../advanced/#cuda-graph-training">Advanced Training</a>.</td>
 </tr>
 <tr>
 <td><code>gradient_checkpointing</code></td>
 <td><code>bool</code></td>
 <td><code>False</code></td>
-<td>Re-computes parts of the forward pass during backpropagation to reduce memory usage. Lowers memory needs but increases training time.</td>
+<td><strong>Constructor-only parameter</strong> — pass to the model constructor (<code>RFDETRMedium(gradient_checkpointing=True)</code>), not to <code>train()</code>. Re-computes activations during backprop to reduce memory usage by ~30-40% at the cost of ~20% slower training.</td>
 </tr>
 </tbody>
 </table>
+<h3 id="training-precision">Training precision<a class="headerlink" href="#training-precision" title="Permanent link">&para;</a></h3>
+<p><code>amp_dtype</code> accepts <code>None</code>, <code>"auto"</code>, <code>"bf16"</code>, <code>"fp16"</code>, or <code>"fp8"</code>, and is the single setting controlling mixed precision. Pass <code>amp_dtype=None</code> to train in full FP32. The default <code>"auto"</code> picks BF16 on NVIDIA GPUs with native BF16 (Ampere and newer) and FP16 on older ones such as the T4 and V100, where BF16 is only emulated (on a T4, RF-DETR Nano trained about 2x slower in emulated BF16 than in FP16). An explicit <code>"bf16"</code> is still honoured on those GPUs, with a warning. FP8 selects Lightning's Transformer Engine precision plugin, which replaces eligible linear and layer-normalization layers while retaining BF16 weights. FP8 requires a Transformer Engine-supported NVIDIA GPU; it is rejected for CPU, MPS, TPU/XLA, FSDP, and DeepSpeed. Use DDP for multi-GPU FP8 training. Hardware support and speedups vary, so benchmark the exact model and GPU before adopting it.</p>
+<p>The constructor-only <code>amp</code> boolean is deprecated: it is consulted only when <code>amp_dtype</code> has its default value <code>"auto"</code>, and any non-default <code>amp_dtype</code> overrides it. Replace <code>amp=False</code> with <code>amp_dtype=None</code>.</p>
+<p>FP8 requires an explicit integer <code>batch_size</code>. Automatic batch sizing probes an unconverted model and is rejected with <code>amp_dtype="fp8"</code>; BF16/FP16 retain automatic sizing.</p>
+<p>See <a href="../advanced/#fp8-training-on-nvidia-cuda">Advanced Training — FP8 on NVIDIA CUDA</a> for the <code>cuda</code> extra, CUDA-version compatibility, an environment check, and troubleshooting. The extra does not enable FP8 automatically and does not support Apple MPS.</p>
 <h2 id="ema-exponential-moving-average">EMA (Exponential Moving Average)<a class="headerlink" href="#ema-exponential-moving-average" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3075,6 +3678,18 @@
 <td><code>bool</code></td>
 <td><code>True</code></td>
 <td>Enables Exponential Moving Average of weights. Produces a smoothed checkpoint that often improves final performance.</td>
+</tr>
+<tr>
+<td><code>eval_base_model</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Validation-only: also evaluate the base model. Validation forwards through one model by default — the EMA weights when <code>use_ema=True</code> — instead of two, removing a full model forward pass from every validation batch. Set to <code>True</code> to restore the base+EMA comparison. See Evaluation Parameters.</td>
+</tr>
+<tr>
+<td><code>eval_ema_only</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td><strong>Deprecated (removal in v1.13)</strong> — explicit legacy <code>True</code> preserves EMA-only evaluation and explicit legacy <code>False</code> preserves base-plus-EMA evaluation; either emits a <code>FutureWarning</code>. Omit it in new configs; use <code>eval_base_model=True</code> to request the base-model pass.</td>
 </tr>
 </tbody>
 </table>
@@ -3118,29 +3733,32 @@
 </thead>
 <tbody>
 <tr>
-<td><code>checkpoint.pth</code></td>
-<td>Most recent checkpoint (for resuming)</td>
+<td><code>last.ckpt</code></td>
+<td>Most recent full checkpoint (for resuming)</td>
 </tr>
 <tr>
-<td><code>checkpoint_&lt;N&gt;.pth</code></td>
-<td>Periodic checkpoint at epoch N</td>
+<td><code>checkpoint_&lt;epoch&gt;.ckpt</code></td>
+<td>Periodic full checkpoint at an epoch</td>
 </tr>
 <tr>
 <td><code>checkpoint_best_ema.pth</code></td>
-<td>Best validation performance (EMA weights)</td>
+<td>Best EMA weights; lightweight callback state when available</td>
 </tr>
 <tr>
 <td><code>checkpoint_best_regular.pth</code></td>
-<td>Best validation performance (raw weights)</td>
+<td>Best raw weights; lightweight callback state when available</td>
 </tr>
 <tr>
 <td><code>checkpoint_best_total.pth</code></td>
-<td>Final best model for inference</td>
+<td>Final best model; lightweight callback state when available</td>
+</tr>
+<tr>
+<td><code>last_ema.pth</code></td>
+<td>Final EMA weights; lightweight callback state when available</td>
 </tr>
 </tbody>
 </table>
-<p>Best validation performance uses the task metric for the model family: box mAP for detection/segmentation and COCO
-keypoint AP for keypoint preview.</p>
+<p>Best validation performance uses the task metric for the model family (<code>best_model_metric="map"</code>, the default): box mAP for detection, mask mAP for segmentation, and COCO keypoint AP for keypoint models. Set <code>best_model_metric="mar"</code> to rank checkpoints by mAR instead: detection and segmentation use box mAR, while keypoint models use keypoint mAR. mAR for detection and segmentation is evaluated using the configured <code>eval_max_dets</code> limit; keypoint mAR uses fixed COCO <code>maxDets=20</code>.</p>
 <h2 id="early-stopping-parameters">Early Stopping Parameters<a class="headerlink" href="#early-stopping-parameters" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3177,6 +3795,12 @@ keypoint AP for keypoint preview.</p>
 <td>Whether to track improvements using EMA model metrics.</td>
 </tr>
 <tr>
+<td><code>best_model_metric</code></td>
+<td><code>Literal["map","mar"]</code></td>
+<td><code>"map"</code></td>
+<td>Metric family for best-checkpoint selection and early stopping — mAP or mAR.</td>
+</tr>
+<tr>
 <td><code>skip_best_epochs</code></td>
 <td><code>int</code></td>
 <td><code>0</code></td>
@@ -3185,15 +3809,15 @@ keypoint AP for keypoint preview.</p>
 </tbody>
 </table>
 <h3 id="early-stopping-example">Early Stopping Example<a class="headerlink" href="#early-stopping-example" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">dataset_dir</span><span class="o">=</span><span class="s2">"path/to/dataset"</span><span class="p">,</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">epochs</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">early_stopping</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">early_stopping_patience</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">early_stopping_min_delta</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">skip_best_epochs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">dataset_dir</span><span class="o">=</span><span class="s2">"path/to/dataset"</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">epochs</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">early_stopping</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">early_stopping_patience</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">early_stopping_min_delta</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">skip_best_epochs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">)</span>
 </span></code></pre></div>
 <p>This configuration will:</p>
 <ul>
@@ -3203,10 +3827,7 @@ keypoint AP for keypoint preview.</p>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Transfer learning with <code>pretrain_weights</code></p>
-<p>When fine-tuning from <code>pretrain_weights</code>, the pretrained model's epoch-0 validation metric can be artificially high
-relative to the training trajectory on the new dataset. This causes <code>checkpoint_best_total.pth</code> to always contain
-the untrained pretrained weights and may trigger early stopping prematurely. Use <code>skip_best_epochs</code> to defer
-best-checkpoint selection and patience counting until the model has had time to adapt.</p>
+<p>When fine-tuning from <code>pretrain_weights</code>, the pretrained model's epoch-0 validation metric can be artificially high relative to the training trajectory on the new dataset. This causes <code>checkpoint_best_total.pth</code> to always contain the untrained pretrained weights and may trigger early stopping prematurely. Use <code>skip_best_epochs</code> to defer best-checkpoint selection and patience counting until the model has had time to adapt.</p>
 </div>
 <h2 id="logging-parameters">Logging Parameters<a class="headerlink" href="#logging-parameters" title="Permanent link">&para;</a></h2>
 <table>
@@ -3246,14 +3867,14 @@ best-checkpoint selection and patience counting until the model has had time to 
 </tbody>
 </table>
 <h3 id="logging-example">Logging Example<a class="headerlink" href="#logging-example" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">dataset_dir</span><span class="o">=</span><span class="s2">"path/to/dataset"</span><span class="p">,</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">tensorboard</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">wandb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">project</span><span class="o">=</span><span class="s2">"my-detection-project"</span><span class="p">,</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">run</span><span class="o">=</span><span class="s2">"experiment-001"</span><span class="p">,</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">dataset_dir</span><span class="o">=</span><span class="s2">"path/to/dataset"</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">tensorboard</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">wandb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">project</span><span class="o">=</span><span class="s2">"my-detection-project"</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">run</span><span class="o">=</span><span class="s2">"experiment-001"</span><span class="p">,</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="evaluation-parameters">Evaluation Parameters<a class="headerlink" href="#evaluation-parameters" title="Permanent link">&para;</a></h2>
 <table>
@@ -3270,30 +3891,67 @@ best-checkpoint selection and patience counting until the model has had time to 
 <td><code>eval_max_dets</code></td>
 <td><code>int</code></td>
 <td><code>500</code></td>
-<td>Maximum number of detections per image considered during COCO evaluation. Lower values speed up evaluation.</td>
+<td>Maximum detections per image for detection/segmentation COCO AP and AR evaluation. Keypoint AP/AR uses fixed COCO <code>maxDets=20</code>; lower values speed up detection/segmentation evaluation.</td>
 </tr>
 <tr>
 <td><code>eval_interval</code></td>
 <td><code>int</code></td>
 <td><code>1</code></td>
-<td>Run COCO evaluation every N epochs. Set to a higher value to reduce evaluation overhead during long training runs.</td>
+<td>Skip the whole COCO validation loop (forward pass, metric compute, EMA forward) on epochs that aren't a multiple of N, to reduce evaluation overhead during long training runs. The final epoch always validates regardless of this setting.</td>
 </tr>
 <tr>
 <td><code>log_per_class_metrics</code></td>
 <td><code>bool</code></td>
-<td><code>True</code></td>
-<td>Log per-class AP metrics to the console and loggers. Disable to reduce log verbosity when there are many classes.</td>
+<td><code>False</code></td>
+<td>Log per-class AP metrics to the console and loggers. Enable it to also run the underlying per-class <code>torchmetrics</code> computation. Aggregate mAP/mAR and F1 metrics remain available either way.</td>
+</tr>
+<tr>
+<td><code>eval_backend</code></td>
+<td><code>Literal["hotcoco","faster_coco_eval","ufcoco","vernier"]</code></td>
+<td><code>"vernier"</code></td>
+<td>COCO evaluation backend for detection and segmentation mAP. All four ship with <code>rfdetr[train]</code> and return identical metrics; <code>"vernier"</code> additionally requires a box on every annotation, so it cannot evaluate a mask-only run. <code>"faster_coco_eval"</code> selects the previous, slower evaluator, <code>"ufcoco"</code> selects ultrafast-pycocotools and <code>"hotcoco"</code> selects hotcoco.</td>
+</tr>
+<tr>
+<td><code>eval_base_model</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Also evaluate the base model during validation, restoring the base+EMA two-forward comparison. Inert when <code>use_ema=False</code>. See <a href="#ema-exponential-moving-average">EMA</a>.</td>
+</tr>
+<tr>
+<td><code>eval_ema_only</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td><strong>Deprecated (removal in v1.13)</strong> — legacy compatibility field. Explicit values preserve the old <code>True</code>/<code>False</code> policies and emit a <code>FutureWarning</code>; omit it in new configurations. Use <code>eval_base_model</code> for the current opt-in.</td>
+</tr>
+<tr>
+<td><code>eval_masks_head_resolution</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Segmentation only. Skip upsampling predicted masks to full image resolution during validation, comparing at the mask head's native (lower) resolution instead. <code>val/segm_mAP</code> is then not comparable to a full-resolution run. No effect on <code>RFDETR.predict</code> output.</td>
 </tr>
 <tr>
 <td><code>progress_bar</code></td>
 <td>str | bool | None</td>
 <td><code>None</code></td>
-<td>Progress bar style: <code>"tqdm"</code>, <code>"rich"</code>, or <code>None</code>. Legacy booleans are still accepted.</td>
+<td>Progress bar style: <code>"tqdm"</code>, <code>"rich"</code>, or <code>None</code>. Legacy booleans are still accepted. <code>"rich"</code> leaves each completed epoch's bar in the terminal history instead of overwriting it.</td>
 </tr>
 </tbody>
 </table>
+<h3 id="validation-performance">Validation performance<a class="headerlink" href="#validation-performance" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>log_per_class_metrics=False</code> is the default. It retains aggregate mAP/mAR and F1/precision/recall while omitting per-class rows and their underlying per-class metric computation. Set it to <code>True</code> when per-class reporting is needed.</li>
+<li><code>compute_val_loss="auto"</code> is the default. It computes <code>val/loss</code> only when a configured scheduler, checkpoint, or early-stopping callback monitors that key. Set it to <code>True</code> to always log validation loss or <code>False</code> to disable it; <code>False</code> is rejected when a configured consumer monitors <code>val/loss</code>. When computed, <code>val/loss</code> describes whichever model validation forwards through — the EMA model under the default <code>eval_base_model=False</code>, the base model under <code>eval_base_model=True</code>.</li>
+<li><code>eval_base_model=False</code> is the default: validation runs <strong>one</strong> forward pass per batch, through the EMA weights when <code>use_ema=True</code> and through the base weights otherwise. This removes a full forward pass over the validation set each epoch. <code>val/mAP_*</code> and per-class <code>val/AP/&lt;class&gt;</code> report the model that was evaluated — the EMA model under the default — so schedulers, early stopping, checkpoint monitors and dashboards keep receiving a real number; <code>val/ema_*</code> and <code>val/ema_AP/&lt;class&gt;</code> remain available for explicit EMA monitors. The best-checkpoint "regular" track is disabled in this mode, because it saves base weights that were never scored; <code>checkpoint_best_ema.pth</code> is promoted to <code>checkpoint_best_total.pth</code> instead.</li>
+<li><code>eval_base_model=True</code> restores the previous behaviour: the base model is evaluated under <code>val/mAP_*</code>, the EMA model under <code>val/ema_*</code>, and both checkpoint tracks run. It costs one extra forward pass per validation batch.</li>
+<li><code>eval_interval</code> controls validation frequency, not the cost of a validation epoch: non-evaluation epochs skip the complete validation loop, while the final epoch always evaluates.</li>
+<li>Lowering <code>eval_max_dets</code> can reduce detection/segmentation evaluation work, but it also changes AP and AR semantics. Keypoint evaluation keeps COCO <code>maxDets=20</code>.</li>
+<li><code>eval_backend</code> selects the COCO evaluator. The default <code>"vernier"</code> (<a href="https://github.com/NoeFontana/vernier">vernier</a>) ships with <code>rfdetr[train]</code>; <code>"faster_coco_eval"</code> restores the previous evaluator. Metrics are identical, not merely close: the parity tests compare every aggregate, per-class and class-ID output of every backend for box-only and box-plus-mask evaluation and require exact equality. The knob changes the cost of <code>compute()</code>, not the validation forward pass that usually dominates a validation epoch, so it matters most on large validation sets. <code>"vernier"</code> is the one backend that requires a box on every annotation, so it cannot evaluate a mask-only run: an <code>iou_type</code> without <code>"bbox"</code> is rejected when the metric is constructed rather than at <code>compute()</code>, so the run fails immediately instead of after a validation epoch. On a synthetic COCO-val-shaped state (5,000 images, 300 detections per image, 80 classes, box-only) one Linux four-core <code>compute()</code> took 3.18 s on <code>hotcoco</code> against 1.86 s on <code>vernier</code>, a ~1.7x speedup; the macOS-CPU figures below were measured on a different machine and are not directly comparable to these. The margin is wider away from that shape: on the 20-class synthetic configuration <code>vernier</code> is 2.1-2.3x <code>hotcoco</code> on box-only and 5.9-8.6x on box-plus-mask evaluation, at every core count from one to eight. These are single-process timings; under multi-GPU DDP each rank merges the gathered state and runs the whole <code>compute()</code> itself, so the ranks evaluate concurrently and the wall-clock saving per validation epoch may differ. Keypoint evaluation uses its own OKS path and is unaffected, as is the ONNX/TensorRT benchmark evaluator.</li>
+<li><code>eval_backend="hotcoco"</code> selects <a href="https://github.com/derekallman/hotcoco">hotcoco</a>, a Rust COCO evaluator. On synthetic COCO-val-shaped state (5,000 images, 36.6k ground-truth boxes, 300 detections per image, 80 classes, <code>eval_max_dets=500</code>) one macOS-CPU <code>compute()</code> took 6.2 s on <code>faster_coco_eval</code> against 1.1 s on <code>hotcoco</code>. It ships with <code>rfdetr[train]</code> like the other backends.</li>
+<li><code>eval_backend="ufcoco"</code> selects <a href="https://github.com/developer0hye/ultrafast-pycocotools">ultrafast-pycocotools</a>, a Rust evaluator that reproduces pycocotools' precision, recall and score arrays byte for byte. It ships with <code>rfdetr[train]</code> like the other backends; pass <code>eval_backend="ufcoco"</code> to <code>model.train(...)</code> or <code>model.evaluate(...)</code>. The selection reaches the validation, train-split and EMA metrics alike, and the parity tests hold it to the same exact equality against <code>faster_coco_eval</code> as <code>hotcoco</code>, for box-only and box-plus-mask evaluation at <code>eval_max_dets</code> 100 and 500.</li>
+<li>Adding a new <code>eval_backend</code> or benchmarking an existing one: see <a href="../advanced/#coco-evaluation-backends">Advanced Training → COCO Evaluation Backends</a>.</li>
+</ul>
 <h2 id="keypoint-preview-parameters">Keypoint Preview Parameters<a class="headerlink" href="#keypoint-preview-parameters" title="Permanent link">&para;</a></h2>
-<p>These parameters apply when training <code>RFDETRKeypointPreview</code> on COCO keypoint annotations.</p>
+<p>These parameters apply when training <code>RFDETRKeypointPreview</code> on COCO keypoint annotations or Ultralytics YOLO pose labels.</p>
 <table>
 <thead>
 <tr>
@@ -3307,14 +3965,14 @@ best-checkpoint selection and patience counting until the model has had time to 
 <tr>
 <td><code>num_keypoints_per_class</code></td>
 <td><code>list[int]</code></td>
-<td><code>[0, 17]</code></td>
-<td>Keypoint schema by model label slot. A zero entry marks a detection-only class slot.</td>
+<td><code>[17]</code></td>
+<td><strong>Constructor parameter</strong> — pass to <code>RFDETRKeypointPreview(num_keypoints_per_class=...)</code>. Keypoint schema by model label slot. A zero entry marks a detection-only class slot; legacy checkpoints may use a background-first <code>[0, 17]</code> schema.</td>
 </tr>
 <tr>
 <td><code>keypoint_flip_pairs</code></td>
 <td><code>list[int]</code></td>
 <td><code>[]</code></td>
-<td>Flat left/right keypoint index pairs used to swap joints after horizontal-flip augmentation.</td>
+<td>Flat left/right keypoint index pairs used to swap joints after horizontal-flip augmentation. YOLO <code>flip_idx</code> metadata is a permutation; RF-DETR converts it to this pair-list form during automatic schema inference when possible — it extracts only symmetric mutual pairs where <code>flip_idx[i] == j</code> and <code>flip_idx[j] == i</code>. Asymmetric entries and self-mapped keypoints (<code>flip_idx[i] == i</code>) are silently omitted; supply <code>keypoint_flip_pairs</code> explicitly when your <code>flip_idx</code> includes such entries. See the note below for what an empty list means for horizontal-flip augmentation.</td>
 </tr>
 <tr>
 <td><code>keypoint_l1_loss_coef</code></td>
@@ -3348,9 +4006,19 @@ best-checkpoint selection and patience counting until the model has had time to 
 </tr>
 </tbody>
 </table>
+<div class="admonition warning">
+<p class="admonition-title"><code>keypoint_flip_pairs</code>: <code>None</code> vs <code>[]</code> vs a populated list</p>
+<p>This value is tri-state, and the state — not just the value — controls whether horizontal-flip augmentations run at all, on both the default torchvision-native pipeline (<code>aug_config=None</code>) and a custom Albumentations <code>aug_config</code>:</p>
+<ul>
+<li><code>None</code> marks a detection-only pipeline. Horizontal-flip augmentations (torchvision's default flip, or <code>HorizontalFlip</code>/<code>Flip</code>/<code>D4</code> in your <code>aug_config</code>) are always kept, since there are no keypoint annotations that a flip could invalidate.</li>
+<li><code>[]</code> on a keypoint pipeline means no flip pairs are defined. RF-DETR then drops horizontal-flip augmentations rather than flip an image without knowing which keypoints to swap — this is intentional annotation-safety behavior, not a bug, but easy to trip over if you set <code>keypoint_flip_pairs=[]</code> yourself without expecting the augmentation to disappear.</li>
+<li>A populated list on a keypoint pipeline supplies the actual left/right index pairs, so horizontal-flip augmentations run and swap the paired keypoints.</li>
+</ul>
+<p>The current pydantic default for <code>keypoint_flip_pairs</code> is <code>[]</code>, matching the field definition in <code>src/rfdetr/config.py</code>. See <code>_build_torchvision_pipeline</code> in <code>src/rfdetr/datasets/coco.py</code> for the default-backend gating check, and <code>AlbumentationsWrapper.from_config</code> in <code>src/rfdetr/datasets/transforms.py</code> for the Albumentations-backend equivalent — both use the same <code>keypoint_flip_pairs is not None and not keypoint_flip_pairs</code> check.</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">OKS sigma values: flat vs per-keypoint</p>
-<p><code>infer_coco_keypoint_schema</code> returns a flat sigma of 0.1 for all inferred keypoints, and the keypoint demo passes those values explicitly for custom Roboflow datasets. If <code>keypoint_oks_sigmas=None</code>, COCO person-keypoint evaluation uses the standard 17-keypoint COCO sigmas, while non-17 custom keypoint counts use RF-DETR's uniform custom fallback. Flat custom sigmas are not directly comparable to official COCO benchmark numbers.</p>
+<p><code>infer_coco_keypoint_schema</code> and <code>infer_yolo_keypoint_schema</code> return a flat sigma of 0.1 for all inferred keypoints, and the keypoint demos pass those values explicitly for custom datasets. If <code>keypoint_oks_sigmas=None</code>, COCO person-keypoint evaluation uses the standard 17-keypoint COCO sigmas, while non-17 custom keypoint counts use RF-DETR's uniform custom fallback. Flat custom sigmas are not directly comparable to official COCO benchmark numbers.</p>
 </div>
 <h2 id="advanced-parameters">Advanced Parameters<a class="headerlink" href="#advanced-parameters" title="Permanent link">&para;</a></h2>
 <p>The parameters below are available for fine-grained control over training behaviour. Most users can leave these at their defaults.</p>
@@ -3367,21 +4035,45 @@ best-checkpoint selection and patience counting until the model has had time to 
 <tbody>
 <tr>
 <td><code>lr_scheduler</code></td>
-<td><code>str</code></td>
+<td><code>str \| Callable</code></td>
 <td><code>"step"</code></td>
-<td>Learning rate scheduler type. Options: <code>"step"</code> (step decay at <code>lr_drop</code>) or <code>"cosine"</code> (cosine annealing).</td>
+<td>Scheduler preset (<code>"step"</code>/<code>"cosine"</code>), dotted import path, or callable. See <a href="../customization/#custom-lr-scheduler">Custom LR scheduler</a>.</td>
 </tr>
 <tr>
-<td><code>lr_min_factor</code></td>
-<td><code>float</code></td>
-<td><code>0.0</code></td>
-<td>Floor for the cosine scheduler, expressed as a fraction of the initial LR. Ignored when using <code>"step"</code>.</td>
+<td><code>lr_scheduler_kwargs</code></td>
+<td><code>dict</code></td>
+<td><code>{}</code></td>
+<td>Keyword arguments forwarded to an explicit scheduler; for the managed presets carries <code>lr_drop</code> (default 100, epoch of the 10x step drop) and <code>min_factor</code> (default 0.0, cosine floor as a fraction of the initial LR).</td>
+</tr>
+<tr>
+<td><code>lr_scheduler_interval</code></td>
+<td><code>str</code></td>
+<td><code>"step"</code></td>
+<td>Stepping cadence for explicit schedulers: <code>"step"</code> (per optimizer step) or <code>"epoch"</code>. Managed presets always step per step.</td>
+</tr>
+<tr>
+<td><code>lr_scheduler_monitor</code></td>
+<td><code>str</code></td>
+<td><code>"val/loss"</code></td>
+<td>Metric fed to <code>ReduceLROnPlateau</code> (stepped once per epoch).</td>
+</tr>
+<tr>
+<td><code>optimizer</code></td>
+<td><code>str \| Callable</code></td>
+<td><code>"adamw"</code></td>
+<td>Optimizer name, dotted import path, or callable. See <a href="../customization/#custom-optimizer">Custom optimizer</a>.</td>
+</tr>
+<tr>
+<td><code>optimizer_kwargs</code></td>
+<td><code>dict</code></td>
+<td><code>{}</code></td>
+<td>Keyword arguments forwarded to the optimizer constructor; ignored (with a warning) for callables.</td>
 </tr>
 <tr>
 <td><code>warmup_epochs</code></td>
 <td><code>float</code></td>
 <td><code>0.0</code></td>
-<td>Number of epochs for linear learning rate warmup at the start of training.</td>
+<td>Epochs of linear LR warmup. For explicit schedulers this prepends a <code>SequentialLR</code> warmup ramp (skipped for <code>ReduceLROnPlateau</code>).</td>
 </tr>
 <tr>
 <td><code>drop_path</code></td>
@@ -3418,19 +4110,25 @@ best-checkpoint selection and patience counting until the model has had time to 
 <td><code>fp16_eval</code></td>
 <td><code>bool</code></td>
 <td><code>False</code></td>
-<td>Run evaluation passes in FP16 precision. Reduces memory usage but may lower numerical precision.</td>
+<td><strong>Deprecated, no effect.</strong> Evaluation precision follows <code>amp_dtype</code>; set <code>amp_dtype="fp16"</code> instead. Removed in v1.14.</td>
 </tr>
 <tr>
 <td><code>compute_val_loss</code></td>
-<td><code>bool</code></td>
-<td><code>True</code></td>
-<td>Compute and log the detection loss on the validation set each epoch.</td>
+<td><code>bool \| "auto"</code></td>
+<td><code>"auto"</code></td>
+<td>Compute and log validation loss only when a configured consumer monitors <code>val/loss</code>. Set <code>True</code> to always compute it or <code>False</code> to disable it.</td>
 </tr>
 <tr>
 <td><code>compute_test_loss</code></td>
 <td><code>bool</code></td>
 <td><code>True</code></td>
 <td>Compute and log the detection loss during the final test run.</td>
+</tr>
+<tr>
+<td><code>num_sanity_val_steps</code></td>
+<td><code>int</code></td>
+<td><code>0</code></td>
+<td>PyTorch Lightning sanity-check validation batches run before training starts. <code>0</code> disables it (the default); increase to catch val-path errors before a full epoch runs.</td>
 </tr>
 </tbody>
 </table>
@@ -3463,8 +4161,22 @@ best-checkpoint selection and patience counting until the model has had time to 
 <td><code>None</code></td>
 <td>Number of batches to prefetch per DataLoader worker. <code>None</code> uses PyTorch's built-in default.</td>
 </tr>
+<tr>
+<td><code>pack_targets</code></td>
+<td><code>bool</code></td>
+<td><code>True</code></td>
+<td>Concatenate target dicts before crossing the DataLoader worker boundary. See the contract below; set <code>False</code> to opt out.</td>
+</tr>
+<tr>
+<td><code>pad_targets_to</code></td>
+<td><code>int \| None</code></td>
+<td><code>None</code></td>
+<td>Pad every training image's targets to this many rows so the loss keeps one tensor shape across batches. <code>None</code> keeps the variable-length path CUDA wants; set it on XLA/TPU, where a new per-image box count recompiles the graph. Applies to the training loader only.</td>
+</tr>
 </tbody>
 </table>
+<p>With <code>pack_targets=True</code>, train, validation, test, and predict loaders yield batches whose target element is <code>PackedTargets</code> whenever packing is lossless. The Lightning <code>transfer_batch_to_device</code> hook accepts those batches or an unpacked tuple of target dicts. It materializes each packed field directly into its own independently owned per-sample tensor on the target device, producing the same plain per-sample dict list that training, validation, test, and prediction hooks receive on the unpacked path. Batches that cannot be packed losslessly retain their original tuple of dicts.</p>
+<p>With <code>pad_targets_to</code> set, only the training loader pads; validation, test and predict keep the real targets, since padded rows would otherwise be counted as ground truth by COCO matching. Padding runs before packing in the collate seam, so a batch with both options set always packs, at the padded shape. It is semantically transparent: the padded columns get a query-independent matcher cost so they cannot displace a real target, and the box losses and <code>class_error</code> are masked to the real rows. Segmentation models, keypoint models, and the position-supervised, varifocal and plain focal classification branches (<code>ia_bce_loss=False</code>) raise instead of silently including padded rows in the loss — leave <code>pad_targets_to</code> unset for those. <code>pad_targets_to</code> is incompatible with <code>augmentation_backend="kornia"</code>/<code>"gpu"</code> (<code>setup("fit")</code> raises <code>ValueError</code>): the GPU pipeline reconstructs its own real/filler mask from the padded box count and strips it back to a variable row count, undoing the fixed shape. An image whose real ground-truth count exceeds <code>pad_targets_to</code> has its extra boxes dropped from training, logged as a warning.</p>
 <h2 id="complete-parameter-reference">Complete Parameter Reference<a class="headerlink" href="#complete-parameter-reference" title="Permanent link">&para;</a></h2>
 <p>Below is a summary table of all training parameters:</p>
 <table>
@@ -3497,15 +4209,21 @@ best-checkpoint selection and patience counting until the model has had time to 
 </tr>
 <tr>
 <td><code>batch_size</code></td>
-<td>int</td>
+<td>int or "auto"</td>
 <td>4</td>
-<td>Samples per iteration. Balance with <code>grad_accum_steps</code>.</td>
+<td>Samples per iteration. Set to <code>"auto"</code> to let RF-DETR probe the GPU for the largest safe batch size. Balance with <code>grad_accum_steps</code>.</td>
 </tr>
 <tr>
 <td><code>grad_accum_steps</code></td>
 <td>int</td>
-<td>4</td>
+<td>1</td>
 <td>Gradient accumulation steps for effective larger batch sizes.</td>
+</tr>
+<tr>
+<td><code>eval_batch_size</code></td>
+<td>int or None</td>
+<td>None</td>
+<td>Batch size for validation, test and predict dataloaders. <code>None</code> inherits <code>batch_size</code>; <code>no_grad</code> avoids autograd activation storage, but in-fit evaluation still shares device memory with the model and optimizer state.</td>
 </tr>
 <tr>
 <td><code>lr</code></td>
@@ -3542,6 +4260,18 @@ best-checkpoint selection and patience counting until the model has had time to 
 <td>bool</td>
 <td>True</td>
 <td>Enable Exponential Moving Average of weights.</td>
+</tr>
+<tr>
+<td><code>compile</code></td>
+<td>bool</td>
+<td>False</td>
+<td>Constructor-only <code>torch.compile</code> training optimization.</td>
+</tr>
+<tr>
+<td><code>cuda_graphs</code></td>
+<td>bool</td>
+<td>False</td>
+<td>Constructor-only, single-GPU CUDA graph replay for detection training.</td>
 </tr>
 <tr>
 <td><code>gradient_checkpointing</code></td>
@@ -3610,22 +4340,52 @@ best-checkpoint selection and patience counting until the model has had time to 
 <td>Use EMA model for early stopping metrics.</td>
 </tr>
 <tr>
+<td><code>best_model_metric</code></td>
+<td><code>Literal["map","mar"]</code></td>
+<td>"map"</td>
+<td>Metric family for best-checkpoint selection and early stopping — mAP or mAR.</td>
+</tr>
+<tr>
 <td><code>eval_max_dets</code></td>
 <td>int</td>
 <td>500</td>
-<td>Maximum detections per image considered during COCO evaluation.</td>
+<td>Maximum detections per image for detection/segmentation COCO AP and AR evaluation. Keypoint AP/AR uses fixed COCO <code>maxDets=20</code>.</td>
 </tr>
 <tr>
 <td><code>eval_interval</code></td>
 <td>int</td>
 <td>1</td>
-<td>Run COCO evaluation every N epochs.</td>
+<td>Skip the whole validation loop on epochs not a multiple of N; final epoch always validates.</td>
 </tr>
 <tr>
 <td><code>log_per_class_metrics</code></td>
 <td>bool</td>
-<td>True</td>
-<td>Log per-class AP metrics to the console and loggers.</td>
+<td>False</td>
+<td>Log per-class AP metrics; enable to run the underlying per-class compute.</td>
+</tr>
+<tr>
+<td><code>eval_backend</code></td>
+<td><code>Literal["hotcoco","faster_coco_eval","ufcoco","vernier"]</code></td>
+<td>"vernier"</td>
+<td>COCO evaluation backend; <code>"faster_coco_eval"</code> selects the previous, slower evaluator, <code>"ufcoco"</code> for ultrafast-pycocotools and <code>"hotcoco"</code> for hotcoco.</td>
+</tr>
+<tr>
+<td><code>eval_base_model</code></td>
+<td>bool</td>
+<td>False</td>
+<td>Also evaluate the base model during validation (two forward passes). Inert when use_ema=False.</td>
+</tr>
+<tr>
+<td><code>eval_ema_only</code></td>
+<td>bool</td>
+<td>False</td>
+<td>Deprecated (removal in v1.13); no-op alias for the default policy. Use <code>eval_base_model</code>.</td>
+</tr>
+<tr>
+<td><code>eval_masks_head_resolution</code></td>
+<td>bool</td>
+<td>False</td>
+<td>Segmentation only. Compare masks at native (lower) resolution instead of upsampling; not comparable across runs.</td>
 </tr>
 <tr>
 <td><code>progress_bar</code></td>
@@ -3647,15 +4407,27 @@ best-checkpoint selection and patience counting until the model has had time to 
 </tr>
 <tr>
 <td><code>lr_scheduler</code></td>
-<td>str</td>
+<td>str | Callable</td>
 <td>"step"</td>
-<td>Learning rate scheduler type: "step" or "cosine".</td>
+<td>Scheduler preset ("step"/"cosine"), dotted import path, or callable.</td>
 </tr>
 <tr>
-<td><code>lr_min_factor</code></td>
-<td>float</td>
-<td>0.0</td>
-<td>Minimum LR as a fraction of the initial LR (cosine scheduler floor).</td>
+<td><code>lr_scheduler_kwargs</code></td>
+<td>dict</td>
+<td>{}</td>
+<td>Keyword arguments for an explicit scheduler; for the managed presets carries lr_drop (default 100, epoch of the 10x step drop) and min_factor (default 0.0, cosine floor).</td>
+</tr>
+<tr>
+<td><code>lr_scheduler_interval</code></td>
+<td>str</td>
+<td>"step"</td>
+<td>Explicit-scheduler stepping cadence: "step" or "epoch".</td>
+</tr>
+<tr>
+<td><code>lr_scheduler_monitor</code></td>
+<td>str</td>
+<td>"val/loss"</td>
+<td>Metric fed to ReduceLROnPlateau.</td>
 </tr>
 <tr>
 <td><code>warmup_epochs</code></td>
@@ -3671,9 +4443,9 @@ best-checkpoint selection and patience counting until the model has had time to 
 </tr>
 <tr>
 <td><code>compute_val_loss</code></td>
-<td>bool</td>
-<td>True</td>
-<td>Compute and log loss during validation.</td>
+<td>bool | "auto"</td>
+<td>"auto"</td>
+<td>Compute validation loss only for a configured <code>val/loss</code> consumer; <code>True</code> forces it and <code>False</code> disables it.</td>
 </tr>
 <tr>
 <td><code>compute_test_loss</code></td>
@@ -3682,10 +4454,16 @@ best-checkpoint selection and patience counting until the model has had time to 
 <td>Compute and log loss during the test run.</td>
 </tr>
 <tr>
+<td><code>num_sanity_val_steps</code></td>
+<td>int</td>
+<td>0</td>
+<td>PTL sanity-check validation batches run before training starts. 0 disables it; increase to catch val-path errors early.</td>
+</tr>
+<tr>
 <td><code>fp16_eval</code></td>
 <td>bool</td>
 <td>False</td>
-<td>Run evaluation in FP16 precision to reduce memory usage.</td>
+<td><strong>Deprecated, no effect.</strong> Evaluation precision follows <code>amp_dtype</code>; set <code>amp_dtype="fp16"</code> instead.</td>
 </tr>
 <tr>
 <td><code>pin_memory</code></td>
@@ -3704,6 +4482,18 @@ best-checkpoint selection and patience counting until the model has had time to 
 <td>int</td>
 <td>None</td>
 <td>Number of batches prefetched per worker. None uses PyTorch default.</td>
+</tr>
+<tr>
+<td><code>pack_targets</code></td>
+<td>bool</td>
+<td>True</td>
+<td>Concatenate target dicts before crossing the DataLoader worker boundary. See DataLoader Tuning; set False to opt out.</td>
+</tr>
+<tr>
+<td><code>pad_targets_to</code></td>
+<td><code>int \| None</code></td>
+<td><code>None</code></td>
+<td>Pad training targets to this many rows, for a shape-stable XLA/TPU graph. See DataLoader Tuning; training loader only.</td>
 </tr>
 </tbody>
 </table>
@@ -3727,7 +4517,7 @@ best-checkpoint selection and patience counting until the model has had time to 
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="June 13, 2026 00:36:02 UTC">2026-06-13 00:36:02</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="September 27, 2026 10:01:04 UTC">2026-09-27 10:01:04</span>
   </span>
 
     
@@ -3836,6 +4626,8 @@ best-checkpoint selection and patience counting until the model has had time to 
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/version-banner.js"></script>
       
     
   </body>

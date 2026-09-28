@@ -18,7 +18,7 @@
         <link rel="prev" href="../keypoint_train_config/">
       
       
-        <link rel="next" href="../../cookbooks/">
+        <link rel="next" href="../../faq/">
       
       
         
@@ -67,6 +67,20 @@
     
     
   
+  
+  
+  <meta name="robots" content="noindex, follow">
+  
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5M220DKLMB"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){window.dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-5M220DKLMB');
+  </script>
   <link rel="preconnect" href="https://storage.googleapis.com">
 
   
@@ -91,7 +105,7 @@
   
   
   
-  <meta property="article:modified_time" content="2026-04-23T15:22:59">
+  <meta property="article:modified_time" content="2026-08-05T19:51:24">
   
   <script type="application/ld+json">
   {
@@ -106,7 +120,7 @@
     "inLanguage": "en",
     "keywords": "RF-DETR, rfdetr, object detection, instance segmentation, computer vision, Roboflow",
     "datePublished": "2025-03-01",
-    "dateModified": "2026-04-23T15:22:59",
+    "dateModified": "2026-08-05T19:51:24",
     "image": "https://storage.googleapis.com/com-roboflow-marketing/rf-detr/rf_detr_1-4_latency_accuracy_object_detection.png",
     "author": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
     "publisher": {"@type": "Organization", "name": "Roboflow", "url": "https://roboflow.com"},
@@ -171,6 +185,14 @@
     
       <div data-md-color-scheme="default" data-md-component="outdated" hidden>
         
+          <aside class="md-banner md-banner--warning">
+            <div class="md-banner__inner md-grid md-typeset">
+              You are reading the unreleased development version of the documentation, built from the <code>develop</code> branch.<br>
+APIs described here may change or may never ship in a release, so use the <a href="https://rfdetr.roboflow.com/latest/"><strong>latest stable release</strong></a> instead.
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),base=new URL("../.."),outdated=__md_get("__outdated",sessionStorage,base);!0===outdated&&el&&(el.hidden=!1)</script>
+          </aside>
+        
       </div>
     
     
@@ -195,7 +217,7 @@
       data-md-component="logo"
     >
       
-  <img src="../../assets/roboflow-logo.svg" alt="logo">
+  <img src="../../assets/roboflow-logo.svg" alt="RF-DETR" width="24" height="24">
 
     </a>
 
@@ -224,7 +246,7 @@
             id="item-logo"
             >
             
-  <img src="../../assets/roboflow-logo.svg" alt="logo">
+  <img src="../../assets/roboflow-logo.svg" alt="RF-DETR" width="24" height="24">
 
             </a>
             
@@ -246,7 +268,7 @@
         </label>
 
         <!-- Search interface -->
-        <div class="md-search" data-md-component="search" role="dialog">
+        <div class="md-search" data-md-component="search" role="dialog" aria-modal="true" aria-label="Search">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
@@ -284,7 +306,7 @@
 
     <ul class="header-list">
         <li style="align-items: center;" id="resources-list">
-            <label for="dropdown-resources"><span>Resources <img src="https://ka-p.fontawesome.com/releases/v6.6.0/svgs/regular/chevron-down.svg?v=2&token=a463935e93" style="height: 0.5rem;" /></span></label>
+            <label for="dropdown-resources"><span>Resources <span class="header-chevron" aria-hidden="true"></span></span></label>
             <input type="radio" name="dropdown" id="dropdown-resources" style="display: none;" />
             <ul class="resources-sublist sublist">
                 <li><a href="https://blog.roboflow.com">Blog</a></li>
@@ -294,7 +316,7 @@
             </ul>
         </li>
         <li style="align-items: center;" id="products-list">
-            <label for="dropdown-products"><span>Docs <img src="https://ka-p.fontawesome.com/releases/v6.6.0/svgs/regular/chevron-down.svg?v=2&token=a463935e93" style="height: 0.5rem;" /></span></label>
+            <label for="dropdown-products"><span>Docs <span class="header-chevron" aria-hidden="true"></span></span></label>
             <input type="radio" name="dropdown" id="dropdown-products" style="display: none;" />
             <ul class="products-sublist sublist">
                 <li><a href="https://inference.roboflow.com">Inference</a></li>
@@ -305,79 +327,72 @@
                 <li><a href="https://docs.roboflow.com">Roboflow</a></li>
             </ul>
         </li>
-        <script>
-          document.addEventListener('click', function(event) {
-            const resourcesList = document.getElementById('resources-list');
-            const productsList = document.getElementById('products-list');
-            const dropdownResources = document.getElementById('dropdown-resources');
-            const dropdownProducts = document.getElementById('dropdown-products');
-
-            if (!resourcesList.contains(event.target)) {
-              dropdownResources.checked = false;
-            }
-            if (!productsList.contains(event.target)) {
-              dropdownProducts.checked = false;
-            }
-          });
-          // on mouse over
-          document.getElementById('resources-list').addEventListener('mouseover', function() {
-            document.getElementById('dropdown-resources').checked = true;
-          });
-          document.getElementById('products-list').addEventListener('mouseover', function() {
-            document.getElementById('dropdown-products').checked = true;
-          });
-          // on mouse out
-          document.getElementById('resources-list').addEventListener('mouseout', function() {
-            // if not hovering over the sublist or the label, uncheck the dropdown
-            // wait 1 sec
-            setTimeout(function() {
-              if (!document.querySelector('.resources-sublist:hover') && !document.querySelector('#resources-list:hover')) {
-                document.getElementById('dropdown-resources').checked = false;
-              }
-            }, 350);
-          });
-          // if mouseout of sublist, uncheck immediately
-          document.querySelector('.resources-sublist').addEventListener('mouseout', function() {
-            setTimeout(function() {
-              if (!document.querySelector('.resources-sublist:hover') && !document.querySelector('#resources-list:hover')) {
-                document.getElementById('dropdown-resources').checked = false;
-              }
-            }, 450);
-          });
-          document.getElementById('products-list').addEventListener('mouseout', function() {
-            // if not hovering over the sublist, uncheck the dropdown
-            // wait 1 sec
-            setTimeout(function() {
-              if (!document.querySelector('.products-sublist:hover') && !document.querySelector('#products-list:hover')) {
-                document.getElementById('dropdown-products').checked = false;
-              }
-            }, 500);
-          });
-          // if mouseout of sublist, uncheck immediately
-          document.querySelector('.products-sublist').addEventListener('mouseout', function() {
-            setTimeout(function() {
-              if (!document.querySelector('.products-sublist:hover') && !document.querySelector('#products-list:hover')) {
-                document.getElementById('dropdown-products').checked = false;
-              }
-            }, 500);
-          });
-
-        </script>
-        <style>
-          #dropdown-resources:checked ~ .resources-sublist {
-            display: block;
-          }
-          #dropdown-products:checked ~ .products-sublist {
-            display: block;
-          }
-          /* Hide dropdown if clicking outside */
-          body:not(:has(#dropdown-resources:checked)) .resources-sublist,
-          body:not(:has(#dropdown-products:checked)) .products-sublist {
-            display: none;
-          }
-        </style>
-        <a href="https://github.com/roboflow/rf-detr"><li class="header-btn" style="border-radius: 5px; color: white; background: var(--md-typeset-a-color); padding-top: 0.25rem; padding-left: 0.5rem; padding-bottom: 0.25rem; padding-right: 0.5rem; border: 1px solid #8315F9;">Go to GitHub</li></a>
+        <li>
+          <a href="https://github.com/roboflow/rf-detr" class="header-btn" style="border-radius: 5px; color: white; background: var(--md-typeset-a-color); padding-top: 0.25rem; padding-left: 0.5rem; padding-bottom: 0.25rem; padding-right: 0.5rem; border: 1px solid #8315F9;">Go to GitHub</a>
+        </li>
     </ul>
+    <script>
+      document.addEventListener('click', function(event) {
+        const resourcesList = document.getElementById('resources-list');
+        const productsList = document.getElementById('products-list');
+        const dropdownResources = document.getElementById('dropdown-resources');
+        const dropdownProducts = document.getElementById('dropdown-products');
+
+        if (!resourcesList.contains(event.target)) {
+          dropdownResources.checked = false;
+        }
+        if (!productsList.contains(event.target)) {
+          dropdownProducts.checked = false;
+        }
+      });
+      document.getElementById('resources-list').addEventListener('mouseover', function() {
+        document.getElementById('dropdown-resources').checked = true;
+      });
+      document.getElementById('products-list').addEventListener('mouseover', function() {
+        document.getElementById('dropdown-products').checked = true;
+      });
+      document.getElementById('resources-list').addEventListener('mouseout', function() {
+        setTimeout(function() {
+          if (!document.querySelector('.resources-sublist:hover') && !document.querySelector('#resources-list:hover')) {
+            document.getElementById('dropdown-resources').checked = false;
+          }
+        }, 350);
+      });
+      document.querySelector('.resources-sublist').addEventListener('mouseout', function() {
+        setTimeout(function() {
+          if (!document.querySelector('.resources-sublist:hover') && !document.querySelector('#resources-list:hover')) {
+            document.getElementById('dropdown-resources').checked = false;
+          }
+        }, 450);
+      });
+      document.getElementById('products-list').addEventListener('mouseout', function() {
+        setTimeout(function() {
+          if (!document.querySelector('.products-sublist:hover') && !document.querySelector('#products-list:hover')) {
+            document.getElementById('dropdown-products').checked = false;
+          }
+        }, 500);
+      });
+      document.querySelector('.products-sublist').addEventListener('mouseout', function() {
+        setTimeout(function() {
+          if (!document.querySelector('.products-sublist:hover') && !document.querySelector('#products-list:hover')) {
+            document.getElementById('dropdown-products').checked = false;
+          }
+        }, 500);
+      });
+      function labelCurrentVersion() {
+        document.querySelectorAll('.md-version__current').forEach(function(button) {
+          const label = button.textContent.trim();
+          if (label) {
+            button.setAttribute('aria-label', label);
+          }
+        });
+      }
+      labelCurrentVersion();
+      const versionMenu = document.querySelector('.md-version');
+      if (versionMenu) {
+        new MutationObserver(labelCurrentVersion).observe(versionMenu, { childList: true, subtree: true });
+      }
+    </script>
   </nav>
 
   <!-- Navigation tabs (sticky) -->
@@ -456,6 +471,25 @@
         </a>
       </li>
     
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../faq/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  FAQ
+
+      </a>
+    </li>
   
 
       
@@ -546,7 +580,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="RF-DETR" class="md-nav__button md-logo" aria-label="RF-DETR" data-md-component="logo">
       
-  <img src="../../assets/roboflow-logo.svg" alt="logo">
+  <img src="../../assets/roboflow-logo.svg" alt="RF-DETR" width="24" height="24">
 
     </a>
     RF-DETR
@@ -1195,9 +1229,25 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../learn/export/" class="md-nav__link">
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -1211,7 +1261,363 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Export Model
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4_2" id="__nav_2_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export Formats
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Export Formats
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exports/onnx/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ONNX
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exports/tensorrt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TensorRT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exports/tflite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TFLite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exports/litert/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LiteRT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exports/openvino/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenVINO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exports/executorch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ExecuTorch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exports/coreml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CoreML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exports/coreai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core AI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exports/blueprint/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exporter Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2465,56 +2871,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rfdetr.training.module_model.RFDETRModelModule.clip_gradients" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;clip_gradients
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label=" clip_gradients">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#rfdetr.training.module_model.RFDETRModelModule.clip_gradients(optimizer)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;optimizer
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rfdetr.training.module_model.RFDETRModelModule.clip_gradients(gradient_clip_val)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;gradient_clip_val
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rfdetr.training.module_model.RFDETRModelModule.clip_gradients(gradient_clip_algorithm)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;gradient_clip_algorithm
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#rfdetr.training.module_model.RFDETRModelModule.on_load_checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2792,6 +3148,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#rfdetr.training.trainer.build_trainer(include_training_callbacks)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;include_training_callbacks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rfdetr.training.trainer.build_trainer(**trainer_kwargs)" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2995,6 +3362,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;smooth_alpha
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.best_model.BestModelCallback(evaluates_base_model)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;evaluates_base_model
       
     </span>
   </a>
@@ -3339,6 +3717,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.coco_eval.COCOEvalCallback(eval_ema_only)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;eval_ema_only
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.coco_eval.COCOEvalCallback(eval_base_model)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;eval_base_model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.coco_eval.COCOEvalCallback(eval_backend)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;eval_backend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rfdetr.training.callbacks.coco_eval.COCOEvalCallback-functions" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3358,6 +3769,162 @@
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpumemorytqdmprogressbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPUMemoryTQDMProgressBar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;GPUMemoryTQDMProgressBar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar.get_metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" get_metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar.get_metrics(trainer)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;trainer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar.get_metrics(pl_module)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;pl_module
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpumemoryrichprogressbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPUMemoryRichProgressBar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;GPUMemoryRichProgressBar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar.get_metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" get_metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar.get_metrics(trainer)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;trainer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar.get_metrics(pl_module)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;pl_module
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -3408,6 +3975,33 @@
           </ul>
         </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -3815,56 +4409,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rfdetr.training.module_model.RFDETRModelModule.clip_gradients" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;clip_gradients
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label=" clip_gradients">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#rfdetr.training.module_model.RFDETRModelModule.clip_gradients(optimizer)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;optimizer
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rfdetr.training.module_model.RFDETRModelModule.clip_gradients(gradient_clip_val)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;gradient_clip_val
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rfdetr.training.module_model.RFDETRModelModule.clip_gradients(gradient_clip_algorithm)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;gradient_clip_algorithm
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#rfdetr.training.module_model.RFDETRModelModule.on_load_checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4142,6 +4686,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#rfdetr.training.trainer.build_trainer(include_training_callbacks)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;include_training_callbacks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rfdetr.training.trainer.build_trainer(**trainer_kwargs)" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4345,6 +4900,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;smooth_alpha
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.best_model.BestModelCallback(evaluates_base_model)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;evaluates_base_model
       
     </span>
   </a>
@@ -4689,6 +5255,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.coco_eval.COCOEvalCallback(eval_ema_only)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;eval_ema_only
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.coco_eval.COCOEvalCallback(eval_base_model)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;eval_base_model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.coco_eval.COCOEvalCallback(eval_backend)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;eval_backend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rfdetr.training.callbacks.coco_eval.COCOEvalCallback-functions" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4708,6 +5307,162 @@
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpumemorytqdmprogressbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPUMemoryTQDMProgressBar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;GPUMemoryTQDMProgressBar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar.get_metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" get_metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar.get_metrics(trainer)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;trainer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar.get_metrics(pl_module)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;pl_module
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpumemoryrichprogressbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPUMemoryRichProgressBar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;GPUMemoryRichProgressBar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar.get_metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" get_metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar.get_metrics(trainer)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;trainer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar.get_metrics(pl_module)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;pl_module
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -4868,9 +5623,33 @@
 
     <div class="doc doc-contents ">
 
-        <p>Seed RNGs at fit start when <code>TrainConfig.seed</code> is set.</p>
-<p>This avoids hidden global side-effects in <code>build_trainer</code> while still preserving deterministic training
-behaviour for actual fit runs.</p>
+        <p>Validate loss consumers and seed RNGs at fit start.</p>
+<p>Rejects <code>compute_val_loss=False</code> when a configured callback or scheduler
+consumes <code>val/loss</code>. Seeding here avoids hidden global side-effects in
+<code>build_trainer</code> while preserving deterministic training behaviour for fit runs.</p>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="ValueError">ValueError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If a callback or scheduler monitors <code>val/loss</code> while validation-loss computation is disabled.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -4909,7 +5688,7 @@ the same object.</p>
 <h4 id="rfdetr.training.module_model.RFDETRModelModule.on_train_batch_start(batch)" class="doc doc-heading doc-heading-parameter">                  <code>batch</code>
 <a href="#rfdetr.training.module_model.RFDETRModelModule.on_train_batch_start(batch)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
             <td>
-                  <code><span title="typing.Tuple">Tuple</span></code>
+                  <code><span title="tuple">tuple</span>[<span title="typing.Any">Any</span>, <span title="typing.Any">Any</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4977,7 +5756,7 @@ independently; detection and segmentation models keep Lightning's automatic opti
 <h4 id="rfdetr.training.module_model.RFDETRModelModule.training_step(batch)" class="doc doc-heading doc-heading-parameter">                  <code>batch</code>
 <a href="#rfdetr.training.module_model.RFDETRModelModule.training_step(batch)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
             <td>
-                  <code><span title="typing.Tuple">Tuple</span></code>
+                  <code><span title="tuple">tuple</span>[<span title="typing.Any">Any</span>, <span title="typing.Any">Any</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -5087,7 +5866,7 @@ independently; detection and segmentation models keep Lightning's automatic opti
 <h4 id="rfdetr.training.module_model.RFDETRModelModule.validation_step(batch)" class="doc doc-heading doc-heading-parameter">                  <code>batch</code>
 <a href="#rfdetr.training.module_model.RFDETRModelModule.validation_step(batch)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
             <td>
-                  <code><span title="typing.Tuple">Tuple</span></code>
+                  <code><span title="tuple">tuple</span>[<span title="typing.Any">Any</span>, <span title="typing.Any">Any</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -5129,7 +5908,7 @@ independently; detection and segmentation models keep Lightning's automatic opti
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]</code>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -5178,7 +5957,7 @@ training).</p>
 <h4 id="rfdetr.training.module_model.RFDETRModelModule.test_step(batch)" class="doc doc-heading doc-heading-parameter">                  <code>batch</code>
 <a href="#rfdetr.training.module_model.RFDETRModelModule.test_step(batch)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
             <td>
-                  <code><span title="typing.Tuple">Tuple</span></code>
+                  <code><span title="tuple">tuple</span>[<span title="typing.Any">Any</span>, <span title="typing.Any">Any</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -5220,7 +5999,7 @@ training).</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]</code>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -5266,7 +6045,7 @@ training).</p>
 <h4 id="rfdetr.training.module_model.RFDETRModelModule.predict_step(batch)" class="doc doc-heading doc-heading-parameter">                  <code>batch</code>
 <a href="#rfdetr.training.module_model.RFDETRModelModule.predict_step(batch)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
             <td>
-                  <code><span title="typing.Tuple">Tuple</span></code>
+                  <code><span title="tuple">tuple</span>[<span title="typing.Any">Any</span>, <span title="typing.Any">Any</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -5351,9 +6130,11 @@ training).</p>
 
     <div class="doc doc-contents ">
 
-        <p>Build AdamW optimizer with layer-wise LR decay and LambdaLR scheduler.</p>
+        <p>Build the configured optimizer with layer-wise LR decay and scheduler.</p>
 <p>Uses <code>trainer.estimated_stepping_batches</code> for total step count so cosine annealing covers the full training
-run regardless of dataset size or accumulation settings.</p>
+run regardless of dataset size or accumulation settings.
+<code>optimizer="adamw"</code> keeps RF-DETR's fused torch AdamW path;
+other names can be loaded from <code>pytorch-optimizer</code>.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -5367,97 +6148,12 @@ run regardless of dataset size or accumulation settings.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]</code>
+                  <code><span title="pytorch_lightning.utilities.types.OptimizerLRSchedulerConfig">OptimizerLRSchedulerConfig</span></code>
             </td>
             <td>
               <div class="doc-md-description">
                 <p>PTL optimizer config dict with optimizer and step-interval scheduler.</p>
               </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="rfdetr.training.module_model.RFDETRModelModule.clip_gradients" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">clip_gradients</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">gradient_clip_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gradient_clip_algorithm</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
-
-<a href="#rfdetr.training.module_model.RFDETRModelModule.clip_gradients" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Override PTL gradient clipping to support fused AdamW.</p>
-<p>PTL's AMP precision plugin refuses to clip gradients when the optimizer declares it handles unscaling internally
-(fused=True).  When fused is active we are on BF16 (no GradScaler) so <code>clip_grad_norm_</code> is correct.  For the
-non-fused path (FP16 + GradScaler or FP32) we delegate to <code>super()</code> to preserve scaler-aware unscaling.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-<h4 id="rfdetr.training.module_model.RFDETRModelModule.clip_gradients(optimizer)" class="doc doc-heading doc-heading-parameter">                  <code>optimizer</code>
-<a href="#rfdetr.training.module_model.RFDETRModelModule.clip_gradients(optimizer)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
-            <td>
-                  <code><span title="torch.optim.Optimizer">Optimizer</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The current optimizer.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-<h4 id="rfdetr.training.module_model.RFDETRModelModule.clip_gradients(gradient_clip_val)" class="doc doc-heading doc-heading-parameter">                  <code>gradient_clip_val</code>
-<a href="#rfdetr.training.module_model.RFDETRModelModule.clip_gradients(gradient_clip_val)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
-            <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="float">float</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Maximum gradient norm.</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-<h4 id="rfdetr.training.module_model.RFDETRModelModule.clip_gradients(gradient_clip_algorithm)" class="doc doc-heading doc-heading-parameter">                  <code>gradient_clip_algorithm</code>
-<a href="#rfdetr.training.module_model.RFDETRModelModule.clip_gradients(gradient_clip_algorithm)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
-            <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Clipping algorithm; forwarded to super()
-for the non-fused path.</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
             </td>
           </tr>
       </tbody>
@@ -5480,7 +6176,7 @@ for the non-fused path.</p>
     <div class="doc doc-contents ">
 
         <p>Auto-detect legacy formats and reconcile PE shapes at checkpoint load time.</p>
-<p>PTL calls this hook before applying <code>checkpoint["state_dict"]</code> to the module.  Three normalisation steps are
+<p>PTL calls this hook before applying <code>checkpoint["state_dict"]</code> to the module.  Five normalisation steps are
 applied in order:</p>
 <ol>
 <li>
@@ -5496,10 +6192,25 @@ applied in order:</p>
    :issue:<code>998</code>.</p>
 </li>
 <li>
+<p><strong>FP8 extra-state removal</strong> — under Transformer Engine (<code>amp_dtype="fp8"</code>), the live module's
+   <code>state_dict()</code> carries <code>_extra_state</code> entries recording FP8 scaling history. Since <code>strict_loading</code>
+   is disabled on this module, <code>load_state_dict()</code> tolerates a missing or unexpected key afterward, but
+   that does not stop it from calling <code>set_extra_state()</code> for any such key present in both the checkpoint
+   and the module —
+   and Transformer Engine intentionally rejects pickle-deserialised extra state. The entries are removed from
+   <code>checkpoint["state_dict"]</code> here so the full-checkpoint resume path (<code>Trainer(ckpt_path=...)</code>) cannot
+   abort on them, mirroring :meth:<code>~rfdetr.training.callbacks.ema.RFDETREMACallback._without_extra_state</code>.</p>
+</li>
+<li>
 <p><strong>Converted format</strong> — a file produced by
    :func:<code>~rfdetr.training.checkpoint.convert_legacy_checkpoint</code> that already has <code>"state_dict"</code> but also
    carries <code>"legacy_ema_state_dict"</code>.  The EMA weights are stashed on <code>self._pending_legacy_ema_state</code> for
    optional restoration by :class:<code>~rfdetr.training.callbacks.ema.RFDETREMACallback</code>.</p>
+</li>
+<li>
+<p><strong>Optimizer fused eligibility</strong> — built-in AdamW parameter groups are reset to the live runtime's fused
+   eligibility before PyTorch loads saved group options. A combined-route checkpoint records <code>fused=True</code>;
+   the destination's FP32 DDP route must keep <code>fused=False</code>.</p>
 </li>
 </ol>
 
@@ -5714,7 +6425,7 @@ yet or the dataset does not expose COCO-style category information.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[<span title="str">str</span>]]</code>
+                  <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -5811,11 +6522,12 @@ dataset is only constructed once even if <code>setup</code> is called multiple t
     <div class="doc doc-contents ">
 
         <p>Return the training DataLoader.</p>
-<p>Uses a replacement sampler when the dataset is too small to fill <code>_MIN_TRAIN_BATCHES</code> effective batches
-(matching legacy behaviour in <code>main.py</code>).  Otherwise wraps the dataset with :class:<code>GradAccumAlignedDataset</code>
-to ensure its length is an exact multiple of <code>effective_batch_size * world_size</code> (workaround for
-https://github.com/Lightning-AI/pytorch-lightning/issues/19987) and then uses <code>shuffle=True, drop_last=True</code>
-so that PTL can auto-inject <code>DistributedSampler</code> in DDP mode.</p>
+<p>On one process, uses a replacement sampler when the dataset is too small to fill <code>_MIN_TRAIN_BATCHES</code>
+effective batches (matching legacy behaviour in <code>main.py</code>). In DDP, repeats short datasets through
+:class:<code>GradAccumAlignedDataset</code> so that Lightning can safely inject <code>DistributedSampler</code> without discarding
+the requested sample count. The wrapper also ensures the length is an exact multiple of
+<code>effective_batch_size * world_size</code> (workaround for
+https://github.com/Lightning-AI/pytorch-lightning/issues/19987).</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -5829,11 +6541,41 @@ so that PTL can auto-inject <code>DistributedSampler</code> in DDP mode.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="torch.utils.data.DataLoader">DataLoader</span></code>
+                  <code><span title="torch.utils.data.DataLoader">DataLoader</span>[<span title="typing.Any">Any</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>DataLoader for the training dataset.</p>
+                <p>DataLoader for the training dataset. With <code>TrainConfig.pack_targets=True</code> (the default), its collated</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="torch.utils.data.DataLoader">DataLoader</span>[<span title="typing.Any">Any</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>batches contain <code>PackedTargets</code> for losslessly packable target batches. With</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="torch.utils.data.DataLoader">DataLoader</span>[<span title="typing.Any">Any</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>TrainConfig.pad_targets_to</code> set, every target is padded to that row count before packing, so a</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="torch.utils.data.DataLoader">DataLoader</span>[<span title="typing.Any">Any</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>batch always packs (every sample already shares one shape) and every packed shape is fixed too.</p>
               </div>
             </td>
           </tr>
@@ -5870,11 +6612,21 @@ so that PTL can auto-inject <code>DistributedSampler</code> in DDP mode.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="torch.utils.data.DataLoader">DataLoader</span></code>
+                  <code><span title="torch.utils.data.DataLoader">DataLoader</span>[<span title="typing.Any">Any</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>DataLoader for the validation dataset with sequential sampling.</p>
+                <p>DataLoader for the validation dataset with sequential sampling. With <code>TrainConfig.pack_targets=True</code></p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="torch.utils.data.DataLoader">DataLoader</span>[<span title="typing.Any">Any</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>(the default), its collated batches contain <code>PackedTargets</code> for losslessly packable target batches.</p>
               </div>
             </td>
           </tr>
@@ -5911,11 +6663,21 @@ so that PTL can auto-inject <code>DistributedSampler</code> in DDP mode.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="torch.utils.data.DataLoader">DataLoader</span></code>
+                  <code><span title="torch.utils.data.DataLoader">DataLoader</span>[<span title="typing.Any">Any</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>DataLoader for the test dataset with sequential sampling.</p>
+                <p>DataLoader for the test dataset with sequential sampling. With <code>TrainConfig.pack_targets=True</code> (the</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="torch.utils.data.DataLoader">DataLoader</span>[<span title="typing.Any">Any</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>default), its collated batches contain <code>PackedTargets</code> for losslessly packable target batches.</p>
               </div>
             </td>
           </tr>
@@ -5945,8 +6707,8 @@ so that PTL can auto-inject <code>DistributedSampler</code> in DDP mode.</p>
     <div class="doc doc-contents first">
 
         <p>Assemble a PTL <code>Trainer</code> with the full RF-DETR callback and logger stack.</p>
-<p>Resolves training precision from <code>model_config.amp</code> and device capability, guards EMA against sharded strategies,
-wires conditional loggers, and applies promoted training knobs (sync_batchnorm, strategy).</p>
+<p>Resolves training precision from <code>train_config.amp_dtype</code> and device capability, guards EMA against sharded
+strategies, wires conditional loggers, and applies promoted training knobs (sync_batchnorm, strategy).</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -5969,7 +6731,8 @@ wires conditional loggers, and applies promoted training knobs (sync_batchnorm, 
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Training hyperparameter configuration.</p>
+                <p>Training hyperparameter configuration. <code>amp_dtype</code> is the authority for
+precision resolution.</p>
               </div>
             </td>
             <td>
@@ -5985,9 +6748,9 @@ wires conditional loggers, and applies promoted training knobs (sync_batchnorm, 
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Architecture configuration. Used for precision resolution
-(<code>model_config.amp</code>) and to guard against unsupported distributed
-configurations for keypoint models.</p>
+                <p>Architecture configuration. Read for the deprecated <code>amp</code> toggle (a fallback
+only when <code>amp_dtype</code> is left at its default) and to guard against unsupported
+distributed configurations for keypoint models.</p>
               </div>
             </td>
             <td>
@@ -6011,6 +6774,25 @@ Defaults to <code>None</code> which reads from <code>train_config.accelerator</c
             </td>
             <td>
                   <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+<h2 id="rfdetr.training.trainer.build_trainer(include_training_callbacks)" class="doc doc-heading doc-heading-parameter">                  <code>include_training_callbacks</code>
+<a href="#rfdetr.training.trainer.build_trainer(include_training_callbacks)" class="headerlink" title="Permanent link">&para;</a></h2>            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>When <code>True</code> (default) the full training stack is wired (EMA, drop-path,
+checkpointing, best-model selection, early stopping) along with the configured loggers. When <code>False</code> an
+evaluation-only trainer is built that keeps just the metric callback (and the progress bar): no
+checkpoints or logs are written. Used by :meth:<code>rfdetr.detr.RFDETR.evaluate</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -6041,6 +6823,23 @@ keypoint config raises a <code>UserWarning</code> to make the override explicit.
       </tbody>
     </table>
 
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>Two process-wide side effects: (1) unconditionally calls
+<code>torch.set_float32_matmul_precision("high")</code>, which persists after this function
+returns and overrides any caller-set precision (e.g. <code>"highest"</code>) with no opt-out —
+mirrors the import-time guard in <code>rfdetr.detr</code> so the Lightning CLI path
+(<code>rfdetr fit</code>) gets the same TF32 behavior as the python API path. (2) sets
+<code>check_val_every_n_epoch=tc.eval_interval</code>, so <code>eval_interval</code> now gates the whole
+validation loop (forward pass, metric compute, EMA forward), not just result logging;
+a <code>_ForceLastEpochValidationCallback</code> still guarantees the final epoch always
+validates even when <code>epochs</code> is not a multiple of <code>eval_interval</code>.</p>
+<p>When <code>accelerator</code> resolves to <code>"xla"</code> or <code>"tpu"</code>, the resolved precision is
+set via an <code>XLAPrecision</code> plugin instead of a <code>precision</code> argument — PTL's
+<code>XLAStrategy</code> only accepts the plugin and raises <code>TypeError</code> for standard precision
+strings. The XLA plugin is appended to caller-supplied plugins.</p>
+</details>
 
     <p><span class="doc-section-title">Returns:</span></p>
     <table>
@@ -6169,6 +6968,34 @@ effective decay ramps from 0 towards <em>decay</em> following <code>decay * (1 -
     </table>
 
 
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="rfdetr.training.callbacks.ema.RFDETREMACallback.suppress_test_swap">suppress_test_swap</span></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>When <code>True</code> the test-epoch hooks skip the EMA weight swap.  Set (and restored) by
+:class:<code>~rfdetr.training.callbacks.best_model.BestModelCallback</code> around its fit-end <code>trainer.test()</code>
+run, which has already loaded the best checkpoint weights into the module — swapping in the final EMA
+weights there would make the reported <code>test/*</code> metrics reflect the wrong model.  Standalone
+<code>trainer.test()</code> runs keep the default <code>False</code> and evaluate EMA weights as before.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
 
 
 
@@ -6222,14 +7049,22 @@ effective decay ramps from 0 towards <em>decay</em> following <code>decay * (1 -
               Bases: <code><span title="pytorch_lightning.callbacks.ModelCheckpoint">ModelCheckpoint</span></code></p>
 
 
-        <p>Track best validation mAP and save best checkpoints during training.</p>
+        <p>Track the best validation metric and save best checkpoints during training.</p>
 <p>Extends :class:<code>pytorch_lightning.callbacks.ModelCheckpoint</code> to save stripped <code>{model, args, epoch}</code> <code>.pth</code>
 files (instead of full <code>.ckpt</code> files) and to track a separate EMA checkpoint in parallel.</p>
 <p>At the end of training the overall winner (regular vs EMA, strict <code>&gt;</code> for EMA) is copied to
 <code>checkpoint_best_total.pth</code> and optimizer/scheduler state is stripped via
-:func:<code>rfdetr.util.misc.strip_checkpoint</code>.</p>
-<p>Checkpoints are only updated on validation epochs where the monitor metric is actually logged.  On non-eval epochs
-(when <code>eval_interval &gt; 1</code> causes COCO evaluation to be skipped) the callback is a no-op.</p>
+:func:<code>rfdetr.utilities.state_dict.strip_checkpoint</code>.  The stripped payload records <code>best_total_source</code>
+(<code>"ema"</code> or <code>"regular"</code>) so the winning source is recoverable after reload.</p>
+<p>When EMA tracking is enabled (<code>monitor_ema</code> set), EMA-named checkpoints are always left on disk for clarity:
+<code>checkpoint_best_ema.pth</code> (backfilled with the final EMA weights if the EMA metric never improved) and
+<code>last_ema.pth</code> (final EMA weights, mirroring <code>last.pth</code> for the live model).</p>
+<p>Each track only updates when its own monitor key is actually logged that epoch, and the two tracks are
+checked independently.  On non-eval epochs (<code>eval_interval &gt; 1</code> skips COCO eval entirely) both keys are
+absent and the callback is a full no-op.  When validation evaluates only the EMA model (the default, see
+<code>TrainConfig.eval_base_model</code>), <code>monitor_regular</code> <em>is</em> populated — <code>COCOEvalCallback</code> mirrors the EMA
+score onto it so external monitors keep working — but it reports the EMA weights, so <code>evaluates_base_model</code>
+disables the regular track and the EMA track becomes the only one that updates.</p>
 <p><code>state_dict()</code> and <code>load_state_dict()</code> are overridden to persist <code>_best_ema</code> in the Lightning callback state,
 ensuring that <code>trainer.fit(ckpt_path=...)</code> resumes EMA high-water-mark tracking from the correct value.</p>
 
@@ -6270,7 +7105,7 @@ ensuring that <code>trainer.fit(ckpt_path=...)</code> resumes EMA high-water-mar
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Metric key for the regular model mAP.</p>
+                <p>Metric key for the regular model (mAP or mAR, per <code>TrainConfig.best_model_metric</code>).</p>
               </div>
             </td>
             <td>
@@ -6286,7 +7121,7 @@ ensuring that <code>trainer.fit(ckpt_path=...)</code> resumes EMA high-water-mar
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Metric key for the EMA model mAP.  <code>None</code> disables EMA tracking.</p>
+                <p>Metric key for the EMA model (mAP or mAR).  <code>None</code> disables EMA tracking.</p>
               </div>
             </td>
             <td>
@@ -6353,6 +7188,26 @@ is pre-warmed by the first eligible comparison.</p>
                   <code>0.0</code>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+<h2 id="rfdetr.training.callbacks.best_model.BestModelCallback(evaluates_base_model)" class="doc doc-heading doc-heading-parameter">                  <code>evaluates_base_model</code>
+<a href="#rfdetr.training.callbacks.best_model.BestModelCallback(evaluates_base_model)" class="headerlink" title="Permanent link">&para;</a></h2>            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether validation actually evaluates the base model this run (see
+<code>TrainConfig.eval_base_model</code>). <code>False</code> disables the regular checkpoint track because
+<code>monitor_regular</code> then carries the EMA score mirrored by <code>COCOEvalCallback</code> while this track saves
+base weights. The EMA track still runs, and <code>on_fit_end</code> promotes its checkpoint to
+<code>checkpoint_best_total.pth</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -6390,7 +7245,7 @@ is pre-warmed by the first eligible comparison.</p>
 
 
 <h3 id="rfdetr.training.callbacks.best_model.BestModelCallback.__init__" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">monitor_regular</span><span class="o">=</span><span class="s1">'val/mAP_50_95'</span><span class="p">,</span> <span class="n">monitor_ema</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_test</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">skip_best_epochs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">smooth_alpha</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span></code>
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">monitor_regular</span><span class="o">=</span><span class="s1">'val/mAP_50_95'</span><span class="p">,</span> <span class="n">monitor_ema</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_test</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">skip_best_epochs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">smooth_alpha</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">evaluates_base_model</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
 
 <a href="#rfdetr.training.callbacks.best_model.BestModelCallback.__init__" class="headerlink" title="Permanent link">&para;</a></h3>
 
@@ -6421,10 +7276,12 @@ is pre-warmed by the first eligible comparison.</p>
               Bases: <code><span title="pytorch_lightning.callbacks.EarlyStopping">EarlyStopping</span></code></p>
 
 
-        <p>Early stopping callback monitoring validation mAP for RF-DETR.</p>
+        <p>Early stopping callback monitoring a validation metric for RF-DETR.</p>
 <p>Extends :class:<code>pytorch_lightning.callbacks.EarlyStopping</code> with dual-metric
-monitoring: by default it monitors <code>max(regular_mAP, ema_mAP)</code> (legacy
-behaviour); set <code>use_ema=True</code> to monitor the EMA metric exclusively.</p>
+monitoring: by default it monitors <code>max(regular, ema)</code> (legacy
+behaviour); set <code>use_ema=True</code> to monitor the EMA metric exclusively. The
+metric itself (mAP or mAR) is chosen by the caller via <code>monitor_regular</code>/
+<code>monitor_ema</code>, see <code>TrainConfig.best_model_metric</code>.</p>
 <p>The effective metric is injected into <code>trainer.callback_metrics</code> under a synthetic key before delegating to the
 parent's stopping logic, so all parent features are available for free: <code>state_dict</code>/<code>load_state_dict</code> for
 checkpoint resumption, NaN/inf guard via <code>check_finite</code>, and <code>stopping_threshold</code>/<code>divergence_threshold</code>.</p>
@@ -6468,7 +7325,7 @@ checkpoint resumption, NaN/inf guard via <code>check_finite</code>, and <code>st
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Minimum mAP improvement to reset the patience counter.</p>
+                <p>Minimum improvement (in the monitored metric) to reset the patience counter.</p>
               </div>
             </td>
             <td>
@@ -6501,7 +7358,7 @@ monitor only the EMA metric.  When <code>False</code>, monitor <code>max(regular
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Metric key for the regular model mAP.</p>
+                <p>Metric key for the regular model (mAP or mAR, per <code>TrainConfig.best_model_metric</code>).</p>
               </div>
             </td>
             <td>
@@ -6517,7 +7374,7 @@ monitor only the EMA metric.  When <code>False</code>, monitor <code>max(regular
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Metric key for the EMA model mAP.</p>
+                <p>Metric key for the EMA model (mAP or mAR).</p>
               </div>
             </td>
             <td>
@@ -6805,6 +7662,13 @@ model can distribute rates across ViT encoder layers.</p>
 </ul>
 <p>For segmentation models (<code>segmentation=True</code>) additional metrics <code>val/segm_mAP_50_95</code> and <code>val/segm_mAP_50</code>
 are logged.</p>
+<p>In mAP, crowd regions (<code>iscrowd=1</code>) are scored as in pycocotools: a detection on one is ignored, not counted as a
+false positive. <code>ConvertCoco</code> drops them from the dataset targets so training never matches them; for validation
+and test the callback reads them back from the split's COCO API (by <code>image_id</code>) and appends them to the metric
+ground truth as <code>iscrowd=1</code> rows. The macro-F1 sweep sees the same rows but matches them by union IoU, so it
+ignores a detection only when its IoU with the crowd is at least 0.5. Datasets without a COCO API (webdataset
+shards) get no crowd rows. Train-split metrics (<code>compute_train_metrics</code>) are computed on augmented images, where
+annotation-file geometry no longer applies, and get none either.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -6844,8 +7708,7 @@ are logged.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>When <code>True</code>, evaluate both bbox and segm IoU using
-<code>backend="faster_coco_eval"</code>. Defaults to <code>False</code>.</p>
+                <p>When <code>True</code>, evaluate both bbox and segm IoU. Defaults to <code>False</code>.</p>
               </div>
             </td>
             <td>
@@ -6878,11 +7741,72 @@ always computed when <code>trainer.test()</code> is called.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>When <code>False</code>, skip per-class AP logging/table.</p>
+                <p>When <code>False</code>, skip per-class AP computation
+(<code>MeanAveragePrecision(class_metrics=False)</code>) as well as the per-class logging/table.</p>
               </div>
             </td>
             <td>
                   <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+<h2 id="rfdetr.training.callbacks.coco_eval.COCOEvalCallback(eval_ema_only)" class="doc doc-heading doc-heading-parameter">                  <code>eval_ema_only</code>
+<a href="#rfdetr.training.callbacks.coco_eval.COCOEvalCallback(eval_ema_only)" class="headerlink" title="Permanent link">&para;</a></h2>            </td>
+            <td>
+                  <code><span title="bool">bool</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Deprecated compatibility flag from the pre-1.10 callback API. When explicitly supplied,
+<code>True</code> selects EMA-only evaluation and <code>False</code> selects base-plus-EMA evaluation, preserving the old
+keyword and positional behavior. Omit it for the new default.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+<h2 id="rfdetr.training.callbacks.coco_eval.COCOEvalCallback(eval_base_model)" class="doc doc-heading doc-heading-parameter">                  <code>eval_base_model</code>
+<a href="#rfdetr.training.callbacks.coco_eval.COCOEvalCallback(eval_base_model)" class="headerlink" title="Permanent link">&para;</a></h2>            </td>
+            <td>
+                  <code><span title="bool">bool</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>When <code>False</code> (default), <code>validation_step</code> already forwarded through
+the EMA model directly (see <code>TrainConfig.eval_base_model</code>), so the independent
+duplicate EMA forward pass this callback would otherwise run every validation batch
+is skipped and its predictions are routed to the EMA track. When <code>True</code>,
+<code>validation_step</code> forwards the base model and this callback runs the second, EMA
+forward pass, so both models are evaluated from independent predictions.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+<h2 id="rfdetr.training.callbacks.coco_eval.COCOEvalCallback(eval_backend)" class="doc doc-heading doc-heading-parameter">                  <code>eval_backend</code>
+<a href="#rfdetr.training.callbacks.coco_eval.COCOEvalCallback(eval_backend)" class="headerlink" title="Permanent link">&para;</a></h2>            </td>
+            <td>
+                  <code><span title="rfdetr.config.CocoEvalBackend">CocoEvalBackend</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>COCO evaluation backend, mirroring :attr:<code>~rfdetr.config.TrainConfig.eval_backend</code>.
+<code>"vernier"</code> is the default and computes fastest, <code>"faster_coco_eval"</code> is the previous
+evaluator and <code>"ufcoco"</code> selects ultrafast-pycocotools; all four ship with <code>rfdetr[train]</code> and return
+identical metrics.
+Appended after the existing parameters rather than grouped with the other evaluation knobs, so that
+positional callers keep binding the arguments they always did.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;vernier&#39;</code>
             </td>
           </tr>
       </tbody>
@@ -6911,7 +7835,7 @@ always computed when <code>trainer.test()</code> is called.</p>
 
 
 <h3 id="rfdetr.training.callbacks.coco_eval.COCOEvalCallback.__init__" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">max_dets</span><span class="o">=</span><span class="n">DEFAULT_KEYPOINT_MAX_DETS</span><span class="p">,</span> <span class="n">segmentation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eval_interval</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">log_per_class_metrics</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keypoint_oks_sigmas</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">in_notebook</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">max_dets</span><span class="o">=</span><span class="n">DEFAULT_KEYPOINT_MAX_DETS</span><span class="p">,</span> <span class="n">segmentation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eval_interval</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">log_per_class_metrics</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keypoint_oks_sigmas</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">in_notebook</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eval_ema_only</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eval_base_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eval_backend</span><span class="o">=</span><span class="s1">'vernier'</span><span class="p">)</span></code>
 
 <a href="#rfdetr.training.callbacks.coco_eval.COCOEvalCallback.__init__" class="headerlink" title="Permanent link">&para;</a></h3>
 
@@ -6929,15 +7853,319 @@ always computed when <code>trainer.test()</code> is called.</p>
 
     </div>
 
+</div><h3 id="gpumemorytqdmprogressbar">GPUMemoryTQDMProgressBar<a class="headerlink" href="#gpumemorytqdmprogressbar" title="Permanent link">&para;</a></h3>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<a id="rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar"></a>
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="rfdetr.training.callbacks.gpu_memory_progress_bar._GpuMemoryMetricsMixin">_GpuMemoryMetricsMixin</span></code>, <code><span title="pytorch_lightning.callbacks.TQDMProgressBar">TQDMProgressBar</span></code></p>
+
+
+        <p><code>TQDMProgressBar</code> with peak and free/total CUDA memory usage in the postfix.</p>
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<h2 id="rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar-functions">Functions<a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar-functions" class="headerlink" title="Permanent link">&para;</a></h2>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar.get_metrics" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">get_metrics</span><span class="p">(</span><span class="n">trainer</span><span class="p">,</span> <span class="n">pl_module</span><span class="p">)</span></code>
+
+<a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar.get_metrics" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the progress bar metrics, with <code>max_mem</code>/<code>free_mem</code> appended on CUDA.</p>
+<p>The two metrics answer different questions and are not interchangeable. <code>max_mem</code> is this <strong>process's own
+peak</strong> allocation on <code>trainer.strategy.root_device</code> since the last <code>trainer.fit()</code> call, reset at the
+start of every fit. <code>free_mem</code> is a <strong>live, whole-device</strong> <code>torch.cuda.mem_get_info(device)</code> reading with
+no reset step: it includes every allocator on that device, not just this process, and it only reflects memory
+actually handed back to the CUDA driver — freeing a tensor in this process typically does not raise it on
+its own, since PyTorch's caching allocator keeps that block reserved for its own reuse. Explicit cache
+release, allocator reclamation under configured thresholds or allocation pressure, sibling-process release,
+or process exit can change the reading. See the module docstring for the full semantics.</p>
+<p>An explicitly logged <code>max_mem</code>/<code>free_mem</code> wins: if the base metrics already carry that key with a
+different value (a user's own <code>self.log("max_mem", ..., prog_bar=True)</code>), the logged value is kept and a
+rank-zero warning is emitted, mirroring how <code>ProgressBar.get_metrics</code> reports name collisions.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+<h4 id="rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar.get_metrics(trainer)" class="doc doc-heading doc-heading-parameter">                  <code>trainer</code>
+<a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar.get_metrics(trainer)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
+            <td>
+                  <code><span title="pytorch_lightning.Trainer">Trainer</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The Lightning Trainer instance.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+<h4 id="rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar.get_metrics(pl_module)" class="doc doc-heading doc-heading-parameter">                  <code>pl_module</code>
+<a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryTQDMProgressBar.get_metrics(pl_module)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
+            <td>
+                  <code><span title="pytorch_lightning.LightningModule">LightningModule</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The <code>LightningModule</code> being trained.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="rfdetr.training.callbacks.gpu_memory_progress_bar._Metrics">_Metrics</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The metrics dict produced by the base progress bar, plus <code>max_mem</code> and <code>free_mem</code> when</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="rfdetr.training.callbacks.gpu_memory_progress_bar._Metrics">_Metrics</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>trainer.strategy.root_device</code> is an active CUDA device.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h3 id="gpumemoryrichprogressbar">GPUMemoryRichProgressBar<a class="headerlink" href="#gpumemoryrichprogressbar" title="Permanent link">&para;</a></h3>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<a id="rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar"></a>
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="rfdetr.training.callbacks.gpu_memory_progress_bar._GpuMemoryMetricsMixin">_GpuMemoryMetricsMixin</span></code>, <code><span title="pytorch_lightning.callbacks.RichProgressBar">RichProgressBar</span></code></p>
+
+
+        <p><code>RichProgressBar</code> with peak and free/total CUDA memory usage in the metrics column.</p>
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<h2 id="rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar-functions">Functions<a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar-functions" class="headerlink" title="Permanent link">&para;</a></h2>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar.get_metrics" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">get_metrics</span><span class="p">(</span><span class="n">trainer</span><span class="p">,</span> <span class="n">pl_module</span><span class="p">)</span></code>
+
+<a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar.get_metrics" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the progress bar metrics, with <code>max_mem</code>/<code>free_mem</code> appended on CUDA.</p>
+<p>The two metrics answer different questions and are not interchangeable. <code>max_mem</code> is this <strong>process's own
+peak</strong> allocation on <code>trainer.strategy.root_device</code> since the last <code>trainer.fit()</code> call, reset at the
+start of every fit. <code>free_mem</code> is a <strong>live, whole-device</strong> <code>torch.cuda.mem_get_info(device)</code> reading with
+no reset step: it includes every allocator on that device, not just this process, and it only reflects memory
+actually handed back to the CUDA driver — freeing a tensor in this process typically does not raise it on
+its own, since PyTorch's caching allocator keeps that block reserved for its own reuse. Explicit cache
+release, allocator reclamation under configured thresholds or allocation pressure, sibling-process release,
+or process exit can change the reading. See the module docstring for the full semantics.</p>
+<p>An explicitly logged <code>max_mem</code>/<code>free_mem</code> wins: if the base metrics already carry that key with a
+different value (a user's own <code>self.log("max_mem", ..., prog_bar=True)</code>), the logged value is kept and a
+rank-zero warning is emitted, mirroring how <code>ProgressBar.get_metrics</code> reports name collisions.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+<h4 id="rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar.get_metrics(trainer)" class="doc doc-heading doc-heading-parameter">                  <code>trainer</code>
+<a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar.get_metrics(trainer)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
+            <td>
+                  <code><span title="pytorch_lightning.Trainer">Trainer</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The Lightning Trainer instance.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+<h4 id="rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar.get_metrics(pl_module)" class="doc doc-heading doc-heading-parameter">                  <code>pl_module</code>
+<a href="#rfdetr.training.callbacks.gpu_memory_progress_bar.GPUMemoryRichProgressBar.get_metrics(pl_module)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
+            <td>
+                  <code><span title="pytorch_lightning.LightningModule">LightningModule</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The <code>LightningModule</code> being trained.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="rfdetr.training.callbacks.gpu_memory_progress_bar._Metrics">_Metrics</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The metrics dict produced by the base progress bar, plus <code>max_mem</code> and <code>free_mem</code> when</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="rfdetr.training.callbacks.gpu_memory_progress_bar._Metrics">_Metrics</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>trainer.strategy.root_device</code> is an active CUDA device.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
 </div><hr />
 <h2 id="rfdetrcli">RFDETRCli<a class="headerlink" href="#rfdetrcli" title="Permanent link">&para;</a></h2>
+<div class="admonition info">
+<p class="admonition-title">CLI requires the <code>train</code> and <code>cli</code> extras</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"rfdetr[train,cli]"</span>
+</span></code></pre></div>
+<p>The <code>rfdetr</code> console script and its <code>--config</code> / <code>--print_config</code> flags are provided by <code>jsonargparse</code>, which is included in the <code>cli</code> extra.</p>
+</div>
 <p><code>RFDETRCli</code> is the command-line entry point for RF-DETR. It wraps
 <code>RFDETRModelModule</code> and <code>RFDETRDataModule</code> under a single <code>rfdetr</code> command and
 auto-generates four subcommands from the PyTorch Lightning CLI machinery:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>rfdetr<span class="w"> </span>fit<span class="w">      </span>--config<span class="w"> </span>configs/rfdetr_base.yaml
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>rfdetr<span class="w"> </span>validate<span class="w"> </span>--ckpt_path<span class="w"> </span>output/best.ckpt
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>rfdetr<span class="w"> </span><span class="nb">test</span><span class="w">     </span>--ckpt_path<span class="w"> </span>output/best.ckpt
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>rfdetr<span class="w"> </span>predict<span class="w">  </span>--ckpt_path<span class="w"> </span>output/best.ckpt
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>rfdetr<span class="w"> </span>fit<span class="w">      </span>--config<span class="w"> </span>configs/rfdetr_base.yaml
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>rfdetr<span class="w"> </span>validate<span class="w"> </span>--ckpt_path<span class="w"> </span>output/best.ckpt
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>rfdetr<span class="w"> </span><span class="nb">test</span><span class="w">     </span>--ckpt_path<span class="w"> </span>output/best.ckpt
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>rfdetr<span class="w"> </span>predict<span class="w">  </span>--ckpt_path<span class="w"> </span>output/best.ckpt
 </span></code></pre></div>
 <p>Both <code>model_config</code> and <code>train_config</code> are specified once; <code>RFDETRCli</code>
 automatically links them to the datamodule so you do not need to repeat the
@@ -7005,7 +8233,7 @@ same arguments under <code>--data.*</code>.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="April 23, 2026 15:22:59 UTC">2026-04-23 15:22:59</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="August 5, 2026 19:51:24 UTC">2026-08-05 19:51:24</span>
   </span>
 
     
@@ -7114,6 +8342,8 @@ same arguments under <code>--data.*</code>.</p>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/version-banner.js"></script>
       
     
   </body>
