@@ -68,6 +68,23 @@ def test_never_hands_role_from_live_incumbent_to_a_ghost_challenger() -> None:
     assert result.track_id == 6
 
 
+def test_nearer_ghost_does_not_shadow_a_valid_live_challenger() -> None:
+    """A ghost sitting exactly at the midpoint must not block a live challenger that also beats the margin.
+
+    Regression test: the challenger used to be picked as the single globally-closest other track, so a ghost
+    nearer than any live track would occupy that slot and the "never hand from live to ghost" guard then held
+    the incumbent -- even though the live track (id=4) was close enough on its own to win the takeover.
+    """
+    tracks = [
+        _diag(track_id=6, cx=470.0),
+        _diag(track_id=9, cx=380.0, is_ghost=True, missed=1),
+        _diag(track_id=4, cx=385.0),
+    ]
+    result = find_center_track(tracks, FRAME_WIDTH, previous_track_id=6)
+    assert result is not None
+    assert result.track_id == 4
+
+
 def test_yields_from_stale_ghost_incumbent_to_a_live_challenger() -> None:
     tracks = [
         _diag(track_id=6, cx=390.0, is_ghost=True, missed=3),

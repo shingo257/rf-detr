@@ -94,13 +94,14 @@ def find_center_track(
         live = [row for row in candidates if not row.is_ghost]
         return min(live or candidates, key=closeness)
 
-    challenger = min(
-        (row for row in candidates if row.track_id != incumbent.track_id),
-        key=closeness,
-        default=None,
-    )
-    if challenger is None:
+    others = [row for row in candidates if row.track_id != incumbent.track_id]
+    if not others:
         return incumbent
+    # Prefer the closest live track as the challenger: a nearer ghost must never
+    # shadow a live track that would otherwise win the margin check below, since
+    # a ghost challenger can only ever win a ghost-to-ghost handover.
+    live_others = [row for row in others if not row.is_ghost]
+    challenger = min(live_others or others, key=closeness)
 
     margin = switch_margin_fraction * (x_max - x_min) / 2.0
     incumbent_is_stale_ghost = incumbent.is_ghost and incumbent.missed >= 2
