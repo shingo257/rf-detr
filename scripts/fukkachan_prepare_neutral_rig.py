@@ -6,6 +6,7 @@ import argparse
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, cast
 
 import numpy as np
 from PIL import Image, ImageDraw
@@ -20,7 +21,9 @@ class PartSpec:
     shapes: tuple[tuple[str, tuple[float, ...]], ...]
 
 
-def _scaled_shape_mask(size: tuple[int, int], shapes: tuple[tuple[str, tuple[float, ...]], ...]) -> np.ndarray:
+def _scaled_shape_mask(
+    size: tuple[int, int], shapes: tuple[tuple[str, tuple[float, ...]], ...]
+) -> np.ndarray[Any, Any]:
     width, height = size
     mask = Image.new("L", size, 0)
     draw = ImageDraw.Draw(mask)
@@ -40,7 +43,9 @@ def _scaled_shape_mask(size: tuple[int, int], shapes: tuple[tuple[str, tuple[flo
     return np.asarray(mask, dtype=np.uint8)
 
 
-def _crop_layer(rgba: np.ndarray, alpha: np.ndarray, pad: int = 8) -> tuple[Image.Image, list[int]]:
+def _crop_layer(
+    rgba: np.ndarray[Any, Any], alpha: np.ndarray[Any, Any], pad: int = 8
+) -> tuple[Image.Image, list[int]]:
     ys, xs = np.nonzero(alpha)
     if len(xs) == 0:
         raise RuntimeError("Part mask produced an empty layer")
@@ -167,7 +172,8 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     manifest = prepare_neutral_rig(args.input, args.output)
-    print(json.dumps({"output": str(args.output.resolve()), "parts": len(manifest["parts"])}, ensure_ascii=False))
+    parts = cast(list[object], manifest["parts"])
+    print(json.dumps({"output": str(args.output.resolve()), "parts": len(parts)}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

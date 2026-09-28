@@ -13,7 +13,7 @@ LOG_PATH = REPO_ROOT / "artifacts" / "gui_launch_error.log"
 
 
 def _show_error(message: str) -> None:
-    ctypes.windll.user32.MessageBoxW(  # type: ignore[attr-defined]
+    ctypes.windll.user32.MessageBoxW(
         0,
         message,
         "RF-DETR Demo GUI",

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import cast
 
 from PIL import Image
 
@@ -148,7 +149,8 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     manifest = prepare_kirby_mesh_rig(args.input, args.output)
-    print(json.dumps({"output": str(args.output.resolve()), "parts": len(manifest["parts"])}, ensure_ascii=False))
+    parts = cast(list[object], manifest["parts"])
+    print(json.dumps({"output": str(args.output.resolve()), "parts": len(parts)}, ensure_ascii=False))
 
 
 if __name__ == "__main__":
