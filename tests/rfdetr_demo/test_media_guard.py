@@ -8,13 +8,16 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 import pytest
 
+import rfdetr_demo.media.guard as guard
 from rfdetr_demo.media.guard import (
     MediaGuardError,
     assert_vast_transfer_allowed,
+    is_under_confidential,
     is_vast_transfer_allowed,
     log_transfer_audit,
     resolve_media_path,
@@ -27,6 +30,19 @@ def test_resolve_media_path_rejects_outside_repo(tmp_path: Path) -> None:
     outside.write_bytes(b"x")
     with pytest.raises(MediaGuardError):
         resolve_media_path(outside)
+
+
+def test_resolve_media_path_raises_when_file_missing(tmp_path: Path) -> None:
+    missing = tmp_path / "does-not-exist.mov"
+    with pytest.raises(FileNotFoundError):
+        resolve_media_path(missing)
+
+
+def test_is_under_confidential_true_and_false() -> None:
+    inside = CONFIDENTIAL_INPUT / "clip.mov"
+    outside = REPO_ROOT / "sample" / "clip.mov"
+    assert is_under_confidential(inside) is True
+    assert is_under_confidential(outside) is False
 
 
 def test_vast_transfer_allowlist_blocks_sample(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -92,3 +108,53 @@ def test_allow_any_source_env(monkeypatch: pytest.MonkeyPatch) -> None:
     finally:
         if sample_file.is_file():
             sample_file.unlink()
+
+
+def test_assert_vast_transfer_allow_any_source_logs_warning(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    # is_vast_transfer_allowed() already short-circuits to True once
+    # RFDETR_VAST_ALLOW_ANY_SOURCE is set, so assert_vast_transfer_allowed's own
+    # allow-any-source warning branch is only reachable if the two disagree;
+    # force that by stubbing the helper.
+    sample_file = REPO_ROOT / "sample" / "warn-branch.mov"
+    sample_file.parent.mkdir(parents=True, exist_ok=True)
+    sample_file.write_bytes(b"demo")
+    try:
+        monkeypatch.setenv("RFDETR_VAST_ALLOW_ANY_SOURCE", "1")
+        monkeypatch.setattr(guard, "is_vast_transfer_allowed", lambda source: False)
+        with caplog.at_level(logging.WARNING, logger="rfdetr_demo.media.guard"):
+            assert_vast_transfer_allowed(sample_file, user_acknowledged=True)
+        assert "transferring non-allowlisted path" in caplog.text
+    finally:
+        if sample_file.is_file():
+            sample_file.unlink()
+
+
+def test_log_transfer_audit_merges_extra_fields() -> None:
+    audit_dir = CONFIDENTIAL_AUDIT
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    log_file = audit_dir / "vast-transfers.jsonl"
+    if log_file.is_file():
+        log_file.unlink()
+    media = CONFIDENTIAL_INPUT / "audit-extra-test.mov"
+    CONFIDENTIAL_INPUT.mkdir(parents=True, exist_ok=True)
+    media.write_bytes(b"audit")
+    try:
+        log_transfer_audit(
+            "upload_complete",
+            media,
+            "remote:123:/input.mov",
+            instance_id=123,
+            extra={"duration_s": 12.5, "bytes_sent": 2048},
+        )
+        lines = log_file.read_text(encoding="utf-8").strip().splitlines()
+        assert len(lines) == 1
+        record = json.loads(lines[0])
+        assert record["duration_s"] == 12.5
+        assert record["bytes_sent"] == 2048
+    finally:
+        if media.is_file():
+            media.unlink()
+        if log_file.is_file():
+            log_file.unlink()
