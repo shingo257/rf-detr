@@ -7,20 +7,30 @@
 
 from __future__ import annotations
 
+import importlib
 from unittest.mock import patch
 
 from rfdetr_demo.cli.main import SUBCOMMANDS, main
 
+# rfdetr_demo/cli/__init__.py does `from rfdetr_demo.cli.main import main`, which overwrites the
+# package's own `main` attribute with the *function*, shadowing the submodule of the same name.
+# Both a string patch target ("rfdetr_demo.cli.main.<name>") and a plain `import
+# rfdetr_demo.cli.main as x` resolve through that same attribute chain and land on the function
+# instead of the submodule (on Python 3.10 for the string form; on every version for the "import
+# ... as" form, since it also does attribute-chain traversal, not a sys.modules lookup).
+# importlib.import_module() is the one route that always returns the real submodule.
+cli_main = importlib.import_module("rfdetr_demo.cli.main")
+
 
 def test_default_routes_to_video_demo() -> None:
-    with patch("rfdetr_demo.cli.main.video_demo_main", return_value=0) as video_main:
+    with patch.object(cli_main, "video_demo_main", return_value=0) as video_main:
         assert main(["--help"]) == 0
         video_main.assert_called_once_with(["--help"])
 
 
 def test_probe_count_subcommand() -> None:
     with patch("rfdetr_demo.cli.subcommands.probe_count.run", return_value=0) as probe_run:
-        with patch("rfdetr_demo.cli.main._build_parser") as build_parser:
+        with patch.object(cli_main, "_build_parser") as build_parser:
             namespace = type("NS", (), {"_handler": probe_run})()
             build_parser.return_value.parse_args.return_value = namespace
             assert main(["probe-count", "--frames", "5"]) == 0
@@ -30,7 +40,7 @@ def test_probe_count_subcommand() -> None:
 
 
 def test_video_subcommand_passes_remaining_args() -> None:
-    with patch("rfdetr_demo.cli.main.video_demo_main", return_value=0) as video_main:
+    with patch.object(cli_main, "video_demo_main", return_value=0) as video_main:
         assert main(["video", "--task", "keypoint"]) == 0
         video_main.assert_called_once_with(["--task", "keypoint"])
 
@@ -50,7 +60,7 @@ def test_subcommand_names_are_stable() -> None:
 
 def test_probe_viewpoint_subcommand() -> None:
     with patch("rfdetr_demo.cli.subcommands.probe_viewpoint.run", return_value=0) as probe_run:
-        with patch("rfdetr_demo.cli.main._build_parser") as build_parser:
+        with patch.object(cli_main, "_build_parser") as build_parser:
             namespace = type("NS", (), {"_handler": probe_run})()
             build_parser.return_value.parse_args.return_value = namespace
             assert main(["probe-viewpoint", "--frames", "5"]) == 0
