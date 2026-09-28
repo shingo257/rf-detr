@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
@@ -37,7 +37,7 @@ def repo_relpath(path: Path, *, repo_root: Path | None = None) -> str:
 
 def make_run_id() -> str:
     """Return a UTC timestamped run identifier."""
-    return datetime.now(tz=UTC).strftime("%Y%m%dT%H%M%SZ") + f"-{uuid.uuid4().hex[:8]}"
+    return datetime.now(tz=timezone.utc).strftime("%Y%m%dT%H%M%SZ") + f"-{uuid.uuid4().hex[:8]}"
 
 
 def build_base_audit_line(
@@ -52,7 +52,7 @@ def build_base_audit_line(
 ) -> dict[str, Any]:
     """Build the shared confidential audit JSONL record fields."""
     line: dict[str, Any] = {
-        "timestamp": datetime.now(tz=UTC).isoformat(),
+        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
         "classification": CLASSIFICATION,
         "audit_kind": audit_kind,
         "run_id": run_id,

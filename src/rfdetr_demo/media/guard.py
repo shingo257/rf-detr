@@ -11,7 +11,7 @@ import hashlib
 import json
 import logging
 import os
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from rfdetr_demo.paths import CONFIDENTIAL_AUDIT, CONFIDENTIAL_INPUT, CONFIDENTIAL_ROOT, REPO_ROOT
@@ -117,7 +117,7 @@ def log_transfer_audit(
     """Append a JSONL audit record under ``confidential/audit/``."""
     CONFIDENTIAL_AUDIT.mkdir(parents=True, exist_ok=True)
     record: dict[str, object] = {
-        "timestamp": datetime.now(tz=UTC).isoformat(),
+        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
         "event": event,
         "source": str(source.resolve()),
         "destination": destination,
