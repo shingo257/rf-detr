@@ -33,7 +33,7 @@ jobs:
         run: uv python install 3.12
 
       - name: Sync demo dependencies
-        run: uv sync --extra demo --extra tests
+        run: uv sync --extra demo --group tests
 
       - name: Run demo pytest suite
         run: uv run pytest tests/rfdetr_demo tests/test_temporal_quality.py -v --tb=short
